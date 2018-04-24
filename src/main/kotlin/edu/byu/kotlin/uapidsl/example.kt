@@ -1,28 +1,6 @@
 package edu.byu.kotlin.uapidsl
 
-fun personAccess(person: PersonDTO): Set<AuthorizationActions> {
-
-}
-
-enum class AuthorizationActions {
-    CREATE, READ, UPDATE, DELETE
-}
-
 fun main(args: Array<String>) {
-    println("Hello, World")
-}
-
-class Authz(val userId: String) {
-    fun canReadPerson(byuId: String) = true
-    fun canUpdatePerson(byuId: String) = true
-    fun canCreatePerson(byuId: String) = true
-    fun canDeletePerson(byuId: String) = true
-}
-
-interface CreatePerson
-interface UpdatePerson
-interface CreateOrUpdatePerson
-interface PersonFilters
 
 val model = apiModel<Authz> {
     authContext {
@@ -153,6 +131,27 @@ val model = apiModel<Authz> {
 
 }
 
+//model.sparkIt(8080)
+//model.graphQlIt(8081)
+//model.lambdaIt()
+
+//model.toOpenAPI3()
+//model.toOpenAPI2()
+
+}
+
+class Authz(val userId: String) {
+    fun canReadPerson(byuId: String) = true
+    fun canUpdatePerson(byuId: String) = true
+    fun canCreatePerson(byuId: String) = true
+    fun canDeletePerson(byuId: String) = true
+}
+
+interface CreatePerson
+interface UpdatePerson
+interface CreateOrUpdatePerson
+interface PersonFilters
+
 enum class AddressType {
     WRK, RES
 }
@@ -166,10 +165,6 @@ class PutAddress
 class AddressFilters
 
 
-
-//model.sparkIt(8080)
-//model.graphQlIt(8081)
-//model.lambdaIt()
 
 class RelatedDTO {
 
