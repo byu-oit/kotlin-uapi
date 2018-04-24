@@ -164,24 +164,8 @@ class PutAddress
 
 class AddressFilters
 
+class RelatedDTO
 
-
-class RelatedDTO {
-
-}
-
-//
-//
-//        data class PersonDTO(
-//                @MetadataLoader(value = classOf<ByuIdTypeLoader>)
-//                val byu_id: String,
-//                @ApiType(Types.SYSTEM)
-//                val person_id: String
-//        ) {
-//
-//        }
-//
-//
 class PersonDTO(person: Person) {
     val byu_id by person.byuId.uapi()
             .type(ApiType.MODIFIABLE)
@@ -204,11 +188,3 @@ class UAPIDelegate<out Type>(val value: Type) {
 enum class ApiType {
     SYSTEM
 }
-//
-//interface TypeLoader {
-//    fun get(person: PersonDTO, fieldName: String, fieldValue: String);
-//}
-//
-//class ByuIdTypeLoader : TypeLoader {
-//
-//}
