@@ -6,47 +6,18 @@ $schemaver: 2.1
 repo_url: https://github.com/byu-oit/kotlin-uapi-dsl  # optional
 software:
   - name: kotlin-uapi-dsl  # optional
-    deploy_to_cmdb: true # optional
-    type: ''
+    deploy_to_cmdb: false # optional
+    type: 'library'
     aliases:  # optional
     short_description: Kotlin DSL for implementing UAPI Services # optional
     assignment_group: gro:AD-General Enterprise Systems
     notes: # optional
     maintained_by: # optional
       - ThatJoeMoore
-    data_sensitivity: internal
+    data_sensitivity: public
     developed_by_byu: true  # optional
-    ddd: # optional
-      business_domain:
-      ubiquitous_language_url:
-      context_map_url:
     links: # optional
       system_documentation_url: https://github.com/byu-oit/kotlin-uapi-dsl
-      swagger_urls:
-    microservice: true # optional
+    microservice: false # optional
     technologies_used: # optional
       - Kotlin
-    standard_change_template:
-    stages:
-      development:
-        urls:  # optional
-          product_page:
-          physical_url:
-          virtual_url:
-        hosting_location: ''
-        aws_account:  # optional
-        relationships: # optional
-          depends_on:  # optional
-            db_read_write:
-            db_read_only:
-            software:
-          supports: # optional
-            software:
-            service:
-          reverse_proxy: # optional
-          runs_on: # optional
-            server_cluster:
-            virtual_server:
-            rack_server:
-            blade_server:
-    data-sensitivity: ''
