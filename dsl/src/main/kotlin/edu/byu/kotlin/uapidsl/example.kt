@@ -7,7 +7,7 @@ fun main(args: Array<String>) {
             val jwt = it.jwt
             Authz(
                     if (jwt.hasResourceOwner()) {
-                        jwt.resourceOwnerClaims.personId
+                        jwt.resourceOwnerClaims!!.personId
                     } else {
                         jwt.clientClaims.personId
                     }
@@ -29,7 +29,8 @@ fun main(args: Array<String>) {
                     authorization { true }
 
                     handle {
-                        loadPerson(it.id)
+//                        loadPerson(it.id)
+                        null
                     }
 
                     collection<PersonFilters> { ctx ->
@@ -86,7 +87,7 @@ fun main(args: Array<String>) {
                 }
                 externalRelation("student_info") {
                     authorization { true }
-                    handle { "https://api.byu.edu/uapi/student/${it.resource.byu_id}" }
+                    handle { "https://api.byu.edu/uapi/student/${it.resource.byuId}" }
                 }
 
                 subresource<AddressType, PersonAddressDTO>("addresses") {
@@ -172,13 +173,15 @@ class AddressFilters
 
 class RelatedDTO
 
-class PersonDTO(person: Person) {
-    val byuId by person.byuId.uapi()
-            .type(ApiType.MODIFIABLE)
-            .description("")
+class PersonDTO() {
+//    val byuId by person.byuId.uapi()
+//            .type(ApiType.MODIFIABLE)
+//            .description("")
+//
+//    val netId = UAPIString(person.netId)
+//            .type(ApiType.SYSTEM)
 
-    val netId = UAPIString(person.netId)
-            .type(ApiType.SYSTEM)
+    val byuId = ""
 
 
 }
