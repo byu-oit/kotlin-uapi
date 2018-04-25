@@ -10,7 +10,7 @@
     <name>Kotlin UAPI DSL Spark Adapter</name>
 
     <parent>
-        <groupId>edu.byu.kotlin.uapidsl.adapters</groupId>
+        <groupId>edu.byu.uapidsl.adapters</groupId>
         <artifactId>kotlin-uapi-adapters-pom</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>

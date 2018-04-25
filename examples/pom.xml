@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.byu.uapidsl.examples</groupId>
+    <artifactId>kotlin-uapi-examples-pom</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Kotlin UAPI Examples Parent POM</name>
+
+    <modules>
+        <module>students-jvm</module>
+    </modules>
+
+    <parent>
+        <groupId>edu.byu.uapidsl</groupId>
+        <artifactId>kotlin-uapi-dsl-pom</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>edu.byu.uapidsl</groupId>
+                <artifactId>kotlin-uapi-dsl</artifactId>
+                <version>${parent.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

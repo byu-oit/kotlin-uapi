@@ -10,8 +10,8 @@
     <name>Kotlin UAPI DSL</name>
 
     <parent>
-        <groupId>edu.byu.kotlin.uapidsl</groupId>
-        <artifactId>kotlin-uapi-pom</artifactId>
+        <groupId>edu.byu.uapidsl</groupId>
+        <artifactId>kotlin-uapi-dsl-pom</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
