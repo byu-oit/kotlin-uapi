@@ -38,7 +38,6 @@
         <sourceDirectory>src/main/kotlin</sourceDirectory>
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
 
-        <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.jetbrains.kotlin</groupId>
@@ -63,7 +62,6 @@
                     </executions>
                 </plugin>
             </plugins>
-        </pluginManagement>
     </build>
 
 </project>
