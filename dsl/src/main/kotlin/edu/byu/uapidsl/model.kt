@@ -1,8 +1,10 @@
-package edu.byu.kotlin.uapidsl
+package edu.byu.uapidsl
 
-import edu.byu.kotlin.uapidsl.subresource.SubResourceInit
+import edu.byu.uapidsl.subresource.list.SubResourceInit
+import edu.byu.uapidsl.subresource.single.SingleSubResourceInit
 
 
+@UApiMarker
 class ModelInit<AuthContext, IdType, ResourceModel> {
 
     fun customizeFields(handler: CustomizeFieldsHandler<AuthContext, IdType, ResourceModel>) {
@@ -22,15 +24,23 @@ class ModelInit<AuthContext, IdType, ResourceModel> {
 
     }
 
-    inline fun <SubResourceId, reified SubResourceModel> subresource(
+    inline fun <SubResourceId, reified SubResourceModel> collectionSubresource(
             name: String,
             init: SubResourceInit<AuthContext, IdType, ResourceModel, SubResourceId, SubResourceModel>.() -> Unit
     ) {
 
     }
 
+  inline fun <reified SubResourceModel> singleSubresource(
+    name: String,
+    init: SingleSubResourceInit<AuthContext, IdType, ResourceModel, SubResourceModel>.() -> Unit
+  ) {
+
+  }
+
 }
 
+@UApiMarker
 class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel> {
     fun authorization(authorizer: RelationAuthorizer<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>) {
 
@@ -41,6 +51,7 @@ class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel> 
     }
 }
 
+@UApiMarker
 class ExternalRelationInit<AuthContext, IdType, ResourceModel> {
     fun authorization(authorizer: ExternalRelationAuthorizer<AuthContext, IdType, ResourceModel>) {
 

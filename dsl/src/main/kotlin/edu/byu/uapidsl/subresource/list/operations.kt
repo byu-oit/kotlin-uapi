@@ -1,9 +1,11 @@
-package edu.byu.kotlin.uapidsl.subresource
+package edu.byu.uapidsl.subresource.list
 
-import edu.byu.kotlin.uapidsl.PagingParams
-import edu.byu.kotlin.uapidsl.SequenceWithTotal
+import edu.byu.uapidsl.PagingParams
+import edu.byu.uapidsl.CollectionWithTotal
+import edu.byu.uapidsl.UApiMarker
 
 
+@UApiMarker
 class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
     inline fun <reified CreateModel> create(init: SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>.() -> Unit) {
 
@@ -25,8 +27,21 @@ class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
 
     }
 
+    inline fun <reified FilterType> listSimple(
+            handler: SubListHandler<AuthContext, ParentId, ParentModel, SubId, FilterType>
+    ) {
+
+    }
+
+    inline fun <reified FilterType> listPaged(
+        init: SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, FilterType>.() -> Unit
+    ) {
+
+    }
+
 }
 
+@UApiMarker
 class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
     fun authorization(auth: SubReadAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 
@@ -36,20 +51,9 @@ class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
 
     }
 
-    inline fun <reified FilterType> collection(
-            handler: SubListHandler<AuthContext, ParentId, ParentModel, SubId, FilterType>
-    ) {
-
-    }
-
-    inline fun <reified FilterType> pagedCollection(
-        init: SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, FilterType>.() -> Unit
-    ) {
-
-    }
-
 }
 
+@UApiMarker
 class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, FilterType> {
     var defaultSize: Int = Int.MAX_VALUE
     var maxSize: Int = Int.MAX_VALUE
@@ -60,7 +64,7 @@ class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, FilterTy
 }
 
 typealias SubListHandler<AuthContext, ParentId, ParentModel, SubId, FilterType> =
-        (SubListContext<AuthContext, ParentId, ParentModel, FilterType>) -> Sequence<SubId>
+        (SubListContext<AuthContext, ParentId, ParentModel, FilterType>) -> Collection<SubId>
 
 interface SubListContext<AuthContext, ParentId, ParentModel, FilterType> {
     val authContext: AuthContext
@@ -70,7 +74,7 @@ interface SubListContext<AuthContext, ParentId, ParentModel, FilterType> {
 }
 
 typealias SubPagedListHandler<AuthContext, ParentId, ParentModel, SubId, FilterType> =
-        (SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType>) -> SequenceWithTotal<SubId>
+        (SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType>) -> CollectionWithTotal<SubId>
 
 interface SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType> {
     val authContext: AuthContext
@@ -81,6 +85,7 @@ interface SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType> {
 }
 
 
+@UApiMarker
 class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel> {
     fun authorization(auth: SubCreateAuthorizer<AuthContext, ParentId, ParentModel, CreateModel>) {
 
@@ -91,6 +96,7 @@ class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel> {
     }
 }
 
+@UApiMarker
 class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel> {
     fun authorization(auth: SubUpdateAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>) {
 
@@ -101,6 +107,7 @@ class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateM
     }
 }
 
+@UApiMarker
 class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel> {
     fun authorization(auth: SubCreateOrUpdateAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>) {
 
@@ -111,6 +118,7 @@ class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel,
     }
 }
 
+@UApiMarker
 class SubDeleteInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
     fun authorization(auth: SubDeleteAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 

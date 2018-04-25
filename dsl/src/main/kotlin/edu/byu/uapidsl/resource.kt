@@ -1,6 +1,7 @@
-package edu.byu.kotlin.uapidsl
+package edu.byu.uapidsl
 
 
+@UApiMarker
 class ResourceInit<AuthContext, IdType, ResourceModel>(
         val name: String
 ) {

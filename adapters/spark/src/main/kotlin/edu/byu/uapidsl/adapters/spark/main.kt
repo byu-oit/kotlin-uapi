@@ -1,0 +1,7 @@
+package edu.byu.uapidsl.adapters.spark
+
+import edu.byu.uapidsl.UApiModel
+
+fun UApiModel.igniteSpark(port: Int = 4567) {
+    println("In an ideal world, this would start Spark listening on port $port")
+}

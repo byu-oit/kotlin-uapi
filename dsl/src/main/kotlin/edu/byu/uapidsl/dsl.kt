@@ -1,14 +1,18 @@
-package edu.byu.kotlin.uapidsl
+package edu.byu.uapidsl
 
 import edu.byu.jwt.ByuJwt
 import kotlin.reflect.KClass
 
-inline fun <AuthContext> apiModel(init: ApiModelInit<AuthContext>.() -> Unit): ApiModelInit<AuthContext> {
+@UApiMarker
+inline fun <AuthContext> apiModel(init: ApiModelInit<AuthContext>.() -> Unit): UApiModel {
     val model = ApiModelInit<AuthContext>()
     model.init()
-    return model
+    return UApiModel()
 }
 
+class UApiModel
+
+@UApiMarker
 class ApiModelInit<AuthContext> {
     private var authContextCreator: AuthContextCreator<AuthContext>? = null
     fun authContext(creator: AuthContextCreator<AuthContext>) {
@@ -32,4 +36,7 @@ data class AuthContextInput(
         val headers: Map<String, String>,
         val jwt: ByuJwt
 )
+
+@DslMarker
+annotation class UApiMarker
 

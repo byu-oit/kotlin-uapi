@@ -26,9 +26,8 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.jwt</groupId>
-            <artifactId>byu-jwt</artifactId>
-            <version>${byu-jwt.version}</version>
+            <groupId>edu.byu.uapidsl</groupId>
+            <artifactId>kotlin-uapi-dsl</artifactId>
         </dependency>
     </dependencies>
 

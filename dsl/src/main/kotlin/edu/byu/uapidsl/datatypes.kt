@@ -1,4 +1,4 @@
-package edu.byu.kotlin.uapidsl
+package edu.byu.uapidsl
 
 import kotlin.reflect.KClass
 
@@ -8,11 +8,11 @@ data class ApiDefinition<AuthContext>(
 )
 
 data class ApiResource<AuthContext, IdType, ResourceModel>(
-        val name: String,
-        val authorization: ResourceAuthorization<AuthContext, IdType, ResourceModel>,
-        val loader: ResourceLoader<IdType, ResourceModel>,
-        val collection: CollectionDefinition<IdType, *>,
-        val fieldCustomizer: FieldCustomizer<AuthContext, ResourceModel>
+  val name: String,
+  val authorization: ResourceAuthorization<AuthContext, IdType, ResourceModel>,
+  val loader: ResourceLoader<IdType, ResourceModel>,
+  val collection: CollectionDefinition<IdType, *>,
+  val fieldCustomizer: FieldCustomizer<AuthContext, ResourceModel>
 )
 
 data class ResourceAuthorization<AuthContext, IdType, ResourceModel>(
@@ -32,8 +32,8 @@ data class PagedCollectionDefinition<IdType, FilterType>(
         val loader: PagedCollectionLoader<IdType, FilterType>
 ) : CollectionDefinition<IdType, FilterType>
 
-typealias SimpleCollectionLoader<IdType, FilterType> = (FilterType) -> Sequence<IdType>
-typealias PagedCollectionLoader<IdType, FilterType> = (FilterType, PagingParams) -> SequenceWithTotal<IdType>
+typealias SimpleCollectionLoader<IdType, FilterType> = (FilterType) -> Collection<IdType>
+typealias PagedCollectionLoader<IdType, FilterType> = (FilterType, PagingParams) -> CollectionWithTotal<IdType>
 
 typealias FieldCustomizer<AuthContext, ResourceModel> = (AuthContext, ResourceModel, String) -> UAPIField<*>
 
@@ -41,9 +41,9 @@ data class UAPIField<Type>(
         val value: Type?
 )
 
-data class SequenceWithTotal<IdType>(
+data class CollectionWithTotal<IdType>(
         val totalItems: Int,
-        val ids: Sequence<IdType>
+        val ids: Collection<IdType>
 )
 
 data class PagingParams(
