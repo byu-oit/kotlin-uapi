@@ -1,0 +1,17 @@
+{
+  "name": "kotlin-uapi-examples-node-simple",
+  "version": "1.0.0",
+  "description": "Simple example of using the Kotlin UAPI DSL in Node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joseph Moore <joseph_moore@byu.edu>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "kotlin-compiler": "^1.2.40"
+  },
+  "dependencies": {
+    "kotlin": "^1.2.40"
+  }
+}

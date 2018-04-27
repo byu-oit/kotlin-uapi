@@ -12,7 +12,7 @@
     <name>Kotlin UAPI Examples Parent POM</name>
 
     <modules>
-        <module>students-jvm</module>
+        <module>persons-jvm</module>
     </modules>
 
     <parent>

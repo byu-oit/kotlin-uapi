@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>uapi-dsl-persons-jvm</artifactId>
+
+    <packaging>jar</packaging>
+
+    <name>Kotlin UAPI DSL Example - Persons (JVM)</name>
+
+    <parent>
+        <groupId>edu.byu.uapidsl.examples</groupId>
+        <artifactId>kotlin-uapi-examples-pom</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <byu-jwt.version>2.0.0</byu-jwt.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.byu.uapidsl</groupId>
+            <artifactId>kotlin-uapi-dsl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.byu.uapidsl.adapters</groupId>
+            <artifactId>kotlin-uapi-adapter-spark</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>

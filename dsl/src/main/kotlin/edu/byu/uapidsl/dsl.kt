@@ -1,16 +1,15 @@
 package edu.byu.uapidsl
 
 import edu.byu.jwt.ByuJwt
+import edu.byu.uapidsl.dsl.ResourceInit
 import kotlin.reflect.KClass
 
-@UApiMarker
 inline fun <AuthContext> apiModel(init: ApiModelInit<AuthContext>.() -> Unit): UApiModel {
     val model = ApiModelInit<AuthContext>()
     model.init()
     return UApiModel()
 }
 
-class UApiModel
 
 @UApiMarker
 class ApiModelInit<AuthContext> {
