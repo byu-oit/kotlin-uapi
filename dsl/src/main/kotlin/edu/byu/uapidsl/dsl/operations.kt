@@ -29,7 +29,9 @@ class OperationsInit<AuthContext, IdType, ResourceModel> {
 
   }
 
-  inline fun <reified FilterType> listPaged(init: PagedCollectionInit<AuthContext, IdType, FilterType>.() -> Unit) {
+  inline fun <reified FilterType> listPaged(
+    init: PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType>.() -> Unit
+  ) {
 
   }
 
@@ -41,31 +43,36 @@ class ReadInit<AuthContext, IdType, ResourceModel> {
 
   }
 
-  fun handle(handler: ReadHandler<AuthContext, IdType, ResourceModel>) {
-
+  fun handle(handler: ReadLoadContext<AuthContext, IdType>.() -> ResourceModel?) {
+    TODO()
   }
+
 }
 
 @UApiMarker
-class PagedCollectionInit<AuthContext, IdType, FilterType> {
+class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType> {
   var defaultSize: Int = Int.MAX_VALUE
   var maxSize: Int = Int.MAX_VALUE
 
-  fun handle(handler: PagedListHandler<AuthContext, IdType, FilterType>) {
+  fun listIds(block: PagedListHandler<AuthContext, FilterType, IdType>) {
+
+  }
+
+  fun listObjects(handler: PagedListHandler<AuthContext, FilterType, ResourceModel>) {
 
   }
 }
 
 typealias ListHandler<AuthContext, IdType, FilterType> =
-  (ListContext<AuthContext, FilterType>) -> Collection<IdType>
+  ListContext<AuthContext, FilterType>.() -> Collection<IdType>
 
 interface ListContext<AuthContext, FilterType> {
   val authContext: AuthContext
   val filters: FilterType
 }
 
-typealias PagedListHandler<AuthContext, IdType, FilterType> =
-  (PagedListContext<AuthContext, FilterType>) -> CollectionWithTotal<IdType>
+typealias PagedListHandler<AuthContext, FilterType, ResultType> =
+  PagedListContext<AuthContext, FilterType>.() -> CollectionWithTotal<ResultType>
 
 interface PagedListContext<AuthContext, FilterType> {
   val authContext: AuthContext
@@ -121,41 +128,42 @@ class DeleteInit<AuthContext, IdType, ResourceModel> {
 
 
 typealias CreateHandler<AuthContext, IdType, CreateModel> =
-  (CreateContext<AuthContext, CreateModel>) -> IdType
+  CreateContext<AuthContext, CreateModel>.() -> IdType
 
 typealias UpdateHandler<AuthContext, IdType, ResourceModel, UpdateModel> =
-  (UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>) -> Unit
+  UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>.() -> Unit
 
 typealias CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel> =
-  (CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>) -> Unit
+  CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>.() -> Unit
 
 typealias DeleteHandler<AuthContext, IdType, ResourceModel> =
-  (DeleteContext<AuthContext, IdType, ResourceModel>) -> Unit
+  DeleteContext<AuthContext, IdType, ResourceModel>.() -> Unit
 
 typealias ReadHandler<AuthContext, IdType, ResourceModel> =
-  (ReadLoadContext<AuthContext, IdType>) -> ResourceModel?
+  ReadLoadContext<AuthContext, IdType>.() -> ResourceModel?
 
 
 typealias ReadAuthorizer<AuthContext, IdType, ResourceModel> =
-  (ReadContext<AuthContext, IdType, ResourceModel>) -> Boolean
+  ReadContext<AuthContext, IdType, ResourceModel>.() -> Boolean
 
 typealias CreateAuthorizer<AuthContext, CreateModel> =
-  (CreateContext<AuthContext, CreateModel>) -> Boolean
+  CreateContext<AuthContext, CreateModel>.() -> Boolean
 
 typealias UpdateAuthorizer<AuthContext, IdType, ResourceModel, UpdateModel> =
-  (UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>) -> Boolean
+  UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>.() -> Boolean
 
 typealias CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> =
-  (CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>) -> Boolean
+  CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>.() -> Boolean
 
 typealias DeleteAuthorizer<AuthContext, IdType, ResourceModel> =
-  (DeleteContext<AuthContext, IdType, ResourceModel>) -> Boolean
+  DeleteContext<AuthContext, IdType, ResourceModel>.() -> Boolean
 
 interface CreateContext<AuthContext, CreateModel> {
   val authContext: AuthContext
   val input: CreateModel
 }
 
+@UApiMarker
 interface ReadLoadContext<AuthContext, IdType> {
   val authContext: AuthContext
   val id: IdType

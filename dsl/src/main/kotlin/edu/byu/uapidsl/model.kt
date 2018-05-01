@@ -1,3 +1,7 @@
 package edu.byu.uapidsl
 
-class UApiModel
+import edu.byu.uapidsl.model.ResourceModel
+
+data class UApiModel<AuthContext: Any>(
+  val resources: List<ResourceModel<AuthContext, Any, Any>>
+)

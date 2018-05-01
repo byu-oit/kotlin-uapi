@@ -30,6 +30,10 @@
             <artifactId>kotlin-uapi-dsl</artifactId>
         </dependency>
         <dependency>
+            <groupId>edu.byu.uapidsl</groupId>
+            <artifactId>kotlin-uapi-types</artifactId>
+        </dependency>
+        <dependency>
             <groupId>edu.byu.uapidsl.adapters</groupId>
             <artifactId>kotlin-uapi-adapter-spark</artifactId>
         </dependency>

@@ -23,7 +23,7 @@ class SubResourceInit<AuthContext, ParentId, ParentModel, SubResourceId, SubReso
 }
 
 typealias SubAuthorizationHandler<AuthContext, ParentId, ParentModel> =
-        (SubAuthorizationContext<AuthContext, ParentId, ParentModel>) -> Boolean
+        SubAuthorizationContext<AuthContext, ParentId, ParentModel>.() -> Boolean
 
 interface SubAuthorizationContext<AuthContext, ParentId, ParentModel> {
     val authContext: AuthContext

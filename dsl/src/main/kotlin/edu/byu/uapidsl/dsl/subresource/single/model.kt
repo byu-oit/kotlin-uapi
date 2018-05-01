@@ -6,7 +6,7 @@ import edu.byu.uapidsl.UApiMarker
 @UApiMarker
 class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel> {
 
-    fun customizeFields(handler: SingleSubCustomizeFieldsHandler<AuthContext, ParentId, ParentModel, SingleSubModel>) {
+    fun <UAPIType> transform(handler: SingleSubTransformer<AuthContext, ParentId, ParentModel, SingleSubModel, UAPIType>) {
 
     }
 
@@ -47,21 +47,12 @@ class SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSu
     }
 }
 
-typealias SingleSubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel> =
-        (SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>) -> Boolean
-
-typealias SingleSubExternalRelationHandler<AuthContext, ParentId, ParentModel, SingleSubModel> =
-        (SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>) -> String?
-
 interface SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel> {
     val authContext: AuthContext
     val parentId: ParentId
     val parent: ParentModel
     val SingleSubresource: SingleSubModel
 }
-
-typealias SingleSubRelationHandler<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId> =
-        (context: SingleSubRelationLoadingContext<AuthContext, ParentId, ParentModel, SingleSubModel>) -> RelatedId?
 
 interface SingleSubRelationLoadingContext<AuthContext, ParentId, ParentModel, SingleSubModel> {
     val authContext: AuthContext
@@ -79,16 +70,25 @@ interface SingleSubRelationAuthorizationContext<AuthContext, ParentId, ParentMod
     val relatedType: RelatedType
 }
 
-typealias SingleSubRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel> =
-  (context: SingleSubRelationAuthorizationContext<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>) -> Boolean
-
-typealias SingleSubCustomizeFieldsHandler<AuthContext, ParentId, ParentModel, SingleSubModel> =
-        (SingleSubCustomizeFieldsContext<AuthContext, ParentId, ParentModel, SingleSubModel>) -> SingleSubModel
-
 interface SingleSubCustomizeFieldsContext<AuthContext, ParentId, ParentModel, SingleSubModel> {
     val authContext: AuthContext
     val parentId: ParentId
     val parent: ParentModel
-    val SingleSubresource: SingleSubModel
+    val resource: SingleSubModel
 }
+
+typealias SingleSubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel> =
+        SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Boolean
+
+typealias SingleSubExternalRelationHandler<AuthContext, ParentId, ParentModel, SingleSubModel> =
+        SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> String?
+
+typealias SingleSubRelationHandler<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId> =
+  SingleSubRelationLoadingContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> RelatedId?
+
+typealias SingleSubRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel> =
+  SingleSubRelationAuthorizationContext<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>.() -> Boolean
+
+typealias SingleSubTransformer<AuthContext, ParentId, ParentModel, SingleSubModel, UAPIType> =
+        SingleSubCustomizeFieldsContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> UAPIType
 

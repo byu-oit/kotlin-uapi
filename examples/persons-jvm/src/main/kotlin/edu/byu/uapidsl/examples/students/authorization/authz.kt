@@ -25,4 +25,9 @@ class Authorizer(val authJwt: ByuJwt) {
   fun canSeeEmployeeInfo(byuId: String): Boolean {
     TODO("not implemented")
   }
+
+  fun canSeePerson(h:
+                   String): Boolean {
+    TODO()
+  }
 }

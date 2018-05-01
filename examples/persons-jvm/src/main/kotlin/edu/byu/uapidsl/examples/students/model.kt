@@ -1,79 +1,100 @@
 package edu.byu.uapidsl.examples.students
 
 import edu.byu.uapidsl.apiModel
+import edu.byu.uapidsl.dsl.uapiProp
 import edu.byu.uapidsl.examples.students.app.*
 import edu.byu.uapidsl.examples.students.authorization.Authorizer
 import edu.byu.uapidsl.examples.students.dto.*
+import edu.byu.uapidsl.types.ApiType
 
 val personsModel = apiModel<Authorizer> {
 
   authContext {
-    Authorizer(it.jwt)
+    Authorizer(jwt)
   }
 
   resource<String, PersonDTO>("persons") {
+
     operations {
-
       read {
-
+        authorization { authContext.canSeePerson(id) }
         handle {
-          loadPerson(it.id, it.authContext.canSeeRestrictedRecords())
+          loadPerson(id, authContext.canSeeRestrictedRecords())
         }
       }
 
       listPaged<PersonListFilters> {
         defaultSize = 50
         maxSize = 200
-        handle {
-          queryPeople(it.filters, it.paging, it.authContext.canSeeRestrictedRecords())
+        listIds {
+          queryPeople(filters, paging, authContext.canSeeRestrictedRecords())
+        }
+
+        listObjects {
+          TODO()
         }
       }
 
-
       create<CreatePerson> {
-        authorization { it.authContext.canCreatePerson() }
-        handle { ctx ->
-          createPerson(ctx.input, ctx.authContext.byuId)
+        authorization { authContext.canCreatePerson() }
+        handle {
+          createPerson(input, authContext.byuId)
         }
       }
 
       update<UpdatePerson> {
-        authorization { it.authContext.canModifyPerson(it.id) }
+        authorization { authContext.canModifyPerson(id) }
+        handle {
+          TODO()
+        }
+
+      }
+
+      delete {
+        authorization { authContext.canDeletePerson(resource.personId) }
         handle {
           TODO()
         }
       }
 
-      delete {
-        authorization { it.authContext.canDeletePerson(it.resource.personId) }
-      }
-
     }
 
     model {
+
+      example = PersonDTO()
+
+      transform<UAPIPerson> {
+        UAPIPerson(resource, authContext)
+      }
+
       collectionSubresource<AddressType, PersonAddressDTO>("addresses") {
 
         operations {
           listSimple<Unit> {
-            listPersonAddressTypes(it.parentId)
+            listIds {
+              TODO()
+            }
           }
           read {
             handle {
-              getPersonAddress(it.parentId, it.id)
+              getPersonAddress(parentId, id)
             }
           }
+        }
+
+        model {
         }
       }
 
       collectionSubresource<PersonCredentialId, PersonCredentialDTO>("credentials") {
-        authorization { it.authContext.canSeeCredentialsFor(it.parentId) }
+        authorization { authContext.canSeeCredentialsFor(parentId) }
 
         operations {
           listPaged<Unit> {
             maxSize = 20
             defaultSize = 20
 
-            handle {
+            listObjects {
               TODO("Not Implemented")
             }
           }
@@ -95,7 +116,7 @@ val personsModel = apiModel<Authorizer> {
           }
 
           listSimple<Unit> {
-            TODO("Not Implemented")
+            listIds { TODO() }
           }
         }
       }
@@ -103,7 +124,7 @@ val personsModel = apiModel<Authorizer> {
       singleSubresource<EmployeeSummary>("employee_summaries") {
         operations {
           read {
-            authorization { it.authContext.canSeeEmployeeInfo(it.parentId) }
+            authorization { authContext.canSeeEmployeeInfo(parentId) }
 
             handle {
               TODO()
@@ -113,5 +134,30 @@ val personsModel = apiModel<Authorizer> {
       }
     }
   }
+
+//  domain<StateCode> {
+//    list {
+//      getStateCodes()
+//    }
+//
+//    id {
+//      code.id
+//    }
+//  }
+
 }
+
+class UAPIPerson(person: PersonDTO, authContext: Authorizer) {
+  val byuId = uapiProp(
+    value = person.byuId,
+    apiType = byuIdApiType(person.byuId, authContext)
+  )
+
+}
+
+fun byuIdApiType(value: String, authContext: Authorizer) =
+  if(authContext.canModifyPerson(value)) ApiType.MODIFIABLE
+  else ApiType.READ_ONLY
+
+
 

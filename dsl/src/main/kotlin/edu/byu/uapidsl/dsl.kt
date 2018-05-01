@@ -2,34 +2,27 @@ package edu.byu.uapidsl
 
 import edu.byu.jwt.ByuJwt
 import edu.byu.uapidsl.dsl.ResourceInit
-import kotlin.reflect.KClass
 
-inline fun <AuthContext> apiModel(init: ApiModelInit<AuthContext>.() -> Unit): UApiModel {
+inline fun <AuthContext: Any> apiModel(init: ApiModelInit<AuthContext>.() -> Unit): UApiModel<AuthContext> {
     val model = ApiModelInit<AuthContext>()
     model.init()
-    return UApiModel()
+    return UApiModel(
+      resources = emptyList()
+    )
 }
-
 
 @UApiMarker
 class ApiModelInit<AuthContext> {
-    private var authContextCreator: AuthContextCreator<AuthContext>? = null
-    fun authContext(creator: AuthContextCreator<AuthContext>) {
-        this.authContextCreator = creator
-    }
 
-    val resources: MutableMap<KClass<*>, ResourceInit<AuthContext, *, *>> = mutableMapOf()
+    fun authContext(block: AuthContextCreator<AuthContext>) {
+    }
 
     inline fun <reified IdType, reified ResourceModel> resource(name: String, init: ResourceInit<AuthContext, IdType, ResourceModel>.() -> Unit) {
-        val res = ResourceInit<AuthContext, IdType, ResourceModel>(name)
-        res.init()
-        this.resources[ResourceModel::class] = res
     }
-
 
 }
 
-typealias AuthContextCreator<AuthContext> = (AuthContextInput) -> AuthContext
+typealias AuthContextCreator<AuthContext> = AuthContextInput.() -> AuthContext
 
 data class AuthContextInput(
         val headers: Map<String, String>,

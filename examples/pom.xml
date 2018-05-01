@@ -29,6 +29,11 @@
                 <version>${parent.version}</version>
             </dependency>
             <dependency>
+                <groupId>edu.byu.uapidsl</groupId>
+                <artifactId>kotlin-uapi-types</artifactId>
+                <version>${parent.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>edu.byu.uapidsl.adapters</groupId>
                 <artifactId>kotlin-uapi-adapter-spark</artifactId>
                 <version>${parent.version}</version>
