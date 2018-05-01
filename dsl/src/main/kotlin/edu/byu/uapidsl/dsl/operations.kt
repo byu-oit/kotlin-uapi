@@ -1,6 +1,7 @@
 package edu.byu.uapidsl.dsl
 
-import edu.byu.uapidsl.UApiMarker
+import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.model.*
 import either.Either
 import either.Left
@@ -8,14 +9,16 @@ import either.Right
 import kotlin.reflect.KClass
 
 
-@UApiMarker
-class OperationsInit<AuthContext, IdType, ResourceType> {
+class OperationsInit<AuthContext, IdType, ResourceType>(
+  validation: ValidationContext
+): DSLInit(validation) {
 
   @PublishedApi
   internal var createModel: CreateOperation<AuthContext, IdType, *>? by setOnce()
 
   inline fun <reified CreateModel : Any> create(init: CreateInit<AuthContext, IdType, CreateModel>.() -> Unit) {
     val createInit = CreateInit<AuthContext, IdType, CreateModel>(
+      validation,
       CreateModel::class
     )
     createInit.init()
@@ -28,6 +31,7 @@ class OperationsInit<AuthContext, IdType, ResourceType> {
 
   inline fun <reified UpdateModel : Any> update(init: UpdateInit<AuthContext, IdType, ResourceType, UpdateModel>.() -> Unit) {
     val obj = UpdateInit<AuthContext, IdType, ResourceType, UpdateModel>(
+      validation,
       UpdateModel::class
     )
     obj.init()
@@ -36,34 +40,39 @@ class OperationsInit<AuthContext, IdType, ResourceType> {
 
   inline fun <reified InputModel : Any> createOrUpdate(init: CreateOrUpdateInit<AuthContext, IdType, ResourceType, InputModel>.() -> Unit) {
     val obj = CreateOrUpdateInit<AuthContext, IdType, ResourceType, InputModel>(
+      validation,
       InputModel::class
     )
     obj.init()
     this.updateModel = obj.toModel()
   }
 
-  var deleteModel: DeleteOperation<AuthContext, IdType, ResourceType>? by setOnce()
+  @PublishedApi
+  internal var deleteModel: DeleteOperation<AuthContext, IdType, ResourceType>? by setOnce()
 
   inline fun delete(init: DeleteInit<AuthContext, IdType, ResourceType>.() -> Unit) {
     //TODO: Error if already set
-    val obj = DeleteInit<AuthContext, IdType, ResourceType>()
+    val obj = DeleteInit<AuthContext, IdType, ResourceType>(validation)
     obj.init()
     this.deleteModel = obj.toModel()
   }
 
-  var readModel: ReadOperation<AuthContext, IdType, ResourceType> by setOnce()
+  @PublishedApi
+  internal var readModel: ReadOperation<AuthContext, IdType, ResourceType> by setOnce()
 
   inline fun read(init: ReadInit<AuthContext, IdType, ResourceType>.() -> Unit) {
     //TODO: Error if already set
-    val obj = ReadInit<AuthContext, IdType, ResourceType>()
+    val obj = ReadInit<AuthContext, IdType, ResourceType>(validation)
     obj.init()
     this.readModel = obj.toModel()
   }
 
-  var listModel: ListOperation<AuthContext, IdType, ResourceType, *>? by setOnce()
+  @PublishedApi
+  internal var listModel: ListOperation<AuthContext, IdType, ResourceType, *>? by setOnce()
 
   inline fun <reified FilterType: Any> listSimple(init: SimpleListInit<AuthContext, IdType, ResourceType, FilterType>.() -> Unit) {
     val obj = SimpleListInit<AuthContext, IdType, ResourceType, FilterType>(
+      validation,
       FilterType::class
     )
     obj.init()
@@ -74,6 +83,7 @@ class OperationsInit<AuthContext, IdType, ResourceType> {
     init: PagedCollectionInit<AuthContext, IdType, ResourceType, FilterType>.() -> Unit
   ) {
     val obj = PagedCollectionInit<AuthContext, IdType, ResourceType, FilterType>(
+      validation,
       FilterType::class
     )
     obj.init()
@@ -82,16 +92,17 @@ class OperationsInit<AuthContext, IdType, ResourceType> {
 
 }
 
-@UApiMarker
-class ReadInit<AuthContext, IdType, ResourceModel> {
+class ReadInit<AuthContext, IdType, ResourceModel>(
+  validation: ValidationContext
+): DSLInit(validation) {
 
-  lateinit var authorizer: ReadAuthorizer<AuthContext, IdType, ResourceModel>
+  private var authorizer: ReadAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
 
   fun authorization(auth: ReadAuthorizer<AuthContext, IdType, ResourceModel>) {
     this.authorizer = auth
   }
 
-  lateinit var handler: ReadHandler<AuthContext, IdType, ResourceModel>
+  private var handler: ReadHandler<AuthContext, IdType, ResourceModel> by setOnce()
 
   fun handle(handler: ReadHandler<AuthContext, IdType, ResourceModel>) {
     this.handler = handler
@@ -106,15 +117,15 @@ class ReadInit<AuthContext, IdType, ResourceModel> {
 
 }
 
-@UApiMarker
 class SimpleListInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
+  validation: ValidationContext,
   private val filterType: KClass<FilterType>
-) {
+): DSLInit(validation) {
 
-  private lateinit var handler: Either<
+  private var handler: Either<
     ListHandler<AuthContext, FilterType, IdType>,
     ListHandler<AuthContext, FilterType, ResourceModel>
-    >
+    > by setOnce()
 
   fun listIds(block: ListHandler<AuthContext, FilterType, IdType>) {
     handler = Left(block)
@@ -132,12 +143,12 @@ class SimpleListInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
   }
 }
 
-@UApiMarker
 class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType: Any>(
+  validation: ValidationContext,
   private val filterType: KClass<FilterType>
-) {
-  var defaultSize: Int = Int.MAX_VALUE
-  var maxSize: Int = Int.MAX_VALUE
+): DSLInit(validation) {
+  var defaultSize: Int by setOnce()
+  var maxSize: Int by setOnce()
 
   fun listIds(block: PagedListHandler<AuthContext, FilterType, IdType>) {
     this.handler = Left(block)
@@ -147,10 +158,10 @@ class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType: Any>(
     this.handler = Right(block)
   }
 
-  private lateinit var handler: Either<
+  private var handler: Either<
     PagedListHandler<AuthContext, FilterType, IdType>,
     PagedListHandler<AuthContext, FilterType, ResourceModel>
-    >
+    > by setOnce()
 
   fun toModel(): PagedListOperation<AuthContext, IdType, ResourceModel, FilterType> {
     return PagedListOperation(
@@ -178,18 +189,17 @@ interface PagedListContext<AuthContext, FilterType> {
 }
 
 
-@UApiMarker
 class CreateInit<AuthContext, IdType, CreateModel : Any>(
-  val input: KClass<CreateModel>
-) {
+  validation: ValidationContext,
+  private val input: KClass<CreateModel>
+): DSLInit(validation) {
 
-  lateinit var authorizationHandler: CreateAuthorizer<AuthContext, CreateModel>
+  private var authorizationHandler: CreateAuthorizer<AuthContext, CreateModel> by setOnce()
+  private var handler: CreateHandler<AuthContext, IdType, CreateModel> by setOnce()
 
   fun authorization(auth: CreateAuthorizer<AuthContext, CreateModel>) {
     authorizationHandler = auth
   }
-
-  lateinit var handler: CreateHandler<AuthContext, IdType, CreateModel>
 
   fun handle(handler: CreateHandler<AuthContext, IdType, CreateModel>) {
     this.handler = handler
@@ -202,17 +212,17 @@ class CreateInit<AuthContext, IdType, CreateModel : Any>(
   )
 }
 
-@UApiMarker
 class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
-  val input: KClass<InputModel>
-) {
+  validation: ValidationContext,
+  private val input: KClass<InputModel>
+): DSLInit(validation) {
 
-  lateinit var authorization: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>
+  private var authorization: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
+  private var handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
+
   fun authorization(auth: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>) {
     this.authorization = auth
   }
-
-  lateinit var handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel>
 
   fun handle(handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel>) {
     this.handler = handler
@@ -227,17 +237,17 @@ class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
   }
 }
 
-@UApiMarker
 class CreateOrUpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
-  val input: KClass<InputModel>
-) {
+  validation: ValidationContext,
+  private val input: KClass<InputModel>
+): DSLInit(validation) {
 
-  lateinit var authorization: CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>
+  private var authorization: CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
+  private var handler: CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
+
   fun authorization(auth: CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>) {
     this.authorization = auth
   }
-
-  lateinit var handler: CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel>
 
   fun handle(handler: CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel>) {
     this.handler = handler
@@ -252,16 +262,16 @@ class CreateOrUpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
   }
 }
 
-@UApiMarker
-class DeleteInit<AuthContext, IdType, ResourceModel> {
+class DeleteInit<AuthContext, IdType, ResourceModel>(
+  validation: ValidationContext
+): DSLInit(validation) {
 
-  lateinit var authorization: DeleteAuthorizer<AuthContext, IdType, ResourceModel>
+  private var authorization: DeleteAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
+  private var handler: DeleteHandler<AuthContext, IdType, ResourceModel> by setOnce()
 
   fun authorization(auth: DeleteAuthorizer<AuthContext, IdType, ResourceModel>) {
     this.authorization = auth
   }
-
-  lateinit var handler: DeleteHandler<AuthContext, IdType, ResourceModel>
 
   fun handle(handler: DeleteHandler<AuthContext, IdType, ResourceModel>) {
     this.handler = handler
@@ -313,7 +323,6 @@ interface CreateContext<AuthContext, CreateModel> {
   val input: CreateModel
 }
 
-@UApiMarker
 interface ReadLoadContext<AuthContext, IdType> {
   val authContext: AuthContext
   val id: IdType

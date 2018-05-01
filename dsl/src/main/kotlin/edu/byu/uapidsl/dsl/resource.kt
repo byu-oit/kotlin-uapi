@@ -1,28 +1,29 @@
 package edu.byu.uapidsl.dsl
 
-import edu.byu.uapidsl.UApiMarker
+import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.model.Introspectable
 import edu.byu.uapidsl.model.ResourceModel
 import kotlin.reflect.KClass
 
-@UApiMarker
-class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
+class ResourceInit<AuthContext, IdType : Any, DomainType : Any> (
+  validation: ValidationContext,
   private val name: String,
   private val idType: KClass<IdType>,
   private val modelType: KClass<DomainType>
-) {
+): DSLInit(validation) {
 
   private var operationsInit: OperationsInit<AuthContext, IdType, DomainType> by setOnce()
   private var modelInit: ModelInit<AuthContext, IdType, DomainType> by setOnce()
 
   fun operations(init: OperationsInit<AuthContext, IdType, DomainType>.() -> Unit) {
-    val operations = OperationsInit<AuthContext, IdType, DomainType>()
+    val operations = OperationsInit<AuthContext, IdType, DomainType>(validation)
     operations.init()
     this.operationsInit = operations
   }
 
   fun model(init: ModelInit<AuthContext, IdType, DomainType>.() -> Unit) {
-    val model = ModelInit<AuthContext, IdType, DomainType>()
+    val model = ModelInit<AuthContext, IdType, DomainType>(validation)
     model.init()
     this.modelInit = model
   }

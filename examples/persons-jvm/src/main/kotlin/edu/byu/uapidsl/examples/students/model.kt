@@ -29,10 +29,6 @@ val personsModel = apiModel<Authorizer> {
         listIds {
           queryPeople(filters, paging, authContext.canSeeRestrictedRecords())
         }
-
-        listObjects {
-          TODO()
-        }
       }
 
       create<CreatePerson> {

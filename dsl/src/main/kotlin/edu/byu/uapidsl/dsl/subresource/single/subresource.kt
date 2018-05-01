@@ -1,12 +1,13 @@
 package edu.byu.uapidsl.dsl.subresource.single
 
-import edu.byu.uapidsl.UApiMarker
+import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ValidationContext
 
 
-@UApiMarker
 class SingleSubResourceInit<AuthContext, ParentId, ParentModel, SingleSubResourceModel>(
-        val name: String
-) {
+    validation: ValidationContext,
+    val name: String
+) : DSLInit(validation) {
 
     inline fun operations(init: SingleSubOperationsInit<AuthContext, ParentId, ParentModel, SingleSubResourceModel>.() -> Unit) {
 
@@ -23,7 +24,7 @@ class SingleSubResourceInit<AuthContext, ParentId, ParentModel, SingleSubResourc
 }
 
 typealias SingleSubAuthorizationHandler<AuthContext, ParentId, ParentModel> =
-        SingleSubAuthorizationContext<AuthContext, ParentId, ParentModel>.() -> Boolean
+    SingleSubAuthorizationContext<AuthContext, ParentId, ParentModel>.() -> Boolean
 
 interface SingleSubAuthorizationContext<AuthContext, ParentId, ParentModel> {
     val authContext: AuthContext

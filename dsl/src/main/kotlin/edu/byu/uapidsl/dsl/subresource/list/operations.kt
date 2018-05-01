@@ -2,13 +2,14 @@
 
 package edu.byu.uapidsl.dsl.subresource.list
 
+import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.PagingParams
 import edu.byu.uapidsl.dsl.CollectionWithTotal
-import edu.byu.uapidsl.UApiMarker
 
-
-@UApiMarker
-class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
+class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   inline fun <reified CreateModel> create(init: SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>.() -> Unit) {
 
   }
@@ -43,8 +44,9 @@ class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
 
 }
 
-@UApiMarker
-class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
+class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(auth: SubReadAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 
   }
@@ -55,8 +57,9 @@ class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
 
 }
 
-@UApiMarker
-class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType> {
+class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
+    validation: ValidationContext
+): DSLInit(validation) {
   var defaultSize: Int = Int.MAX_VALUE
   var maxSize: Int = Int.MAX_VALUE
 
@@ -69,8 +72,9 @@ class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel
   }
 }
 
-@UApiMarker
-class SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, FilterType, SubId, SubModel> {
+class SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, FilterType, SubId, SubModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
 
   fun listIds(handler: SubListHandler<AuthContext, ParentId, ParentModel, FilterType, SubId>) {
 
@@ -96,9 +100,9 @@ interface SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType> {
   val paging: PagingParams
 }
 
-
-@UApiMarker
-class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel> {
+class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(auth: SubCreateAuthorizer<AuthContext, ParentId, ParentModel, CreateModel>) {
 
   }
@@ -108,8 +112,9 @@ class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel> {
   }
 }
 
-@UApiMarker
-class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel> {
+class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(auth: SubUpdateAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>) {
 
   }
@@ -119,8 +124,9 @@ class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateM
   }
 }
 
-@UApiMarker
-class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel> {
+class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(auth: SubCreateOrUpdateAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>) {
 
   }
@@ -130,8 +136,9 @@ class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel,
   }
 }
 
-@UApiMarker
-class SubDeleteInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
+class SubDeleteInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(auth: SubDeleteAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 
   }

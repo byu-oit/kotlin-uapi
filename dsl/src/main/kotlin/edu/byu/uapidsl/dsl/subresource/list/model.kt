@@ -1,10 +1,12 @@
 package edu.byu.uapidsl.dsl.subresource.list
 
-import edu.byu.uapidsl.UApiMarker
+import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ValidationContext
 
 
-@UApiMarker
-class SubModelInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
+class SubModelInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
 
   fun <UAPIType> transform(handler: SubTransformer<AuthContext, ParentId, ParentModel, SubId, SubModel, UAPIType>) {
 
@@ -25,8 +27,9 @@ class SubModelInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
 
 }
 
-@UApiMarker
-class SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel> {
+class SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(authorizer: SubRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>) {
 
   }
@@ -36,8 +39,9 @@ class SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, Relat
   }
 }
 
-@UApiMarker
-class SubExternalRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel> {
+class SubExternalRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+    validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(authorizer: SubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 
   }

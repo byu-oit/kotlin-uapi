@@ -1,6 +1,7 @@
 package edu.byu.uapidsl.dsl
 
-import edu.byu.uapidsl.UApiMarker
+import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.subresource.list.SubResourceInit
 import edu.byu.uapidsl.dsl.subresource.single.SingleSubResourceInit
 import edu.byu.uapidsl.model.Introspectable
@@ -53,12 +54,13 @@ fun <Type> uapiKey(
   displayLabel = displayLabel
 )
 
-@UApiMarker
-class ModelInit<AuthContext, IdType, ResourceModel: Any> {
+class ModelInit<AuthContext, IdType, ResourceModel: Any>(
+  validation: ValidationContext
+) : DSLInit(validation) {
 
-  lateinit var example: ResourceModel
+  var example: ResourceModel by setOnce()
 
-  lateinit var transformModel: TransformModel<AuthContext, IdType, ResourceModel, *>
+  var transformModel: TransformModel<AuthContext, IdType, ResourceModel, *> by setOnce()
 
   inline fun <reified UAPIType: Any> transform(noinline block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
     this.transformModel = TransformModel(
@@ -96,8 +98,9 @@ class ModelInit<AuthContext, IdType, ResourceModel: Any> {
 
 }
 
-@UApiMarker
-class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel> {
+class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>(
+  validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(authorizer: RelationAuthorizer<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>) {
 
   }
@@ -107,8 +110,9 @@ class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel> 
   }
 }
 
-@UApiMarker
-class ExternalRelationInit<AuthContext, IdType, ResourceModel> {
+class ExternalRelationInit<AuthContext, IdType, ResourceModel>(
+  validation: ValidationContext
+): DSLInit(validation) {
   fun authorization(authorizer: ExternalRelationAuthorizer<AuthContext, IdType, ResourceModel>) {
 
   }

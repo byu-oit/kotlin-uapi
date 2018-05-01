@@ -1,32 +1,34 @@
 package edu.byu.uapidsl.dsl.subresource.single
 
-import edu.byu.uapidsl.UApiMarker
+import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ValidationContext
 
-
-@UApiMarker
-class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel> {
+class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
+    validation: ValidationContext
+) : DSLInit(validation) {
 
     fun <UAPIType> transform(handler: SingleSubTransformer<AuthContext, ParentId, ParentModel, SingleSubModel, UAPIType>) {
 
     }
 
     inline fun <RelatedId, reified RelatedModel> relation(
-            name: String,
-            init: SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>.() -> Unit
-            ) {
+        name: String,
+        init: SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>.() -> Unit
+    ) {
     }
 
     inline fun externalRelation(
-            name: String,
-            init: SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit
+        name: String,
+        init: SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit
     ) {
 
     }
 
 }
 
-@UApiMarker
-class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel> {
+class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>(
+    validation: ValidationContext
+) : DSLInit(validation) {
     fun authorization(authorizer: SingleSubRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>) {
 
     }
@@ -36,8 +38,9 @@ class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, 
     }
 }
 
-@UApiMarker
-class SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel> {
+class SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
+    validation: ValidationContext
+) : DSLInit(validation) {
     fun authorization(authorizer: SingleSubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel>) {
 
     }
@@ -78,17 +81,17 @@ interface SingleSubCustomizeFieldsContext<AuthContext, ParentId, ParentModel, Si
 }
 
 typealias SingleSubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel> =
-        SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Boolean
+    SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Boolean
 
 typealias SingleSubExternalRelationHandler<AuthContext, ParentId, ParentModel, SingleSubModel> =
-        SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> String?
+    SingleSubExternalRelationContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> String?
 
 typealias SingleSubRelationHandler<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId> =
-  SingleSubRelationLoadingContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> RelatedId?
+    SingleSubRelationLoadingContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> RelatedId?
 
 typealias SingleSubRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel> =
-  SingleSubRelationAuthorizationContext<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>.() -> Boolean
+    SingleSubRelationAuthorizationContext<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>.() -> Boolean
 
 typealias SingleSubTransformer<AuthContext, ParentId, ParentModel, SingleSubModel, UAPIType> =
-        SingleSubCustomizeFieldsContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> UAPIType
+    SingleSubCustomizeFieldsContext<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> UAPIType
 
