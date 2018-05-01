@@ -5,7 +5,7 @@ import edu.byu.uapidsl.types.LinkMethod
 import kotlin.reflect.KClass
 
 internal val linkSerializers = mapOf<KClass<*>, JsonSerializer<*>>(
-  LinkMethod::class to LinkMethodSerializer
+    LinkMethod::class to LinkMethodSerializer
 )
 
 internal object LinkMethodSerializer : ApiEnumSerializer<LinkMethod>(LinkMethod::class)

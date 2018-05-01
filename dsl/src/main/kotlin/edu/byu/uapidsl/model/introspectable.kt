@@ -6,13 +6,13 @@ import kotlin.reflect.full.memberProperties
 
 
 data class Introspectable<Type : Any>(
-  val type: KClass<Type>
+    val type: KClass<Type>
 ) {
-  val props by lazy(type::memberProperties)
+    val props by lazy(type::memberProperties)
 
-  val uapiPropNames: Collection<String> by lazy {
-    this.props.map { it.name }
-      .map { CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, it) }
-  }
+    val uapiPropNames: Collection<String> by lazy {
+        this.props.map { it.name }
+            .map { CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, it) }
+    }
 }
 

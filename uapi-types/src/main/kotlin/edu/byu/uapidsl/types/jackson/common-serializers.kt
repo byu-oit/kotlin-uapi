@@ -7,13 +7,13 @@ import edu.byu.uapidsl.types.ApiEnum
 import kotlin.reflect.KClass
 
 internal inline infix fun <T> T?.maybe(block: (T) -> Unit) {
-  if (this != null) {
-    block(this)
-  }
+    if (this != null) {
+        block(this)
+    }
 }
 
 open class ApiEnumSerializer<E : ApiEnum>(type: KClass<E>) : StdSerializer<E>(type.java) {
-  override fun serialize(value: E, gen: JsonGenerator, serializers: SerializerProvider) {
-    gen.writeString(value.serialized)
-  }
+    override fun serialize(value: E, gen: JsonGenerator, serializers: SerializerProvider) {
+        gen.writeString(value.serialized)
+    }
 }

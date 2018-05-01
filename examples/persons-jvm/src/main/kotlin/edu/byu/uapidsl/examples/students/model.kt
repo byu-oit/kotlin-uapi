@@ -2,139 +2,141 @@ package edu.byu.uapidsl.examples.students
 
 import edu.byu.uapidsl.apiModel
 import edu.byu.uapidsl.dsl.uapiProp
-import edu.byu.uapidsl.examples.students.app.*
+import edu.byu.uapidsl.examples.students.app.createPerson
+import edu.byu.uapidsl.examples.students.app.getPersonAddress
+import edu.byu.uapidsl.examples.students.app.loadPerson
+import edu.byu.uapidsl.examples.students.app.queryPeople
 import edu.byu.uapidsl.examples.students.authorization.Authorizer
 import edu.byu.uapidsl.examples.students.dto.*
 import edu.byu.uapidsl.types.ApiType
 
 val personsModel = apiModel<Authorizer> {
 
-  authContext {
-    Authorizer(jwt)
-  }
-
-  resource<String, PersonDTO>("persons") {
-
-    operations {
-      read {
-        authorization { authContext.canSeePerson(id) }
-        handle {
-          loadPerson(id, authContext.canSeeRestrictedRecords())
-        }
-      }
-
-      listPaged<PersonListFilters> {
-        defaultSize = 50
-        maxSize = 200
-        listIds {
-          queryPeople(filters, paging, authContext.canSeeRestrictedRecords())
-        }
-      }
-
-      create<CreatePerson> {
-        authorization { authContext.canCreatePerson() }
-        handle {
-          createPerson(input, authContext.byuId)
-        }
-      }
-
-      update<UpdatePerson> {
-        authorization { authContext.canModifyPerson(id) }
-        handle {
-          TODO()
-        }
-
-      }
-
-      delete {
-        authorization { authContext.canDeletePerson(resource.personId) }
-        handle {
-          TODO()
-        }
-      }
-
+    authContext {
+        Authorizer(jwt)
     }
 
-    model {
-
-      example = PersonDTO()
-
-      transform<UAPIPerson> {
-        UAPIPerson(resource, authContext)
-      }
-
-      collectionSubresource<AddressType, PersonAddressDTO>("addresses") {
-
+    resource<String, PersonDTO>("persons") {
         operations {
-          listSimple<Unit> {
-            listIds {
-              TODO()
+            read {
+                authorization { authContext.canSeePerson(id) }
+                handle {
+                    loadPerson(id, authContext.canSeeRestrictedRecords())
+                }
             }
-          }
-          read {
-            handle {
-              getPersonAddress(parentId, id)
+
+            listPaged<PersonListFilters> {
+                defaultSize = 50
+                maxSize = 200
+                listIds {
+                    queryPeople(filters, paging, authContext.canSeeRestrictedRecords())
+                }
             }
-          }
-          createOrUpdate<Any> {
-            authorization { true }
-            handle {
+
+            create<CreatePerson> {
+                authorization { authContext.canCreatePerson() }
+                handle {
+                    createPerson(input, authContext.byuId)
+                }
             }
-          }
+
+            update<UpdatePerson> {
+                authorization { authContext.canModifyPerson(id) }
+                handle {
+                    TODO()
+                }
+
+            }
+
+            delete {
+                authorization { authContext.canDeletePerson(resource.personId) }
+                handle {
+                    TODO()
+                }
+            }
+
         }
 
         model {
-        }
-      }
 
-      collectionSubresource<PersonCredentialId, PersonCredentialDTO>("credentials") {
-        authorization { authContext.canSeeCredentialsFor(parentId) }
+            example = PersonDTO()
 
-        operations {
-          listPaged<Unit> {
-            maxSize = 20
-            defaultSize = 20
-
-            listObjects {
-              TODO("Not Implemented")
+            transform<UAPIPerson> {
+                UAPIPerson(resource, authContext)
             }
-          }
-          read {
-            handle {
-              TODO()
+
+            collectionSubresource<AddressType, PersonAddressDTO>("addresses") {
+
+                operations {
+                    listSimple<Unit> {
+                        listIds {
+                            TODO()
+                        }
+                    }
+                    read {
+                        handle {
+                            getPersonAddress(parentId, id)
+                        }
+                    }
+                    createOrUpdate<Any> {
+                        authorization { true }
+                        handle {
+                        }
+                    }
+                }
+
+                model {
+                }
             }
-          }
 
-        }
-      }
+            collectionSubresource<PersonCredentialId, PersonCredentialDTO>("credentials") {
+                authorization { authContext.canSeeCredentialsFor(parentId) }
 
-      collectionSubresource<EmailType, PersonEmailDTO>("email_addresses") {
-        operations {
-          read {
-            handle {
-              TODO()
+                operations {
+                    listPaged<Unit> {
+                        maxSize = 20
+                        defaultSize = 20
+
+                        listObjects {
+                            TODO("Not Implemented")
+                        }
+                    }
+                    read {
+                        handle {
+                            TODO()
+                        }
+                    }
+
+                }
             }
-          }
 
-          listSimple<Unit> {
-            listIds { TODO() }
-          }
-        }
-      }
+            collectionSubresource<EmailType, PersonEmailDTO>("email_addresses") {
+                operations {
+                    read {
+                        handle {
+                            TODO()
+                        }
+                    }
 
-      singleSubresource<EmployeeSummary>("employee_summaries") {
-        operations {
-          read {
-            authorization { authContext.canSeeEmployeeInfo(parentId) }
-
-            handle {
-              TODO()
+                    listSimple<Unit> {
+                        listIds { TODO() }
+                    }
+                }
             }
-          }
+
+            singleSubresource<EmployeeSummary>("employee_summaries") {
+                operations {
+                    read {
+                        authorization { authContext.canSeeEmployeeInfo(parentId) }
+
+                        handle {
+                            TODO()
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
 
 //  domain<StateCode> {
 //    list {
@@ -149,16 +151,16 @@ val personsModel = apiModel<Authorizer> {
 }
 
 class UAPIPerson(person: PersonDTO, authContext: Authorizer) {
-  val byuId = uapiProp(
-    value = person.byuId,
-    apiType = byuIdApiType(person.byuId, authContext)
-  )
+    val byuId = uapiProp(
+        value = person.byuId,
+        apiType = byuIdApiType(person.byuId, authContext)
+    )
 
 }
 
 fun byuIdApiType(value: String, authContext: Authorizer) =
-  if(authContext.canModifyPerson(value)) ApiType.MODIFIABLE
-  else ApiType.READ_ONLY
+    if (authContext.canModifyPerson(value)) ApiType.MODIFIABLE
+    else ApiType.READ_ONLY
 
 
 

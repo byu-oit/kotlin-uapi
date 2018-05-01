@@ -39,10 +39,10 @@ package edu.byu.uapidsl.dsl
 //)
 
 data class CollectionWithTotal<IdType>(
-        val totalItems: Int,
-        val ids: Collection<IdType>
+    val totalItems: Int,
+    val ids: Collection<IdType>
 )
 
 data class PagingParams(
-        val pageStart: Int
+    val pageStart: Int
 )
