@@ -3,6 +3,8 @@ package edu.byu.uapidsl.dsl
 import edu.byu.uapidsl.UApiMarker
 import edu.byu.uapidsl.dsl.subresource.list.SubResourceInit
 import edu.byu.uapidsl.dsl.subresource.single.SingleSubResourceInit
+import edu.byu.uapidsl.model.Introspectable
+import edu.byu.uapidsl.model.TransformModel
 import edu.byu.uapidsl.types.ApiType
 import edu.byu.uapidsl.types.UAPIField
 import java.net.URI
@@ -52,26 +54,31 @@ fun <Type> uapiKey(
 )
 
 @UApiMarker
-class ModelInit<AuthContext, IdType, ResourceModel> {
+class ModelInit<AuthContext, IdType, ResourceModel: Any> {
 
-  var example: ResourceModel? = null
+  lateinit var example: ResourceModel
 
-  fun <UAPIType> transform(block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
+  lateinit var transformModel: TransformModel<AuthContext, IdType, ResourceModel, *>
 
+  inline fun <reified UAPIType: Any> transform(noinline block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
+    this.transformModel = TransformModel(
+      type = Introspectable(UAPIType::class),
+      handle = block
+    )
   }
 
-  inline fun <RelatedId, reified RelatedModel> relation(
-    name: String,
-    init: RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>.() -> Unit
-  ) {
-  }
-
-  inline fun externalRelation(
-    name: String,
-    init: ExternalRelationInit<AuthContext, IdType, ResourceModel>.() -> Unit
-  ) {
-
-  }
+//  inline fun <RelatedId, reified RelatedModel> relation(
+//    name: String,
+//    init: RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>.() -> Unit
+//  ) {
+//  }
+//
+//  inline fun externalRelation(
+//    name: String,
+//    init: ExternalRelationInit<AuthContext, IdType, ResourceModel>.() -> Unit
+//  ) {
+//
+//  }
 
   inline fun <reified SubResourceId, reified SubResourceModel> collectionSubresource(
     name: String,

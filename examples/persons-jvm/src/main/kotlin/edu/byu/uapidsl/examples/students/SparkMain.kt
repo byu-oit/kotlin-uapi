@@ -4,4 +4,5 @@ import edu.byu.uapidsl.adapters.spark.igniteSpark
 
 fun main(args: Array<String>) {
   personsModel.igniteSpark(8080)
+  println(personsModel)
 }

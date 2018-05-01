@@ -21,7 +21,9 @@ object UAPIFieldSerializer : StdSerializer<UAPIField<*>>(UAPIField::class.java) 
     uapiField.apply {
       serializers.defaultSerializeField("value", value, gen)
       serializers.defaultSerializeField("api_type", apiType, gen)
-      key maybe { gen.writeBooleanField("key", true) }
+      if (key) {
+        gen.writeBooleanField("key", true)
+      }
       description maybe { gen.writeStringField("description", it)}
       longDescription maybe { gen.writeStringField("long_description", it)}
       displayLabel maybe { gen.writeStringField("display_label", it) }

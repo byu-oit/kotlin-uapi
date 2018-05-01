@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import edu.byu.uapidsl.types.ApiEnum
 import kotlin.reflect.KClass
 
-internal infix fun <T> T?.maybe(block: (T) -> Unit) {
+internal inline infix fun <T> T?.maybe(block: (T) -> Unit) {
   if (this != null) {
     block(this)
   }

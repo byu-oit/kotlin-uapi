@@ -80,6 +80,11 @@ val personsModel = apiModel<Authorizer> {
               getPersonAddress(parentId, id)
             }
           }
+          createOrUpdate<Any> {
+            authorization { true }
+            handle {
+            }
+          }
         }
 
         model {
