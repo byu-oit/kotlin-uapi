@@ -2,8 +2,10 @@ package edu.byu.uapidsl.dsl
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ValidationContext
+import edu.byu.uapidsl.dsl.subresource.SubresourcesInit
 import edu.byu.uapidsl.model.Introspectable
 import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.SubResourceModel
 import kotlin.reflect.KClass
 
 class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
@@ -14,7 +16,9 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
 ) : DSLInit(validation) {
 
     private var operationsInit: OperationsInit<AuthContext, IdType, DomainType> by setOnce()
-    private var modelInit: ModelInit<AuthContext, IdType, DomainType> by setOnce()
+    @PublishedApi
+    internal var outputInit: OutputInit<AuthContext, IdType, DomainType, *> by setOnce()
+//    private var subresourcesInit: SubresourcesModel<AuthContext, IdType, DomainType> by setOnce()
 
     fun operations(init: OperationsInit<AuthContext, IdType, DomainType>.() -> Unit) {
         val operations = OperationsInit<AuthContext, IdType, DomainType>(validation)
@@ -22,15 +26,18 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
         this.operationsInit = operations
     }
 
-    fun model(init: ModelInit<AuthContext, IdType, DomainType>.() -> Unit) {
-        val model = ModelInit<AuthContext, IdType, DomainType>(validation)
+    inline fun <reified UAPIType: Any> output(init: OutputInit<AuthContext, IdType, DomainType, UAPIType>.() -> Unit) {
+        val model = OutputInit<AuthContext, IdType, DomainType, UAPIType>(validation, Introspectable(UAPIType::class))
         model.init()
-        this.modelInit = model
+        this.outputInit = model
+    }
+
+    inline fun subresources(init: SubresourcesInit<AuthContext, IdType, DomainType>.() -> Unit) {
+        //TODO
     }
 
     fun toResourceModel(): ResourceModel<AuthContext, IdType, DomainType> {
         val ops = this.operationsInit
-        val model = this.modelInit
         return ResourceModel(
             type = Introspectable(modelType),
             idType = Introspectable(idType),
@@ -40,8 +47,7 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
             create = ops.createModel,
             update = ops.updateModel,
             delete = ops.deleteModel,
-            example = model.example,
-            transform = model.transformModel
+            output = this.outputInit.toModel()
         )
     }
 

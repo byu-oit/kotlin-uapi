@@ -1,6 +1,7 @@
 package edu.byu.uapidsl.examples.students
 
 import edu.byu.uapidsl.apiModel
+import edu.byu.uapidsl.dsl.uapiKey
 import edu.byu.uapidsl.dsl.uapiProp
 import edu.byu.uapidsl.examples.students.app.createPerson
 import edu.byu.uapidsl.examples.students.app.getPersonAddress
@@ -57,20 +58,24 @@ val personsModel = apiModel<Authorizer> {
 
         }
 
-        model {
+        output<UAPIPerson> {
 
-            example = PersonDTO()
+            example = UAPIPerson("pid", "byuId", "name")
 
-            transform<UAPIPerson> {
-                UAPIPerson(resource, authContext)
+            transform {
+                UAPIPerson(resource)
             }
 
-            collectionSubresource<AddressType, PersonAddressDTO>("addresses") {
+        }
+
+        subresources {
+
+            collection<AddressType, PersonAddressDTO>("addresses") {
 
                 operations {
                     listSimple<Unit> {
                         listIds {
-                            TODO()
+                            AddressType.values().toList()
                         }
                     }
                     read {
@@ -89,7 +94,7 @@ val personsModel = apiModel<Authorizer> {
                 }
             }
 
-            collectionSubresource<PersonCredentialId, PersonCredentialDTO>("credentials") {
+            collection<PersonCredentialId, PersonCredentialDTO>("credentials") {
                 authorization { authContext.canSeeCredentialsFor(parentId) }
 
                 operations {
@@ -110,7 +115,7 @@ val personsModel = apiModel<Authorizer> {
                 }
             }
 
-            collectionSubresource<EmailType, PersonEmailDTO>("email_addresses") {
+            collection<EmailType, PersonEmailDTO>("email_addresses") {
                 operations {
                     read {
                         handle {
@@ -124,7 +129,7 @@ val personsModel = apiModel<Authorizer> {
                 }
             }
 
-            singleSubresource<EmployeeSummary>("employee_summaries") {
+            single<EmployeeSummary>("employee_summaries") {
                 operations {
                     read {
                         authorization { authContext.canSeeEmployeeInfo(parentId) }
@@ -136,6 +141,7 @@ val personsModel = apiModel<Authorizer> {
                 }
             }
         }
+
     }
 
 //  domain<StateCode> {
@@ -150,17 +156,23 @@ val personsModel = apiModel<Authorizer> {
 
 }
 
-class UAPIPerson(person: PersonDTO, authContext: Authorizer) {
-    val byuId = uapiProp(
-        value = person.byuId,
-        apiType = byuIdApiType(person.byuId, authContext)
+class UAPIPerson(personId: String, byuId: String, name: String) {
+
+    constructor(dto: PersonDTO): this("pid", dto.byuId, "name")
+
+    val personId = uapiProp(
+        value = personId,
+        apiType = ApiType.SYSTEM
+    )
+
+    val byuId = uapiKey(
+        value = byuId,
+        apiType = ApiType.SYSTEM
+    )
+
+    val name = uapiProp(
+        value = name
     )
 
 }
-
-fun byuIdApiType(value: String, authContext: Authorizer) =
-    if (authContext.canModifyPerson(value)) ApiType.MODIFIABLE
-    else ApiType.READ_ONLY
-
-
 

@@ -72,7 +72,7 @@ class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel
     }
 }
 
-class SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, FilterType, SubId, SubModel>(
+class SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
     validation: ValidationContext
 ) : DSLInit(validation) {
 
@@ -157,7 +157,7 @@ interface SubCreateContext<AuthContext, ParentId, ParentModel, CreateModel> {
 
 interface SubReadLoadContext<AuthContext, ParentId, ParentModel, SubId> {
     val authContext: AuthContext
-    val parentId: ParentId;
+    val parentId: ParentId
     val parent: ParentModel
     val id: SubId
 }

@@ -5,7 +5,7 @@ import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.subresource.list.SubResourceInit
 import edu.byu.uapidsl.dsl.subresource.single.SingleSubResourceInit
 import edu.byu.uapidsl.model.Introspectable
-import edu.byu.uapidsl.model.TransformModel
+import edu.byu.uapidsl.model.OutputModel
 import edu.byu.uapidsl.types.ApiType
 import edu.byu.uapidsl.types.UAPIField
 import java.net.URI
@@ -54,19 +54,17 @@ fun <Type> uapiKey(
     displayLabel = displayLabel
 )
 
-class ModelInit<AuthContext, IdType, ResourceModel : Any>(
-    validation: ValidationContext
+class OutputInit<AuthContext, IdType, ResourceModel : Any, UAPIType: Any>(
+    validation: ValidationContext,
+    private val type: Introspectable<UAPIType>
 ) : DSLInit(validation) {
 
-    var example: ResourceModel by setOnce()
+    var example: UAPIType by setOnce()
 
-    var transformModel: TransformModel<AuthContext, IdType, ResourceModel, *> by setOnce()
+    var transformModel: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType> by setOnce()
 
-    inline fun <reified UAPIType : Any> transform(noinline block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
-        this.transformModel = TransformModel(
-            type = Introspectable(UAPIType::class),
-            handle = block
-        )
+    fun transform(block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
+        this.transformModel = block
     }
 
 //  inline fun <RelatedId, reified RelatedModel> relation(
@@ -82,18 +80,12 @@ class ModelInit<AuthContext, IdType, ResourceModel : Any>(
 //
 //  }
 
-    inline fun <reified SubResourceId, reified SubResourceModel> collectionSubresource(
-        name: String,
-        init: SubResourceInit<AuthContext, IdType, ResourceModel, SubResourceId, SubResourceModel>.() -> Unit
-    ) {
-
-    }
-
-    inline fun <reified SubResourceModel> singleSubresource(
-        name: String,
-        init: SingleSubResourceInit<AuthContext, IdType, ResourceModel, SubResourceModel>.() -> Unit
-    ) {
-
+    fun toModel(): OutputModel<AuthContext, IdType, ResourceModel, UAPIType> {
+        return OutputModel(
+            type = this.type,
+            example = this.example,
+            handle = this.transformModel
+        )
     }
 
 }

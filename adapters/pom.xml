@@ -17,6 +17,7 @@
     </parent>
 
     <modules>
+        <module>openapi3</module>
         <module>spark</module>
     </modules>
 

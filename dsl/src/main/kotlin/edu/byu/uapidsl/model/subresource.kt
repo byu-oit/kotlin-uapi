@@ -10,9 +10,9 @@ data class SubResourceModel<AuthContext : Any, SubId : Any, SubModel : Any>(
     val list: ListOperation<AuthContext, SubId, SubModel, Any>?,
     val create: CreateOperation<AuthContext, SubId, Any>?,
     val update: UpdateOperation<AuthContext, SubId, SubModel, Any>?,
-    val delete: DeleteOperation<AuthContext, SubId, SubModel>?,
-    val example: SubModel,
-    val transform: TransformModel<AuthContext, SubId, SubModel, Any>
+    val delete: DeleteOperation<AuthContext, SubId, SubModel>?
+//    val example: SubModel,
+//    val transform: TransformModel<AuthContext, SubId, SubModel, Any>
 ) {
     init {
 

@@ -12,8 +12,7 @@ data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
     val create: CreateOperation<AuthContext, IdType, *>?,
     val update: UpdateOperation<AuthContext, IdType, ResourceType, *>?,
     val delete: DeleteOperation<AuthContext, IdType, ResourceType>?,
-    val example: ResourceType,
-    val transform: TransformModel<AuthContext, IdType, ResourceType, *>//,
+    val output: OutputModel<AuthContext, IdType, ResourceType, *>//,
 //  val subresources: List<SubResourceModel<AuthContext, IdType, ResourceType, Any>>
 ) {
     init {
@@ -21,8 +20,9 @@ data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
     }
 }
 
-data class TransformModel<AuthContext, IdType, DomainType, OutputType : Any>(
+data class OutputModel<AuthContext, IdType, DomainType, OutputType : Any>(
     val type: Introspectable<OutputType>,
+    val example: OutputType,
     val handle: TransformModelHandler<AuthContext, IdType, DomainType, OutputType>
 )
 
