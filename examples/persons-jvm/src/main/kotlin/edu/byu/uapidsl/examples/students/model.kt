@@ -141,6 +141,9 @@ val personsModel = apiModel<Authorizer> {
                 }
             }
         }
+    }
+
+    extend {
 
     }
 

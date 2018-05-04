@@ -37,6 +37,10 @@ class ApiModelInit<AuthContext: Any> : DSLInit(ValidationContext()) {
         resources.add(res.toResourceModel())
     }
 
+    inline fun extend(block: ExtendInit.() -> Unit) {
+
+    }
+
     fun toModel(): UApiModel<AuthContext> {
         return UApiModel(
             info = apiInfoInit.toModel(),
@@ -61,6 +65,14 @@ class ApiInfoInit(
             version = version
         )
     }
+}
+
+class ExtendInit {
+//    fun scalar() {
+//    }
+
+//    fun module() {
+//    }
 }
 
 typealias AuthContextCreator<AuthContext> = AuthContextInput.() -> AuthContext

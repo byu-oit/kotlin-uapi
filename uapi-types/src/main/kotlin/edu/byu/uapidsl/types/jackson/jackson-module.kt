@@ -16,7 +16,7 @@ class JacksonUAPITypesModule : Module() {
 }
 
 internal val allSerializers =
-    fieldSerializers + linkSerializers
+    fieldSerializers + linkSerializers + scalarSerializers
 
 class JacksonUAPISerializers(
     private val serializers: Map<KClass<*>, JsonSerializer<*>>
