@@ -57,3 +57,16 @@ Various examples of using the DSL. All examples are self-contained and operate o
 
 A JVM-based subset of the official Persons V2 BYUAPI.
 
+# Development
+
+## Important Concepts For Developers
+
+### API Model
+
+The API model is the output of the DSL. It contains a data structure representing all of the resources, subresources, relationships, etc., including type mappings, field names and types, etc.  It is a complete specification of the API, and contains all information needed to implement or consume the API.
+
+### UAPIScalar
+
+Subclasses of the sealed class UAPIScalar represent the different datatypes that are natively understood by the UAPI.  These are the basic JSON types, plus types which are serialized to a string, but are governed by a non-JSON specification. For example, a date/time is serialized as a string, but the format of that string is governed by [RFC 3339](https://tools.ietf.org/html/rfc3339), so there is a UAPIDateTime scalar class which understands this serialization.
+
+All data types that are serialized to and from our UAPI implementations must be converted to/from one of these scalar types. The datatypes module contains JSON serialization/deserialization providers for all of the scalar types.
