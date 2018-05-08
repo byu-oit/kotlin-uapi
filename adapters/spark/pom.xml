@@ -16,8 +16,8 @@
     </parent>
 
     <properties>
+        <spark.version>2.7.2</spark.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <byu-jwt.version>2.0.0</byu-jwt.version>
     </properties>
 
     <dependencies>
@@ -28,6 +28,11 @@
         <dependency>
             <groupId>edu.byu.uapidsl</groupId>
             <artifactId>kotlin-uapi-dsl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <version>${spark.version}</version>
         </dependency>
     </dependencies>
 

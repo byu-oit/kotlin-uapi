@@ -1,67 +1,79 @@
 package edu.byu.uapidsl.converters
 
+import edu.byu.uapidsl.types.*
 import java.math.BigDecimal
-import java.math.BigInteger
-import java.net.URI
-import java.net.URL
-import java.time.Instant
-import java.util.*
+import java.time.OffsetDateTime
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 
-class ScalarConverters {
-
+interface ScalarSerializerRegistry {
+    fun <Type : Any> deserializerFor(type: KType): ScalarDeserializer<Type, *>
+    fun <Type : Any> serializerFor(type: KType): ScalarSerializer<Type, *>
 }
 
 
-interface ScalarInConverter<Type : Any> {
-    fun convertIn(incoming: String, actualType: KClass<in Type>): Type
+interface ScalarDeserializer<out Type : Any, ScalarType : UAPIScalar<*>> {
+    fun deserialize(incoming: ScalarType, actualType: KClass<in Type>): Type?
 }
 
-interface ScalarOutConverter<Type : Any> {
-    fun convertOut(outgoing: Type): String
+interface ScalarSerializer<in Type : Any, ScalarType : UAPIScalar<*>> {
+    fun serialize(outgoing: Type?): ScalarType
 }
 
-interface BidirectionalScalarConverter<Type : Any> : ScalarInConverter<Type>, ScalarOutConverter<Type>
+interface BidirectionalScalarConverter<Type : Any, ScalarType : UAPIScalar<*>> : ScalarDeserializer<Type, ScalarType>, ScalarSerializer<Type, ScalarType>
 
-//typealias ScalarInConverter<Type> = (input: String) -> Type
-//typealias ScalarOutConverter<Type> = (value: Type) -> String
+private class SimpleSerialization<Type : Any, ScalarType : UAPIScalar<Type>>(
+    private val constructor: (Type?) -> ScalarType
+) : BidirectionalScalarConverter<Type, ScalarType> {
+    override fun deserialize(incoming: ScalarType, actualType: KClass<in Type>) = incoming.value
 
-class SimpleConverter<Type : Any>(
-    val inConverter: (String) -> Type
-) : BidirectionalScalarConverter<Type> {
-    override fun convertIn(incoming: String, actualType: KClass<in Type>): Type = inConverter(incoming)
-
-    override fun convertOut(outgoing: Type): String = outgoing.toString()
+    override fun serialize(outgoing: Type?) = constructor(outgoing)
 }
 
-class BasicEnumConverter : BidirectionalScalarConverter<Enum<*>> {
-
-    override fun convertIn(incoming: String, actualType: KClass<in Enum<*>>): Enum<*> {
-//        actualType.java.enumConstants.filter {  }
-//        enumValueOf<KClass>()
-        TODO("not implemented")
+private class SlightlyLessSimpleSerialization<Type: Any, ScalarType: Any, Scalar: UAPIScalar<ScalarType>>(
+    private val constructor: (Type?) -> Scalar,
+    private val valueTransformer: (ScalarType) -> Type
+): BidirectionalScalarConverter<Type, Scalar> {
+    override fun deserialize(incoming: Scalar, actualType: KClass<in Type>): Type? {
+        val value = incoming.value
+        return if (value == null) {
+            null
+        } else {
+            valueTransformer(value)
+        }
     }
 
-    override fun convertOut(outgoing: Enum<*>): String = outgoing.name
+    override fun serialize(outgoing: Type?): Scalar = constructor(outgoing)
 
 }
 
-private fun <Type : Any> s(func: (String) -> Type) = SimpleConverter(func)
+private typealias ScalarConstructor<Type, Scalar> = (Type?) -> Scalar
 
-val defaultConverters = mapOf<KClass<*>, BidirectionalScalarConverter<*>>(
-    String::class to s(::identity),
-    Byte::class to s(String::toByte),
-    Short::class to s(String::toShort),
-    Int::class to s(String::toInt),
-    Long::class to s(String::toLong),
-    BigInteger::class to s(String::toBigInteger),
-    BigDecimal::class to s(String::toBigDecimal),
-    URI::class to s({ it: String -> URI(it) }),
-    URL::class to s({ it: String -> URL(it) }),
-    UUID::class to s(UUID::fromString),
-    Instant::class to s({ str: String -> Instant.parse(str) })
+private inline fun <reified Type : Any, Scalar : UAPIScalar<Type>> simple(noinline constructor: ScalarConstructor<Type, Scalar>)
+    = Type::class to SimpleSerialization(constructor)
+
+
+private inline fun <reified Type : Any, ScalarType: Any, Scalar : UAPIScalar<ScalarType>> lessSimple(
+    noinline constructor: ScalarConstructor<Type, Scalar>,
+    noinline valueTransformer: (ScalarType) -> Type
+)= Type::class to SlightlyLessSimpleSerialization(constructor, valueTransformer)
+
+
+val defaultScalars: Map<KClass<*>, BidirectionalScalarConverter<*, *>> = mapOf(
+    simple(::UAPIInt),
+    simple(::UAPILong),
+    simple<BigDecimal, UAPIDecimal>(::UAPIDecimal),
+    lessSimple(::UAPIDecimal, BigDecimal::toFloat),
+    lessSimple(::UAPIDecimal, BigDecimal::toDouble),
+    simple(::UAPIString),
+    simple(::UAPIByteArray),
+    simple(::UAPIBoolean),
+    simple(::UAPIDate),
+    simple(::UAPITime),
+    simple(::UAPIUri),
+    simple<OffsetDateTime, UAPIDateTime>(::UAPIDateTime),
+    lessSimple(::UAPIDateTime, OffsetDateTime::toZonedDateTime),
+    lessSimple(::UAPIDateTime, OffsetDateTime::toInstant)
 )
-
-private fun <Type> identity(obj: Type): Type = obj
 

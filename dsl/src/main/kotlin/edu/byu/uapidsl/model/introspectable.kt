@@ -11,7 +11,7 @@ data class Introspectable<Type : Any>(
 ) {
     val props by lazy(type::memberProperties)
 
-    val uapiPropNames: Collection<String> by lazy {
+    val uapiPropNames: List<String> by lazy {
         this.props.map { it.name }
             .map(::toUAPIName)
     }

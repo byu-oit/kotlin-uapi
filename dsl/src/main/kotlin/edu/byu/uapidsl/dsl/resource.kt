@@ -6,6 +6,7 @@ import edu.byu.uapidsl.dsl.subresource.SubresourcesInit
 import edu.byu.uapidsl.model.Introspectable
 import edu.byu.uapidsl.model.ResourceModel
 import edu.byu.uapidsl.model.SubResourceModel
+import edu.byu.uapidsl.model.getPathIdentifierModel
 import kotlin.reflect.KClass
 
 class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
@@ -40,7 +41,7 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
         val ops = this.operationsInit
         return ResourceModel(
             type = Introspectable(modelType),
-            idType = Introspectable(idType),
+            idModel = getPathIdentifierModel(this.idType),
             name = name,
             read = ops.readModel,
             list = ops.listModel,

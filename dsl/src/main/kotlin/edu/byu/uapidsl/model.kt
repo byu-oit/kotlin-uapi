@@ -8,7 +8,9 @@ data class UApiModel<AuthContext : Any>(
     val authContextCreator: AuthContextCreator<AuthContext>,
     val resources: List<ResourceModel<AuthContext, *, *>>
 
-)
+) {
+
+}
 
 data class ApiInfo(
     val name: String,
@@ -30,3 +32,4 @@ class ValidationContext {
         stack.pop()
     }
 }
+

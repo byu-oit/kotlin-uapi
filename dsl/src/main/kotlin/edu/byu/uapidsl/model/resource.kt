@@ -5,7 +5,7 @@ import either.Either
 
 data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
     val type: Introspectable<ResourceType>,
-    val idType: Introspectable<IdType>,
+    val idModel: PathIdentifierModel<IdType>,
     val name: String,
     val read: ReadOperation<AuthContext, IdType, ResourceType>,
     val list: ListOperation<AuthContext, IdType, ResourceType, *>?,
@@ -31,21 +31,21 @@ data class ReadOperation<AuthContext, IdType, DomainType>(
     val handle: ReadHandler<AuthContext, IdType, DomainType>
 )
 
-interface UpdateOperation<AuthContext, IdType, DomainType, InputType : Any> {
-    val input: Introspectable<InputType>
+sealed class UpdateOperation<AuthContext, IdType, DomainType, InputType : Any> {
+    abstract val input: Introspectable<InputType>
 }
 
 data class SimpleUpdateOperation<AuthContext, IdType, DomainType, InputType : Any>(
     override val input: Introspectable<InputType>,
     val authorization: UpdateAuthorizer<AuthContext, IdType, DomainType, InputType>,
     val handle: UpdateHandler<AuthContext, IdType, DomainType, InputType>
-) : UpdateOperation<AuthContext, IdType, DomainType, InputType>
+) : UpdateOperation<AuthContext, IdType, DomainType, InputType>()
 
 data class CreateOrUpdateOperation<AuthContext, IdType, DomainType, InputType : Any>(
     override val input: Introspectable<InputType>,
     val authorization: CreateOrUpdateAuthorizer<AuthContext, IdType, DomainType, InputType>,
     val handle: CreateOrUpdateHandler<AuthContext, IdType, DomainType, InputType>
-) : UpdateOperation<AuthContext, IdType, DomainType, InputType>
+) : UpdateOperation<AuthContext, IdType, DomainType, InputType>()
 
 data class CreateOperation<AuthContext, IdType, InputType : Any>(
     val input: Introspectable<InputType>,

@@ -1,10 +1,41 @@
 package edu.byu.uapidsl.model
 
-import com.google.common.collect.Multimap
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 import kotlin.reflect.full.primaryConstructor
 
+fun <Type: Any> getPathIdentifierModel(type: KClass<Type>): PathIdentifierModel<Type> {
+    val introspectable = Introspectable(type)
+    return when (type) {
+        KClass<Type>::isData -> CompoundPathIdentifierModel(introspectable)
+        else -> SimplePathIdentifierModel(introspectable)
+    }
+}
+
+sealed class PathIdentifierModel<Type: Any> {
+    abstract val type: Introspectable<Type>
+    abstract val isCompound: Boolean
+    abstract val names: List<String>
+}
+
+data class SimplePathIdentifierModel<Type: Any> (
+    override val type: Introspectable<Type>
+): PathIdentifierModel<Type>() {
+    override val isCompound = false
+
+    override val names = listOf("id")
+}
+
+data class CompoundPathIdentifierModel<Type: Any> (
+    override val type: Introspectable<Type>
+): PathIdentifierModel<Type>() {
+    override val isCompound: Boolean = true
+
+    override val names by lazy { type.uapiPropNames }
+}
+
+interface DeserializationContext {
+
+}
 
 data class FilterParamsModel<Type: Any> (
     val type: Introspectable<Type>
@@ -13,7 +44,7 @@ data class FilterParamsModel<Type: Any> (
 }
 
 interface QueryParamSetter<Type: Any> {
-    fun instance(query: QueryParams)
+    fun instance(query: QueryParams, context: DeserializationContext)
 }
 
 class DataClassQueryParamSetter<Type: Any>(
@@ -26,7 +57,7 @@ class DataClassQueryParamSetter<Type: Any>(
         }
     }
 
-    override fun instance(query: QueryParams) {
+    override fun instance(query: QueryParams, context: DeserializationContext) {
         type.primaryConstructor?.parameters?.first()?.kind
         TODO("not implemented")
     }

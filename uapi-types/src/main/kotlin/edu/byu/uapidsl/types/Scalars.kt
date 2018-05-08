@@ -33,7 +33,7 @@ class UAPIDateTime(value: OffsetDateTime?): UAPIScalar<OffsetDateTime>(value) {
     constructor(value: Instant?): this(value?.atZone(ZoneId.systemDefault()))
 }
 
-class UAPIUri(value: URI?): UAPIScalar<String>(value?.toString())
+class UAPIUri(value: URI?): UAPIScalar<URI>(value)
 
 data class JsonSchemaType(val type: String, val format: String? = null)
 
