@@ -13,6 +13,12 @@ import edu.byu.uapidsl.types.ApiType
 
 val personsModel = apiModel<Authorizer> {
 
+    info {
+        name = "Persons-JVM"
+        version = "1.0.0"
+        description = "Persons V2 mock implementation for Kotlin-JVM"
+    }
+
     authContext {
         Authorizer(jwt)
     }
@@ -20,7 +26,7 @@ val personsModel = apiModel<Authorizer> {
     resource<String, PersonDTO>("persons") {
         operations {
             read {
-                authorization { authContext.canSeePerson(id) }
+                authorized { authContext.canSeePerson(id) }
                 handle {
                     loadPerson(id, authContext.canSeeRestrictedRecords())
                 }
@@ -35,14 +41,35 @@ val personsModel = apiModel<Authorizer> {
             }
 
             create<CreatePerson> {
-                authorization { authContext.canCreatePerson() }
+                authorized { authContext.canCreatePerson() }
+
+//                possible {
+//
+//                }
+//
+//                validateInput {
+//                    validate.isNotEmpty(input::name)
+//                    validate.matches("""""".toRegex(), input::name)
+//                }
+
                 handle {
                     createPerson(input, authContext.byuId)
                 }
             }
 
             update<UpdatePerson> {
-                authorization { authContext.canModifyPerson(id) }
+                authorized {
+                    authContext.canModifyPerson(id)
+                }
+
+//                possible {
+//
+//                }
+//
+//                validateInput {
+//
+//                }
+
                 handle {
                     TODO()
                 }
@@ -50,7 +77,12 @@ val personsModel = apiModel<Authorizer> {
             }
 
             delete {
-                authorization { authContext.canDeletePerson(resource.personId) }
+                authorized { authContext.canDeletePerson(resource.personId) }
+
+//                possible {
+//
+//                }
+
                 handle {
                     TODO()
                 }

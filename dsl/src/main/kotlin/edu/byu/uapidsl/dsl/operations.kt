@@ -7,6 +7,7 @@ import either.Either
 import either.Left
 import either.Right
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 
 class OperationsInit<AuthContext, IdType, ResourceType>(
@@ -98,7 +99,7 @@ class ReadInit<AuthContext, IdType, ResourceModel>(
 
     private var authorizer: ReadAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
 
-    fun authorization(auth: ReadAuthorizer<AuthContext, IdType, ResourceModel>) {
+    fun authorized(auth: ReadAuthorizer<AuthContext, IdType, ResourceModel>) {
         this.authorizer = auth
     }
 
@@ -188,7 +189,6 @@ interface PagedListContext<AuthContext, FilterType> {
     val paging: PagingParams
 }
 
-
 class CreateInit<AuthContext, IdType, CreateModel : Any>(
     validation: ValidationContext,
     private val input: KClass<CreateModel>
@@ -197,7 +197,7 @@ class CreateInit<AuthContext, IdType, CreateModel : Any>(
     private var authorizationHandler: CreateAuthorizer<AuthContext, CreateModel> by setOnce()
     private var handler: CreateHandler<AuthContext, IdType, CreateModel> by setOnce()
 
-    fun authorization(auth: CreateAuthorizer<AuthContext, CreateModel>) {
+    fun authorized(auth: CreateAuthorizer<AuthContext, CreateModel>) {
         authorizationHandler = auth
     }
 
@@ -220,7 +220,7 @@ class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
     private var authorization: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
     private var handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
 
-    fun authorization(auth: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>) {
+    fun authorized(auth: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>) {
         this.authorization = auth
     }
 
@@ -269,7 +269,7 @@ class DeleteInit<AuthContext, IdType, ResourceModel>(
     private var authorization: DeleteAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
     private var handler: DeleteHandler<AuthContext, IdType, ResourceModel> by setOnce()
 
-    fun authorization(auth: DeleteAuthorizer<AuthContext, IdType, ResourceModel>) {
+    fun authorized(auth: DeleteAuthorizer<AuthContext, IdType, ResourceModel>) {
         this.authorization = auth
     }
 
@@ -285,7 +285,16 @@ class DeleteInit<AuthContext, IdType, ResourceModel>(
     }
 }
 
+typealias Prop<Type> = KProperty1<*, Type>
 
+interface InputValidator {
+    fun validate(message: String, condition: () -> Boolean)
+
+    fun isNotEmpty(prop: Prop<String>)
+
+
+
+}
 
 typealias CreateHandler<AuthContext, IdType, CreateModel> =
     CreateContext<AuthContext, CreateModel>.() -> IdType
@@ -309,10 +318,22 @@ typealias ReadAuthorizer<AuthContext, IdType, ResourceModel> =
 typealias CreateAuthorizer<AuthContext, CreateModel> =
     CreateContext<AuthContext, CreateModel>.() -> Boolean
 
+typealias CreateAllower<AuthContext, CreateModel> =
+    CreateContext<AuthContext, CreateModel>.() -> Boolean
+
+typealias CreateValidator<AuthContext, CreateModel> =
+    CreateContext<AuthContext, CreateModel>.() -> Boolean
+
 typealias UpdateAuthorizer<AuthContext, IdType, ResourceModel, UpdateModel> =
     UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>.() -> Boolean
 
+typealias UpdateAllower<AuthContext, IdType, ResourceModel, UpdateModel> =
+    UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>.() -> Boolean
+
 typealias CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> =
+    CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>.() -> Boolean
+
+typealias CreateOrUpdateAllower<AuthContext, IdType, ResourceModel, InputModel> =
     CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>.() -> Boolean
 
 typealias DeleteAuthorizer<AuthContext, IdType, ResourceModel> =

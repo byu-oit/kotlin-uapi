@@ -5,7 +5,9 @@ class PersonDTO {
     val byuId = "byuId"
 }
 
-class CreatePerson
+class CreatePerson {
+    var name: String = ""
+}
 
 class UpdatePerson
 

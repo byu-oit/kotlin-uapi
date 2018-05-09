@@ -17,7 +17,7 @@ package edu.byu.uapidsl.dsl
 //        resource<String, PersonDTO>("persons") {
 //            operations {
 //                create<CreatePerson> {
-//                    authorization {
+//                    authorized {
 //                        it.authContext.canCreatePerson("")
 //                    }
 //
@@ -26,7 +26,7 @@ package edu.byu.uapidsl.dsl
 //                    }
 //                }
 //                read {
-//                    authorization { true }
+//                    authorized { true }
 //
 //                    handle {
 ////                        loadPerson(it.id)
@@ -49,7 +49,7 @@ package edu.byu.uapidsl.dsl
 //                }
 //
 //                update<UpdatePerson> {
-//                    authorization { true }
+//                    authorized { true }
 //
 //                    handle {
 //
@@ -57,14 +57,14 @@ package edu.byu.uapidsl.dsl
 //                }
 //
 //                createOrUpdate<CreateOrUpdatePerson> {
-//                    authorization { true }
+//                    authorized { true }
 //                    handle {
 //
 //                    }
 //                }
 //
 //                delete {
-//                    authorization { true }
+//                    authorized { true }
 //                    handle {
 //
 //                    }
@@ -78,7 +78,7 @@ package edu.byu.uapidsl.dsl
 //                }
 //
 //                relation<String, RelatedDTO>("my_rel") {
-//                    authorization { it: RelationAuthorizationContext<Authz, String, PersonDTO, String, RelatedDTO> ->
+//                    authorized { it: RelationAuthorizationContext<Authz, String, PersonDTO, String, RelatedDTO> ->
 //                        true
 //                    }
 //                    handle { it ->
@@ -86,7 +86,7 @@ package edu.byu.uapidsl.dsl
 //                    }
 //                }
 //                externalRelation("student_info") {
-//                    authorization { true }
+//                    authorized { true }
 //                    handle { "https://api.byu.edu/uapi/student/${it.resource.byuId}" }
 //                }
 //
@@ -94,13 +94,13 @@ package edu.byu.uapidsl.dsl
 //
 //                    operations {
 //                        createOrUpdate<PutAddress> {
-//                            authorization { true }
+//                            authorized { true }
 //                            handle {
 //                            }
 //                        }
 //
 //                        read {
-//                            authorization { true }
+//                            authorized { true }
 //                            handle {
 //                                PersonAddressDTO()
 //                            }
@@ -111,7 +111,7 @@ package edu.byu.uapidsl.dsl
 //                        }
 //
 //                        delete {
-//                            authorization { true }
+//                            authorized { true }
 //                            handle {
 //
 //                            }

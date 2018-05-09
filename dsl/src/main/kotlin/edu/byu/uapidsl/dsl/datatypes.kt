@@ -6,7 +6,7 @@ package edu.byu.uapidsl.dsl
 //
 //data class ApiResource<AuthContext, IdType, ResourceModel>(
 //  val name: String,
-//  val authorization: ResourceAuthorization<AuthContext, IdType, ResourceModel>,
+//  val authorized: ResourceAuthorization<AuthContext, IdType, ResourceModel>,
 //  val loader: ResourceLoader<IdType, ResourceModel>,
 //  val collection: CollectionDefinition<IdType, *>,
 //  val fieldCustomizer: FieldCustomizer<AuthContext, ResourceModel>

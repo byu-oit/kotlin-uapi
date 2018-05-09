@@ -13,7 +13,9 @@ import spark.Service
 import spark.Service.ignite
 
 fun <AuthContext : Any> UApiModel<AuthContext>.igniteSpark(port: Int = 4567): Service {
-    val spark = ignite()
+    val spark: Service = ignite()
+
+    spark.port(port)
 
     val paths = this.httpPaths
 
@@ -23,24 +25,31 @@ fun <AuthContext : Any> UApiModel<AuthContext>.igniteSpark(port: Int = 4567): Se
         val (options, get, post, put, patch, delete) = path.handlers
 
         spark.options(pathString, SparkOptions(options))
+        println("OPTIONS - $pathString")
         if (get != null) {
             spark.get(pathString, SparkGet(get))
+            println("GET - $pathString")
         }
         if (post != null) {
             spark.post(pathString, SparkPost(post))
+            println("POST - $pathString")
         }
         if (put != null) {
             spark.put(pathString, SparkPut(put))
+            println("PUT - $pathString")
         }
         if (patch != null) {
             spark.patch(pathString, SparkPatch(patch))
+            println("PATCH - $pathString")
         }
         if (delete != null) {
             spark.delete(pathString, SparkDelete(delete))
+            println("DELETE - $pathString")
         }
     }
 
-    spark.port(port)
+    println("Spark is listening on port $port")
+
     return spark
 }
 
