@@ -1,6 +1,5 @@
 package edu.byu.uapidsl.http
 
-
 interface HttpResponse {
 
     val status: Int

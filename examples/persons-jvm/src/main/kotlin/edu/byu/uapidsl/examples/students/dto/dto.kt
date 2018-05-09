@@ -21,7 +21,13 @@ data class PersonListFilters(
     val emailAddress: String?,
     val emailAlias: String?,
     val phoneNumber: Set<String>,
-    val surname: String?
+    val surname: String?,
+    val addresses: AddressFilters?
+)
+
+data class AddressFilters(
+    val addressType: AddressType?,
+    val zipCode: Set<String>
 )
 
 enum class CredentialType {

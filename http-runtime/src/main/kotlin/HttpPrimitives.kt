@@ -1,6 +1,5 @@
 package edu.byu.uapidsl.http
 
-
 enum class HttpMethod {
     GET, PUT, PATCH, POST, DELETE
 }

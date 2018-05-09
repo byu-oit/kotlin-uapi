@@ -12,12 +12,14 @@
     <name>Kotlin UAPI Parent POM</name>
 
     <modules>
+        <module>uapi-types</module>
         <module>dsl</module>
+	<module>models</module>
+	<module>http-runtime</module>
 
         <module>adapters</module>
 
         <module>examples</module>
-        <module>uapi-types</module>
     </modules>
 
     <properties>

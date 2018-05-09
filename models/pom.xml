@@ -4,11 +4,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.byu.uapidsl.adapters</groupId>
-    <artifactId>kotlin-uapi-adapters-pom</artifactId>
+    <groupId>edu.byu.uapidsl.models</groupId>
+    <artifactId>kotlin-uapi-models-pom</artifactId>
     <packaging>pom</packaging>
 
-    <name>Kotlin UAPI Adapters Parent POM</name>
+    <name>Kotlin UAPI Models Parent POM</name>
 
     <parent>
         <groupId>edu.byu.uapidsl</groupId>
@@ -17,7 +17,7 @@
     </parent>
 
     <modules>
-        <module>spark</module>
+        <module>openapi3</module>
     </modules>
 
     <dependencyManagement>
@@ -29,7 +29,7 @@
             </dependency>
             <dependency>
                 <groupId>edu.byu.uapidsl</groupId>
-                <artifactId>kotlin-uapi-http-runtime</artifactId>
+                <artifactId>kotlin-uapi-types</artifactId>
                 <version>${project.parent.version}</version>
             </dependency>
         </dependencies>

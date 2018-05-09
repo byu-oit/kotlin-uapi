@@ -39,12 +39,14 @@ val <Type> KProperty0<Type>.meta: UAPIFieldMeta
 
 fun main(args: Array<String>) {
     val p = Person("id")
+
     println(p.personId)
 
     println(p::personId.meta.apiType)
-    p::personId.meta.apiType = ApiType.READ_ONLY
-    println(p::personId.meta.apiType)
 
+    p::personId.meta.apiType = ApiType.READ_ONLY
+
+    println(p::personId.meta.apiType)
     println(p::personId.meta.description)
 
     p::personId.meta.description = "descr"

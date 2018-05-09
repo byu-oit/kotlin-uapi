@@ -3,20 +3,21 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kotlin-uapi-adapter-spark</artifactId>
+    <artifactId>kotlin-uapi-model-openapi3</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>Kotlin UAPI DSL Spark Adapter</name>
+    <name>Kotlin UAPI DSL OpenAPI3 Model</name>
 
     <parent>
-        <groupId>edu.byu.uapidsl.adapters</groupId>
-        <artifactId>kotlin-uapi-adapters-pom</artifactId>
+        <groupId>edu.byu.uapidsl.models</groupId>
+        <artifactId>kotlin-uapi-models-pom</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <spark.version>2.7.2</spark.version>
+        <swagger.version>2.0.1</swagger.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -30,13 +31,14 @@
             <artifactId>kotlin-uapi-dsl</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapidsl</groupId>
-            <artifactId>kotlin-uapi-http-runtime</artifactId>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-core</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.sparkjava</groupId>
-            <artifactId>spark-core</artifactId>
-            <version>${spark.version}</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.4</version>
         </dependency>
     </dependencies>
 

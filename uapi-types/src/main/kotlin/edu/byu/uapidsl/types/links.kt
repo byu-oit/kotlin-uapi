@@ -1,5 +1,7 @@
 package edu.byu.uapidsl.types
 
+typealias UAPILinks = Map<String, UAPILink>
+
 data class UAPILink(
     val rel: String,
     val href: String,

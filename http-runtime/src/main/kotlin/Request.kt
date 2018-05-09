@@ -1,7 +1,5 @@
 package edu.byu.uapidsl.http
 
-
-
 interface HttpRequest {
 
     val path: PathParams
