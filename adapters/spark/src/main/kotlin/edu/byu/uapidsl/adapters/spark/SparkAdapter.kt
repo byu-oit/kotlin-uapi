@@ -68,14 +68,20 @@ sealed class SparkHandler<ReqType : HttpRequest, Handler : HttpHandler<ReqType>>
     protected abstract fun wrapRequest(req: Request): ReqType
 
     final override fun handle(req: Request, res: Response): String {
-        val wrappedReq = wrapRequest(req)
+        try {
+            val wrappedReq = wrapRequest(req)
 
-        val dslResponse = handler.handle(wrappedReq)
+            val dslResponse = handler.handle(wrappedReq)
 
-        res.status(dslResponse.status)
-        dslResponse.headers.forEach { name, values -> values.forEach { res.header(name, it) } }
+            res.status(dslResponse.status)
+            dslResponse.headers.forEach { name, values -> values.forEach { res.header(name, it) } }
 
-        return dslResponse.body.asString()
+            return dslResponse.body.asString()
+        } catch (ex: Throwable) {
+            ex.printStackTrace()
+            res.status(500)
+            return ex.toString()
+        }
     }
 }
 
@@ -104,9 +110,9 @@ class SparkDelete(handler: DeleteHandler) : SparkHandler<DeleteRequest, DeleteHa
 }
 
 abstract class SparkRequest(req: Request) : HttpRequest {
-    override val path: PathParams = SimplePathParams(req.params())
+    override val path: PathParams = SimplePathParams(req.params().mapKeys { it.key.substring(1) })
     override val headers: Headers = SimpleHeaders(
-        req.headers().map { it to setOf(req.headers(it)) }.toMap()
+        req.headers().map { it.toLowerCase() to setOf(req.headers(it)) }.toMap()
     )
 }
 

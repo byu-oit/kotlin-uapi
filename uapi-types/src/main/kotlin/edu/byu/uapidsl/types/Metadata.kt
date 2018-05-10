@@ -9,6 +9,12 @@ interface ResponseMetadata {
     val cache: CacheMeta?
 }
 
+data class UAPIErrorMetadata(
+    override val validationResponse: ValidationResponse,
+    override val validationInformation: List<String>
+): ResponseMetadata {
+    override val cache: CacheMeta? = null
+}
 
 interface CollectionMetadata: ResponseMetadata {
     val collectionSize: Int

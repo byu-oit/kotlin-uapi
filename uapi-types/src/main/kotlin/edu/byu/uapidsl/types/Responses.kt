@@ -7,13 +7,21 @@ interface UAPIResponse<MetaType: ResponseMetadata> {
 
 interface UAPIResource: UAPIResponse<UAPIResourceMeta>
 
-interface UAPIResourceResponse {
+interface UAPIResourceResponse: UAPIResource {
     val basic: UAPIResource?
     val fieldsets: Map<String, UAPIResource>
 }
 
+data class ErrorResponse(
+    override val metadata: UAPIErrorMetadata
+): UAPIResponse<UAPIErrorMetadata> {
+    override val links: UAPILinks = emptyMap()
+}
+
 data class BasicResourceResponse(
-    override val fieldsets: Map<String, UAPIResource>
+    override val fieldsets: Map<String, UAPIResource>,
+    override val metadata: UAPIResourceMeta,
+    override val links: UAPILinks = emptyMap()
 ): UAPIResourceResponse {
     override val basic: UAPIResource? = fieldsets["basic"]
 }
@@ -25,7 +33,7 @@ abstract class UAPIResourceResponseBase(
 
 data class UAPIMapResource(
     override val metadata: UAPIResourceMeta,
-    override val links: UAPILinks,
+    override val links: UAPILinks = emptyMap(),
     val properties: Map<String, UAPIField<*>>
 ): UAPIResource
 

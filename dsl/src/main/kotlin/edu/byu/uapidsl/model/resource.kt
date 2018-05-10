@@ -1,18 +1,26 @@
 package edu.byu.uapidsl.model
 
 import edu.byu.uapidsl.dsl.*
+import edu.byu.uapidsl.types.UAPIField
+import edu.byu.uapidsl.types.UAPIResponse
 import either.Either
+
+interface ModelResponseMapper<AuthContext, IdType, ModelType> {
+    fun mapResponse(authContext: AuthContext, idType: IdType, modelType: ModelType): Map<String, UAPIField<*>>
+}
 
 data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
     val type: Introspectable<ResourceType>,
     val idModel: PathIdentifierModel<IdType>,
     val name: String,
+    val example: ResourceType,
     val read: ReadOperation<AuthContext, IdType, ResourceType>,
     val list: ListOperation<AuthContext, IdType, ResourceType, *>?,
     val create: CreateOperation<AuthContext, IdType, *>?,
     val update: UpdateOperation<AuthContext, IdType, ResourceType, *>?,
     val delete: DeleteOperation<AuthContext, IdType, ResourceType>?,
-    val output: OutputModel<AuthContext, IdType, ResourceType, *>//,
+//    val output: OutputModel<AuthContext, IdType, ResourceType, *>,
+    val responseMapper: ModelResponseMapper<AuthContext, IdType, ResourceType>
 //  val subresources: List<SubResourceModel<AuthContext, IdType, ResourceType, Any>>
 ) {
     init {

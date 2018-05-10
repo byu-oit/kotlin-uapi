@@ -28,6 +28,6 @@ class Authorizer(val authJwt: ByuJwt) {
 
     fun canSeePerson(h:
                      String): Boolean {
-        TODO()
+        return true
     }
 }

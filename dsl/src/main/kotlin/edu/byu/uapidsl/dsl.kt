@@ -78,8 +78,9 @@ class ExtendInit {
 typealias AuthContextCreator<AuthContext> = AuthContextInput.() -> AuthContext
 
 data class AuthContextInput(
-    val headers: Map<String, String>,
-    val jwt: ByuJwt
+    val headers: Map<String, Set<String>>,
+    val jwt: ByuJwt,
+    val originalJwt: ByuJwt? = null
 )
 
 @DslMarker

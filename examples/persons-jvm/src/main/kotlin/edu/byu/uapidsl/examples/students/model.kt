@@ -28,7 +28,8 @@ val personsModel = apiModel<Authorizer> {
             read {
                 authorized { authContext.canSeePerson(id) }
                 handle {
-                    loadPerson(id, authContext.canSeeRestrictedRecords())
+                    println("Loading person for id $id")
+                    PersonDTO()
                 }
             }
 
@@ -90,15 +91,16 @@ val personsModel = apiModel<Authorizer> {
 
         }
 
-        output<UAPIPerson> {
+        example = PersonDTO()
 
-            example = UAPIPerson("pid", "byuId", "name")
-
-            transform {
-                UAPIPerson(resource)
-            }
-
-        }
+//        output<UAPIPerson> {
+//
+//
+//            transform {
+//                UAPIPerson(resource)
+//            }
+//
+//        }
 
         subresources {
 

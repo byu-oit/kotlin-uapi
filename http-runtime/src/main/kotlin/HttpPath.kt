@@ -2,6 +2,7 @@ package edu.byu.uapidsl.http
 
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.http.implementation.*
+import edu.byu.uapidsl.http.implementation.serialization.jacksonJsonMapper
 import edu.byu.uapidsl.http.path.PathPart
 import edu.byu.uapidsl.http.path.SimplePathVariablePart
 import edu.byu.uapidsl.http.path.StaticPathPart
@@ -26,18 +27,21 @@ data class MethodHandlers(
 
 val <AuthContext: Any> UApiModel<AuthContext>.httpPaths: List<HttpPath>
     get() {
-        return this.resources.flatMap(::pathsFor)
+        return this.resources.flatMap { pathsFor(this, it) }
     }
 
-private fun <AuthContext> pathsFor(resource: ResourceModel<AuthContext, *, *>): Iterable<HttpPath> {
+private fun <AuthContext: Any> pathsFor(apiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, *, *>): Iterable<HttpPath> {
 
     val basePath: List<PathPart> = listOf(StaticPathPart(resource.name))
 
-    val resourcePath = basePath + SimplePathVariablePart(resource.name + "_id")
+    // TODO("Actually, you know, handle other types of IDs")
+    val idParamName = resource.idModel.names.first()
+
+    val resourcePath = basePath + SimplePathVariablePart(idParamName)
 
     val collection = collectionHandlers(resource)
 
-    val single = singleHandlers(resource)
+    val single = singleHandlers(apiModel, resource)
 
     val result = mutableListOf(
         HttpPath(resourcePath, single)
@@ -64,8 +68,8 @@ private fun <AuthContext> collectionHandlers(resource: ResourceModel<AuthContext
     )
 }
 
-private fun <AuthContext> singleHandlers(resource: ResourceModel<AuthContext, *, *>): MethodHandlers {
-    val get = ResourceGet()
+private fun <AuthContext: Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, *, *>): MethodHandlers {
+    val get = ResourceGet(uapiModel, resource, jacksonJsonMapper)
     val put = when(resource.update) {
         is SimpleUpdateOperation<AuthContext, *, *, *> -> SimplePut()
         is CreateOrUpdateOperation<AuthContext, *, *, *> -> MaybeCreatePut()
