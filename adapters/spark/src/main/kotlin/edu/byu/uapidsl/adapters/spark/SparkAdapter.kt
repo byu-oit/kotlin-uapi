@@ -20,7 +20,7 @@ fun <AuthContext : Any> UApiModel<AuthContext>.igniteSpark(port: Int = 4567): Se
     val paths = this.httpPaths
 
     for (path in paths) {
-        val pathString = stringify(path.pathParts)
+        val pathString = stringifyPaths(path.pathParts)
 
         val (options, get, post, put, patch, delete) = path.handlers
 
@@ -51,16 +51,6 @@ fun <AuthContext : Any> UApiModel<AuthContext>.igniteSpark(port: Int = 4567): Se
     println("Spark is listening on port $port")
 
     return spark
-}
-
-fun stringify(pathParts: List<PathPart>): String {
-    return pathParts.joinToString(separator = "/", prefix = "/") { part ->
-        when (part) {
-            is StaticPathPart -> part.part
-            is SimplePathVariablePart -> ":" + part.name
-            is CompoundPathVariablePart -> part.names.joinToString(separator = ",") { ":$it" }
-        }
-    }
 }
 
 sealed class SparkHandler<ReqType : HttpRequest, Handler : HttpHandler<ReqType>>(private val handler: Handler) : Route {
