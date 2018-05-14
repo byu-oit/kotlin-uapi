@@ -17,7 +17,7 @@ interface ScalarDeserializer<out Type : Any, ScalarType : UAPIScalar<*>> {
     fun deserialize(incoming: ScalarType, actualType: KClass<in Type>): Type?
 }
 
-interface ScalarSerializer<in Type : Any, ScalarType : UAPIScalar<*>> {
+interface ScalarSerializer<in Type, ScalarType : UAPIScalar<*>> {
     fun serialize(outgoing: Type?): ScalarType
 }
 

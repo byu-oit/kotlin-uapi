@@ -32,7 +32,7 @@ class PersonDTO(person: Person, canModifyPersonalInfo: Boolean) {
     val middleName = uapiProp(person.name.middle, personalInfoType)
     val surname = uapiProp(person.name.surname, personalInfoType)
     val suffix = uapiProp(person.name.suffix, personalInfoType)
-    val preferredfirstName = uapiProp(person.name.preferredFirst, ApiType.MODIFIABLE)
+    val preferredFirstName = uapiProp(person.name.preferredFirst, ApiType.MODIFIABLE)
     val preferredSurname = uapiProp(person.name.preferredSurname, ApiType.MODIFIABLE)
 
     val restOfName = uapiProp(person.name.restOfName, ApiType.DERIVED)

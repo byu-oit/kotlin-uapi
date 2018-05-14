@@ -16,7 +16,8 @@ val personsModel = apiModel<Authorizer> {
     }
 
     authContext {
-        Authorizer(if (jwt.hasResourceOwner()) jwt.resourceOwnerClaims!!.byuId!! else jwt.clientClaims.byuId!!)
+//        Authorizer(if (jwt.hasResourceOwner()) jwt.resourceOwnerClaims!!.byuId!! else jwt.clientClaims.byuId!!)
+        Authorizer("fake")
     }
 
     resource<String, PersonDTO>("persons") {
