@@ -1,15 +1,11 @@
 package edu.byu.uapidsl.examples.students
 
 import edu.byu.uapidsl.apiModel
-import edu.byu.uapidsl.dsl.uapiKey
-import edu.byu.uapidsl.dsl.uapiProp
-import edu.byu.uapidsl.examples.students.app.createPerson
-import edu.byu.uapidsl.examples.students.app.getPersonAddress
-import edu.byu.uapidsl.examples.students.app.loadPerson
-import edu.byu.uapidsl.examples.students.app.queryPeople
+import edu.byu.uapidsl.examples.students.app.*
 import edu.byu.uapidsl.examples.students.authorization.Authorizer
 import edu.byu.uapidsl.examples.students.dto.*
-import edu.byu.uapidsl.types.ApiType
+import edu.byu.uapidsl.examples.students.dto.EmailType
+import edu.byu.uapidsl.examples.students.dto.EmployeeSummary
 
 val personsModel = apiModel<Authorizer> {
 
@@ -20,7 +16,8 @@ val personsModel = apiModel<Authorizer> {
     }
 
     authContext {
-        Authorizer(jwt)
+//        Authorizer(if (jwt.hasResourceOwner()) jwt.resourceOwnerClaims!!.byuId!! else jwt.clientClaims.byuId!!)
+        Authorizer("fake")
     }
 
     resource<String, PersonDTO>("persons") {
@@ -29,15 +26,15 @@ val personsModel = apiModel<Authorizer> {
                 authorized { authContext.canSeePerson(id) }
                 handle {
                     println("Loading person for id $id")
-                    PersonDTO()
+                    Database.findPerson(id)?.toDTO(authContext)
                 }
             }
 
-            listPaged<PersonListFilters> {
+            listPaged<PersonFilters> {
                 defaultSize = 50
                 maxSize = 200
                 listIds {
-                    queryPeople(filters, paging, authContext.canSeeRestrictedRecords())
+                    Database.searchPeoplePaged(filters, paging)
                 }
             }
 
@@ -78,20 +75,20 @@ val personsModel = apiModel<Authorizer> {
             }
 
             delete {
-                authorized { authContext.canDeletePerson(resource.personId) }
+                authorized { authContext.canDeletePerson(resource.personId.value) }
 
 //                possible {
 //
 //                }
 
                 handle {
-                    TODO()
+                    Database.deletePerson(id)
                 }
             }
 
         }
 
-        example = PersonDTO()
+        example = joe.person.toDTO(Authorizer(""))
 
 //        output<UAPIPerson> {
 //
@@ -192,24 +189,3 @@ val personsModel = apiModel<Authorizer> {
 //  }
 
 }
-
-class UAPIPerson(personId: String, byuId: String, name: String) {
-
-    constructor(dto: PersonDTO): this("pid", dto.byuId, "name")
-
-    val personId = uapiProp(
-        value = personId,
-        apiType = ApiType.SYSTEM
-    )
-
-    val byuId = uapiKey(
-        value = byuId,
-        apiType = ApiType.SYSTEM
-    )
-
-    val name = uapiProp(
-        value = name
-    )
-
-}
-

@@ -1,7 +1,10 @@
 package edu.byu.uapidsl.http.implementation
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import edu.byu.jwt.ByuClientClaims
+import edu.byu.jwt.ByuGatewayClaims
 import edu.byu.jwt.ByuJwt
+import edu.byu.jwt.ByuResourceOwnerClaims
 import edu.byu.jwt.openid.OIDDiscoveryLoaderImpl
 import edu.byu.jwt.validate.ByuJwtValidator
 import edu.byu.jwt.validate.ByuJwtValidatorImpl
@@ -55,7 +58,7 @@ abstract class BaseHttpHandler<Request : HttpRequest, AuthContext : Any>(
     }
 
     private fun HttpRequest.extractAuthContextInput(): AuthContextInput {
-        val jwtHeader = this.headers[ByuJwtValidator.BYU_JWT_HEADER_CURRENT.toLowerCase()]?.firstOrNull()
+/*        val jwtHeader = this.headers[ByuJwtValidator.BYU_JWT_HEADER_CURRENT.toLowerCase()]?.firstOrNull()
             ?: throw NoCredentialsException("No authentication information was included in the request", listOf(
                 "Make sure that you are calling this API through the BYU API Manager (api.byu.edu)",
                 "Check with the developer of the API to ensure that the API is configured properly in the API Manager"
@@ -69,6 +72,46 @@ abstract class BaseHttpHandler<Request : HttpRequest, AuthContext : Any>(
 
         return AuthContextInput(
             this.headers, jwt, originalJwt
+        )*/
+
+        return AuthContextInput(
+            this.headers, object : ByuJwt {
+            override fun getClientClaims(): ByuClientClaims {
+                TODO("not implemented")
+            }
+
+            override fun getExpiresMillis(): Long {
+                TODO("not implemented")
+            }
+
+            override fun claimsAsMap(): MutableMap<String, Any> {
+                TODO("not implemented")
+            }
+
+            override fun getUserType(): ByuJwt.UserType {
+                TODO("not implemented")
+            }
+
+            override fun getIssuer(): String {
+                TODO("not implemented")
+            }
+
+            override fun hasResourceOwner(): Boolean {
+                TODO("not implemented")
+            }
+
+            override fun getGatewayClaims(): ByuGatewayClaims {
+                TODO("not implemented")
+            }
+
+            override fun getResourceOwnerClaims(): ByuResourceOwnerClaims? {
+                TODO("not implemented")
+            }
+
+            override fun getClientClaimSource(): ByuJwt.ClaimSource {
+                TODO("not implemented")
+            }
+        }
         )
     }
 

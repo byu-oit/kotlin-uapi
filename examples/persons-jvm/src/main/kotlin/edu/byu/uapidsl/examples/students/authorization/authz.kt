@@ -1,33 +1,25 @@
 package edu.byu.uapidsl.examples.students.authorization
 
-import edu.byu.jwt.ByuJwt
-
-class Authorizer(val authJwt: ByuJwt) {
-
-    val byuId = "person BYU ID"
+class Authorizer(val byuId: String) {
 
     fun canCreatePerson() = true
 
     fun canSeeRestrictedRecords() = false
 
-    fun canModifyPerson(targetByuId: String): Boolean {
-        TODO()
-    }
+    fun canModifyPerson(targetByuId: String) = true
 
-    fun canDeletePerson(targetPersonId: String): Boolean {
-        TODO("not implemented")
-    }
+    fun canDeletePerson(targetPersonId: String) = true
 
-    fun canSeeCredentialsFor(byuId: String): Boolean {
-        TODO("not implemented")
-    }
+    fun canSeeCredentialsFor(byuId: String) = true
 
-    fun canSeeEmployeeInfo(byuId: String): Boolean {
-        TODO("not implemented")
-    }
+    fun canSeeEmployeeInfo(byuId: String) = true
 
     fun canSeePerson(h:
                      String): Boolean {
         return true
+    }
+
+    fun isRegistrar(): Boolean {
+        return false
     }
 }

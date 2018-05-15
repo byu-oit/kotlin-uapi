@@ -4,7 +4,6 @@ import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.subresource.SubresourcesInit
 import edu.byu.uapidsl.model.*
-import edu.byu.uapidsl.types.ApiType
 import edu.byu.uapidsl.types.UAPIField
 import kotlin.reflect.KClass
 
@@ -40,8 +39,13 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
 
     fun toResourceModel(): ResourceModel<AuthContext, IdType, DomainType> {
         val ops = this.operationsInit
+
+        val type = Introspectable(modelType)
+        val responseModel = getResponseModel(type)
+
         return ResourceModel(
-            type = Introspectable(modelType),
+            type = type,
+            responseModel = responseModel,
             idModel = getPathIdentifierModel(this.idType),
             name = name,
             example = example,
@@ -50,18 +54,19 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
             create = ops.createModel,
             update = ops.updateModel,
             delete = ops.deleteModel,
-            // TODO ("Actual response wrapper, maybe? 🤷")
-            responseMapper = FakeResponseMapper()
+            // TODO ("Actual response wrapper, maybe? ")
+            responseMapper = FakeResponseMapper(responseModel)
         )
     }
 }
 
-class FakeResponseMapper<AuthContext, IdType, DomainType>: ModelResponseMapper<AuthContext, IdType, DomainType> {
+class FakeResponseMapper<AuthContext, IdType, DomainType: Any>(
+    private val responseModel: ResponseModel<DomainType>
+): ModelResponseMapper<AuthContext, IdType, DomainType> {
     override fun mapResponse(authContext: AuthContext, idType: IdType, modelType: DomainType): Map<String, UAPIField<*>> {
-        return mapOf("foo" to UAPIField(
-            value = "bar",
-            apiType = ApiType.MODIFIABLE
-        ))
+        return responseModel.fields.map {
+            it.uapiName to it.reader(modelType)
+        }.toMap()
     }
 
 }

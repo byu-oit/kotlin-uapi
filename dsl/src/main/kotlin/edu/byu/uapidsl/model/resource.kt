@@ -2,7 +2,6 @@ package edu.byu.uapidsl.model
 
 import edu.byu.uapidsl.dsl.*
 import edu.byu.uapidsl.types.UAPIField
-import edu.byu.uapidsl.types.UAPIResponse
 import either.Either
 
 interface ModelResponseMapper<AuthContext, IdType, ModelType> {
@@ -11,6 +10,7 @@ interface ModelResponseMapper<AuthContext, IdType, ModelType> {
 
 data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
     val type: Introspectable<ResourceType>,
+    val responseModel: ResponseModel<ResourceType>,
     val idModel: PathIdentifierModel<IdType>,
     val name: String,
     val example: ResourceType,
