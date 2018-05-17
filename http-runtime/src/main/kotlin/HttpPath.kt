@@ -3,6 +3,7 @@ package edu.byu.uapidsl.http
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.http.implementation.*
 import edu.byu.uapidsl.http.implementation.serialization.jacksonJsonMapper
+import edu.byu.uapidsl.http.path.CompoundPathVariablePart
 import edu.byu.uapidsl.http.path.PathPart
 import edu.byu.uapidsl.http.path.SimplePathVariablePart
 import edu.byu.uapidsl.http.path.StaticPathPart
@@ -85,5 +86,17 @@ private fun <AuthContext: Any> singleHandlers(uapiModel: UApiModel<AuthContext>,
         delete = delete
     )
 }
+
+
+fun stringifyPaths(pathParts: List<PathPart>): String {
+    return pathParts.joinToString(separator = "/", prefix = "/") { part ->
+        when (part) {
+            is StaticPathPart -> part.part
+            is SimplePathVariablePart -> ":" + part.name
+            is CompoundPathVariablePart -> part.names.joinToString(separator = ",") { ":$it" }
+        }
+    }
+}
+
 
 

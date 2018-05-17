@@ -31,6 +31,11 @@
             <artifactId>kotlin-uapi-dsl</artifactId>
         </dependency>
         <dependency>
+            <groupId>edu.byu.uapidsl</groupId>
+            <artifactId>kotlin-uapi-http-runtime</artifactId>
+        <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-core</artifactId>
             <version>${swagger.version}</version>
