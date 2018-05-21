@@ -3,13 +3,16 @@ package edu.byu.uapidsl.http.implementation
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.ReadLoadContext
-import edu.byu.uapidsl.http.*
+import edu.byu.uapidsl.http.HttpRequest
+import edu.byu.uapidsl.http.NotAuthorizedToViewException
+import edu.byu.uapidsl.http.NotFoundException
+import edu.byu.uapidsl.http.PathParams
 import edu.byu.uapidsl.model.ResourceModel
 import edu.byu.uapidsl.types.UAPIResponse
 
 //class ResourceBaseHandler
 
-abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdType : Any, ModelType : Any, AuthzContext: Any>(
+abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdType : Any, ModelType : Any, AuthzContext : Any>(
     apiModel: UApiModel<AuthContext>,
     jsonMapper: ObjectMapper,
     protected val resource: ResourceModel<AuthContext, IdType, ModelType>
@@ -58,13 +61,15 @@ abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdT
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun loadModel(id: IdType, authContext: AuthContext): ModelType {
         //TODO: Add implementation classes for context objects
-        val loadContext = object : ReadLoadContext<AuthContext, IdType> {
-            override val authContext: AuthContext = authContext
-            override val id: IdType = id
-        }
+        val loadContext = ReadLoadContextImpl(authContext, id)
 
         return loadContext.loader() ?: throw NotFoundException(resource.name, id)
     }
 
 
 }
+
+data class ReadLoadContextImpl<AuthContext, IdType>(
+    override val authContext: AuthContext,
+    override val id: IdType
+) : ReadLoadContext<AuthContext, IdType>
