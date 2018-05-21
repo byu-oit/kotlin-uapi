@@ -40,7 +40,7 @@ private fun <AuthContext: Any> pathsFor(apiModel: UApiModel<AuthContext>, resour
 
     val resourcePath = basePath + SimplePathVariablePart(idParamName)
 
-    val collection = collectionHandlers(resource)
+    val collection = collectionHandlers(apiModel, resource)
 
     val single = singleHandlers(apiModel, resource)
 
@@ -55,12 +55,17 @@ private fun <AuthContext: Any> pathsFor(apiModel: UApiModel<AuthContext>, resour
     return result
 }
 
-private fun <AuthContext> collectionHandlers(resource: ResourceModel<AuthContext, *, *>): MethodHandlers? {
+private fun <AuthContext: Any, IdType: Any, ModelType: Any> collectionHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers? {
     if (resource.list == null && resource.create == null) {
         return null
     }
+
+    val create = resource.create
+
     val get = if (resource.list != null) PagedListGet() else null
-    val post = if (resource.create != null) SimplePost() else null
+    val post = if (create != null) {
+        SimplePost(uapiModel, resource, create, jacksonJsonMapper)
+    } else null
 
     return MethodHandlers(
         options = AuthorizationAwareOptions(),
