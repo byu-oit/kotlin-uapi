@@ -7,7 +7,7 @@ repo_url: https://github.com/byu-oit/kotlin-uapi-dsl  # optional
 software:
   - name: kotlin-uapi-dsl  # optional
     deploy_to_cmdb: false # optional
-    type: 'library'
+    type: library
     aliases:  # optional
     short_description: Kotlin DSL for implementing UAPI Services # optional
     assignment_group: gro:AD-General Enterprise Systems
@@ -21,3 +21,5 @@ software:
     microservice: false # optional
     technologies_used: # optional
       - Kotlin
+      - Maven
+      - Java
