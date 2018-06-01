@@ -5,8 +5,11 @@ import com.fasterxml.jackson.module.jsonSchema.JsonSchema
 import kotlin.reflect.KClass
 
 interface TypeModeler {
+
+    fun jsonMapper(): ObjectMapper
+
     @Throws(UnmappableTypeException::class)
-    fun getJsonReaderFor(type: KClass<*>): ObjectReader
+    fun jsonReaderFor(type: KClass<*>): ObjectReader
 
     @Throws(UnmappableTypeException::class)
     fun getJsonWriterFor(type: KClass<*>): ObjectWriter
@@ -40,6 +43,8 @@ interface TypeModeler {
 
     @Throws(UnmappableTypeException::class)
     fun jsonInputSchemaFor(type: KClass<*>): JsonInputSchema
+
+    fun genericJsonWriter(): ObjectWriter
 }
 
 class UnmappableTypeException(

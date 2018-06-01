@@ -121,8 +121,8 @@ val personsModel = apiModel<Authorizer> {
                     }
                 }
 
-                model {
-                }
+//                model {
+//                }
             }
 
             collection<PersonCredentialId, PersonCredentialDTO>("credentials") {

@@ -1,10 +1,12 @@
 package edu.byu.uapidsl.dsl
 
 import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.subresource.SubresourcesInit
-import edu.byu.uapidsl.model.*
-import edu.byu.uapidsl.types.UAPIField
+import edu.byu.uapidsl.model.IdModel
+import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.ResponseModel
 import kotlin.reflect.KClass
 
 class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
@@ -12,7 +14,7 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
     private val name: String,
     private val idType: KClass<IdType>,
     private val modelType: KClass<DomainType>
-) : DSLInit(validation) {
+) : DSLInit<ResourceModel<AuthContext, IdType, DomainType>>(validation) {
 
     var example: DomainType by setOnce()
 
@@ -37,36 +39,20 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
         //TODO
     }
 
-    fun toResourceModel(): ResourceModel<AuthContext, IdType, DomainType> {
-        val ops = this.operationsInit
-
-        val type = Introspectable(modelType)
-        val responseModel = getResponseModel(type)
-
+    override fun toModel(ctx: ModelingContext): ResourceModel<AuthContext, IdType, DomainType> {
         return ResourceModel(
-            type = type,
-            responseModel = responseModel,
-            idModel = getPathIdentifierModel(this.idType),
+            type = modelType,
+            responseModel = ResponseModel(
+                ctx.models.outputSchemaFor(modelType),
+                ctx.models.genericJsonWriter()
+            ),
+            idModel = IdModel(
+                ctx.models.pathParamSchemaFor(idType),
+                ctx.models.pathParamReaderFor(idType)
+            ),
             name = name,
             example = example,
-            read = ops.readModel,
-            list = ops.listModel,
-            create = ops.createModel,
-            update = ops.updateModel,
-            delete = ops.deleteModel,
-            // TODO ("Actual response wrapper, maybe? ")
-            responseMapper = FakeResponseMapper(responseModel)
+            operations = this.operationsInit.toModel(ctx)
         )
     }
-}
-
-class FakeResponseMapper<AuthContext, IdType, DomainType: Any>(
-    private val responseModel: ResponseModel<DomainType>
-): ModelResponseMapper<AuthContext, IdType, DomainType> {
-    override fun mapResponse(authContext: AuthContext, idType: IdType, modelType: DomainType): Map<String, UAPIField<*>> {
-        return responseModel.fields.map {
-            it.uapiName to it.reader(modelType)
-        }.toMap()
-    }
-
 }

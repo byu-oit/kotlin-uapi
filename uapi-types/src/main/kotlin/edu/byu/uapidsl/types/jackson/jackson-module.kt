@@ -29,7 +29,7 @@ data class Mixin(
 inline fun <reified For, reified Mixin> mixin() = Mixin(For::class, Mixin::class)
 
 internal val allSerializers =
-    fieldSerializers + linkSerializers + scalarSerializers
+    fieldSerializers + linkSerializers
 
 internal val allMixins: List<Mixin> = responseMixins
 

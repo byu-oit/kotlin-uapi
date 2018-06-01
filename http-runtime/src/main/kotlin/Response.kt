@@ -1,6 +1,6 @@
 package edu.byu.uapidsl.http
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.types.UAPIResponse
 
 interface HttpResponse {
@@ -18,8 +18,8 @@ interface ResponseBody {
 }
 
 
-class ErrorHttpResponse(val error: HttpError, objectMapper: ObjectMapper)
-    : UAPIHttpResponse(error.toResponse(), objectMapper) {
+class ErrorHttpResponse(val error: HttpError, jsonWriter: ObjectWriter)
+    : UAPIHttpResponse(error.toResponse(), jsonWriter) {
 
     override val status = error.code
 
@@ -28,7 +28,7 @@ class ErrorHttpResponse(val error: HttpError, objectMapper: ObjectMapper)
 
 }
 
-open class UAPIHttpResponse(uapiResponse: UAPIResponse<*>, jsonMapper: ObjectMapper) : HttpResponse {
+open class UAPIHttpResponse(uapiResponse: UAPIResponse<*>, jsonWriter: ObjectWriter) : HttpResponse {
 
     private val validationResponse = uapiResponse.metadata.validationResponse
 
@@ -39,13 +39,13 @@ open class UAPIHttpResponse(uapiResponse: UAPIResponse<*>, jsonMapper: ObjectMap
         "Content-Type" to "application/json"
     )
 
-    override val body: ResponseBody = JacksonResponseBody(uapiResponse, jsonMapper)
+    override val body: ResponseBody = JacksonResponseBody(uapiResponse, jsonWriter)
 
 }
 
-class JacksonResponseBody(val body: UAPIResponse<*>, val mapper: ObjectMapper) : ResponseBody {
+class JacksonResponseBody(val body: UAPIResponse<*>, val writer: ObjectWriter) : ResponseBody {
     override fun asString(): String {
-        return mapper.writeValueAsString(body)
+        return writer.writeValueAsString(body)
     }
 }
 

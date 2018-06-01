@@ -1,11 +1,5 @@
 package edu.byu.uapidsl.dsl
 
-import edu.byu.uapidsl.DSLInit
-import edu.byu.uapidsl.ValidationContext
-import edu.byu.uapidsl.dsl.subresource.list.SubResourceInit
-import edu.byu.uapidsl.dsl.subresource.single.SingleSubResourceInit
-import edu.byu.uapidsl.model.Introspectable
-import edu.byu.uapidsl.model.OutputModel
 import edu.byu.uapidsl.types.ApiType
 import edu.byu.uapidsl.types.UAPIField
 import java.net.URI
@@ -54,65 +48,65 @@ fun <Type> uapiKey(
     displayLabel = displayLabel
 )
 
-class OutputInit<AuthContext, IdType, ResourceModel : Any, UAPIType: Any>(
-    validation: ValidationContext,
-    private val type: Introspectable<UAPIType>
-) : DSLInit(validation) {
-
-    var example: UAPIType by setOnce()
-
-    var transformModel: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType> by setOnce()
-
-    fun transform(block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
-        this.transformModel = block
-    }
-
-//  inline fun <RelatedId, reified RelatedModel> relation(
-//    name: String,
-//    init: RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>.() -> Unit
-//  ) {
-//  }
+//class OutputInit<AuthContext, IdType, ResourceModel : Any, UAPIType: Any>(
+//    validation: ValidationContext,
+//    private val type: Introspectable<UAPIType>
+//) : DSLInit(validation) {
 //
-//  inline fun externalRelation(
-//    name: String,
-//    init: ExternalRelationInit<AuthContext, IdType, ResourceModel>.() -> Unit
-//  ) {
+//    var example: UAPIType by setOnce()
 //
-//  }
+//    var transformModel: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType> by setOnce()
+//
+//    fun transform(block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
+//        this.transformModel = block
+//    }
+//
+////  inline fun <RelatedId, reified RelatedModel> relation(
+////    name: String,
+////    init: RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>.() -> Unit
+////  ) {
+////  }
+////
+////  inline fun externalRelation(
+////    name: String,
+////    init: ExternalRelationInit<AuthContext, IdType, ResourceModel>.() -> Unit
+////  ) {
+////
+////  }
+//
+////    fun toModel(): OutputModel<AuthContext, IdType, ResourceModel, UAPIType> {
+////        return OutputModel(
+////            type = this.type,
+////            example = this.example,
+////            handle = this.transformModel
+////        )
+////    }
+//
+//}
 
-    fun toModel(): OutputModel<AuthContext, IdType, ResourceModel, UAPIType> {
-        return OutputModel(
-            type = this.type,
-            example = this.example,
-            handle = this.transformModel
-        )
-    }
+//class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>(
+//    validation: ValidationContext
+//) : DSLInit(validation) {
+//    fun authorization(authorizer: RelationAuthorizer<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>) {
+//
+//    }
+//
+//    fun handle(handler: RelationHandler<AuthContext, IdType, ResourceModel, RelatedId>) {
+//
+//    }
+//}
 
-}
-
-class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>(
-    validation: ValidationContext
-) : DSLInit(validation) {
-    fun authorization(authorizer: RelationAuthorizer<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>) {
-
-    }
-
-    fun handle(handler: RelationHandler<AuthContext, IdType, ResourceModel, RelatedId>) {
-
-    }
-}
-
-class ExternalRelationInit<AuthContext, IdType, ResourceModel>(
-    validation: ValidationContext
-) : DSLInit(validation) {
-    fun authorization(authorizer: ExternalRelationAuthorizer<AuthContext, IdType, ResourceModel>) {
-
-    }
-
-    fun handle(handler: ExternalRelationHandler<AuthContext, IdType, ResourceModel>) {
-
-    }
-}
+//class ExternalRelationInit<AuthContext, IdType, ResourceModel>(
+//    validation: ValidationContext
+//) : DSLInit(validation) {
+//    fun authorization(authorizer: ExternalRelationAuthorizer<AuthContext, IdType, ResourceModel>) {
+//
+//    }
+//
+//    fun handle(handler: ExternalRelationHandler<AuthContext, IdType, ResourceModel>) {
+//
+//    }
+//}
 
 typealias ExternalRelationAuthorizer<AuthContext, IdType, ResourceModel> =
     ExternalRelationContext<AuthContext, IdType, ResourceModel>.() -> Boolean

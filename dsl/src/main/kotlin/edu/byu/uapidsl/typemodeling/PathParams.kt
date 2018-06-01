@@ -1,14 +1,17 @@
 package edu.byu.uapidsl.typemodeling
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.ValueNode
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema
 import com.fasterxml.jackson.module.jsonSchema.types.ValueTypeSchema
 import kotlin.reflect.KClass
 
-abstract class PathParamSchema<SchemaType : JsonSchema>(
+sealed class PathParamSchema<SchemaType : JsonSchema>(
     val paramType: PathParamType
 ) {
     abstract val type: KClass<*>
@@ -39,7 +42,18 @@ data class PathParamField(
     val jsonSchema: ValueTypeSchema
 )
 
-class JacksonPathParamReader<Type : Any>(
+class JacksonSimplePathParamReader<Type : Any>(
+    val type: KClass<Type>,
+    private val jsonReader: ObjectReader
+) : PathParamReader<Type> {
+    override fun read(params: Map<String, String>): Type {
+        val value = params.values.single()
+        return jsonReader.readValue(TextNode.valueOf(value))
+    }
+}
+
+
+class JacksonComplexPathParamReader<Type : Any>(
     val type: KClass<Type>,
     private val jsonReader: ObjectReader,
     private val nodeCreator: ObjectNodeCreator

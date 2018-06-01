@@ -18,7 +18,7 @@ data class ErrorResponse(
     override val links: UAPILinks = emptyMap()
 }
 
-data class BasicResourceResponse(
+data class SimpleResourceResponse(
     override val fieldsets: Map<String, UAPIResource>,
     override val metadata: UAPIResourceMeta,
     override val links: UAPILinks = emptyMap()
@@ -30,6 +30,12 @@ abstract class UAPIResourceResponseBase(
     override val metadata: UAPIResourceMeta,
     override val links: UAPILinks
 ): UAPIResponse<UAPIResourceMeta>
+
+data class UAPISimpleResource(
+    override val metadata: UAPIResourceMeta,
+    override val links: UAPILinks = emptyMap(),
+    val properties: Any
+): UAPIResource
 
 data class UAPIMapResource(
     override val metadata: UAPIResourceMeta,

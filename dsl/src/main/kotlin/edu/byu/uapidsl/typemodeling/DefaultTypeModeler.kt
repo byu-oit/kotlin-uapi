@@ -8,8 +8,12 @@ import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import edu.byu.uapidsl.toSnakeCase
 import edu.byu.uapidsl.types.ApiType
+import edu.byu.uapidsl.types.UAPIField
 import edu.byu.uapidsl.types.jackson.JacksonUAPITypesModule
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubtypeOf
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.jvmName
 
 class DefaultTypeModeler(config: TypeModelerConfig = TypeModelerConfig()) : TypeModeler {
@@ -26,9 +30,13 @@ class DefaultTypeModeler(config: TypeModelerConfig = TypeModelerConfig()) : Type
 
     private val schemaGenerator = JsonSchemaGenerator(objectMapper)
 
-    override fun getJsonReaderFor(type: KClass<*>): ObjectReader {
+    override fun jsonReaderFor(type: KClass<*>): ObjectReader {
         return objectMapper.readerFor(type.java).with(DeserializationFeature.EAGER_DESERIALIZER_FETCH)
     }
+
+    override fun jsonMapper(): ObjectMapper = objectMapper
+
+    override fun genericJsonWriter(): ObjectWriter = objectMapper.writer()
 
     override fun getJsonWriterFor(type: KClass<*>): ObjectWriter {
         return objectMapper.writerFor(type.java).with(SerializationFeature.EAGER_SERIALIZER_FETCH)
@@ -51,7 +59,7 @@ class DefaultTypeModeler(config: TypeModelerConfig = TypeModelerConfig()) : Type
 
     @Throws(UnmappableTypeException::class)
     override fun <Type : Any> queryParamReaderFor(type: KClass<Type>): QueryParamReader<Type> {
-        return JacksonQueryParamReader(type, queryParamSchemaFor(type), getJsonReaderFor(type)) { objectMapper.createObjectNode() }
+        return JacksonQueryParamReader(type, queryParamSchemaFor(type), jsonReaderFor(type)) { objectMapper.createObjectNode() }
     }
 
     override fun queryParamSchemaFor(type: KClass<*>): QueryParamSchema {
@@ -66,7 +74,13 @@ class DefaultTypeModeler(config: TypeModelerConfig = TypeModelerConfig()) : Type
     }
 
     @Throws(UnmappableTypeException::class)
-    override fun <Type : Any> pathParamReaderFor(type: KClass<Type>): PathParamReader<Type> = JacksonPathParamReader(type, getJsonReaderFor(type)) { objectMapper.createObjectNode() }
+    override fun <Type : Any> pathParamReaderFor(type: KClass<Type>): PathParamReader<Type> {
+        val schema = pathParamSchemaFor(type)
+        return when(schema.paramType) {
+            PathParamType.SIMPLE -> JacksonSimplePathParamReader(type, jsonReaderFor(type))
+            PathParamType.COMPLEX -> JacksonComplexPathParamReader(type, jsonReaderFor(type)) { objectMapper.createObjectNode() }
+        }
+    }
 
     override fun pathParamSchemaFor(type: KClass<*>): PathParamSchema<*> {
         val schema = jsonSchemaFor(type)
@@ -88,25 +102,35 @@ class DefaultTypeModeler(config: TypeModelerConfig = TypeModelerConfig()) : Type
     }
 
     override fun outputSchemaFor(type: KClass<*>): OutputSchema {
-        val schema: ObjectSchema = jsonSchemaFor(type).asObjectSchema()
+        val jsonSchema: ObjectSchema = jsonSchemaFor(type).asObjectSchema()
 
-        val props = (schema.properties as Map<String, JsonSchema>).map {
-            val (name, prop) = it
-            if (!prop.isValueTypeSchema) {
-                //TODO(sometime when Joseph isn't hopped up on allergy meds, add a pretty error message)
-                throw UnmappableTypeException("$type $name isn't a value type")
+        val props = type.memberProperties
+            .filter { jsonSchema.properties.containsKey(it.name.toSnakeCase()) }
+            .map {
+                val name = it.name.toSnakeCase()
+                var jsonProp = jsonSchema.properties[name]!!
+
+                if (jsonProp.`$ref` != null) {
+                    jsonProp = jsonSchema.properties.values.find { it.id == jsonProp.`$ref` } ?: throw UnmappableTypeException("Unable to dereference schema for $name (ref was ${jsonProp.`$ref`})")
+                }
+
+                if (!jsonProp.isObjectSchema) throw UnmappableTypeException("${it.name} doesn't have an object schema")
+                if (!it.returnType.isSubtypeOf(UAPIField::class.starProjectedType)) {
+                    //TODO(sometime when Joseph isn't hopped up on allergy meds, add a pretty error message)
+                    throw UnmappableTypeException("${it.name} isn't of type 'UAPIField'")
+                }
+
+                OutputField(
+                    name = name,
+                    valueSchema = jsonProp.asObjectSchema().properties["value"]!!.asValueTypeSchema(),
+                    allowedApiTypes = setOf(ApiType.MODIFIABLE)
+                )
             }
-            OutputField(
-                name = name,
-                valueSchema = prop.asValueTypeSchema(),
-                allowedApiTypes = setOf(ApiType.MODIFIABLE)
-            )
-        }
 
         return OutputSchema(
             name = type.jvmName.toSnakeCase(),
             properties = props,
-            jsonSchema = schema
+            jsonSchema = jsonSchema
         )
     }
 

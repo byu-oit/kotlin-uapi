@@ -11,7 +11,7 @@ class CachingTypeModelerDecorator(private val delegate: TypeModeler) : TypeModel
 
     private val jsonReaderCache: LoadingCache<KClass<*>, ObjectReader> = Caffeine.newBuilder()
         .softValues()
-        .build(delegate::getJsonReaderFor)
+        .build(delegate::jsonReaderFor)
 
     private val jsonWriterCache: LoadingCache<KClass<*>, ObjectWriter> = Caffeine.newBuilder()
         .softValues()
@@ -33,7 +33,7 @@ class CachingTypeModelerDecorator(private val delegate: TypeModeler) : TypeModel
         .softValues()
         .build(delegate::outputSchemaFor)
 
-    override fun getJsonReaderFor(type: KClass<*>): ObjectReader = jsonReaderCache[type]!!
+    override fun jsonReaderFor(type: KClass<*>): ObjectReader = jsonReaderCache[type]!!
 
     override fun getJsonWriterFor(type: KClass<*>): ObjectWriter = jsonWriterCache[type]!!
 
