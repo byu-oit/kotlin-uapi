@@ -20,7 +20,7 @@ fun <AuthContext : Any> UApiModel<AuthContext>.igniteSpark(port: Int = 4567): Se
     val paths = this.httpPaths
 
     for (path in paths) {
-        val pathString = stringifyPaths(path.pathParts)
+        val pathString = stringifyPaths(path.pathParts, PathParamDelimiter.SPARK)
 
         val (options, get, post, put, patch, delete) = path.handlers
 

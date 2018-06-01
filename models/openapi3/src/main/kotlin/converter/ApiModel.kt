@@ -22,8 +22,9 @@ fun convert(model: UApiModel<*>): OpenAPI {
         val modelPaths = model.httpPaths
 
         for (modelPath in modelPaths) {
-            val pathString = stringifyPaths(modelPath.pathParts)
-            val idString = pathString.removePrefix("/").replace("/", "_").replace(":","")
+            val pathString = stringifyPaths(modelPath.pathParts,PathParamDelimiter.OPENAPI)
+            val simplePathString = stringifyPaths(modelPath.pathParts,PathParamDelimiter.NONE)
+            val idString = simplePathString.removePrefix("/").replace("/", "_")
 
             val (options, get, post, put, patch, delete) = modelPath.handlers
 

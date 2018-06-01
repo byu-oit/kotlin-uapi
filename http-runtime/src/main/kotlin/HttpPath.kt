@@ -92,13 +92,28 @@ private fun <AuthContext: Any> singleHandlers(uapiModel: UApiModel<AuthContext>,
     )
 }
 
+enum class PathParamDelimiter {
+    NONE,
+    SPARK,
+    OPENAPI
+}
 
-fun stringifyPaths(pathParts: List<PathPart>): String {
+fun stringifyPaths(pathParts: List<PathPart>, delimiter: PathParamDelimiter): String {
+    val openDelim = when(delimiter) {
+        PathParamDelimiter.NONE -> ""
+        PathParamDelimiter.SPARK -> ":"
+        PathParamDelimiter.OPENAPI -> "{"
+    }
+    val closeDelim = when(delimiter) {
+        PathParamDelimiter.NONE -> ""
+        PathParamDelimiter.SPARK -> ""
+        PathParamDelimiter.OPENAPI -> "}"
+    }
     return pathParts.joinToString(separator = "/", prefix = "/") { part ->
         when (part) {
             is StaticPathPart -> part.part
-            is SimplePathVariablePart -> ":" + part.name
-            is CompoundPathVariablePart -> part.names.joinToString(separator = ",") { ":$it" }
+            is SimplePathVariablePart -> openDelim + part.name + closeDelim
+            is CompoundPathVariablePart -> part.names.joinToString(separator = ",") { "$openDelim$it$closeDelim" }
         }
     }
 }
