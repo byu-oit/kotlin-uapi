@@ -1,11 +1,15 @@
 package edu.byu.uapidsl.dsl.subresource.single
 
 import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.ValidationContext
 
 class SingleSubOperationsInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
 
     inline fun <reified InputModel> createOrUpdate(init: SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubModel, InputModel>.() -> Unit) {
 
@@ -23,7 +27,11 @@ class SingleSubOperationsInit<AuthContext, ParentId, ParentModel, SingleSubModel
 
 class SingleSubReadInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SingleSubReadAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel>) {
 
     }
@@ -36,7 +44,11 @@ class SingleSubReadInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
 
 class SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubModel, UpdateModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SingleSubCreateOrUpdateAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel, UpdateModel>) {
 
     }
@@ -48,7 +60,11 @@ class SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubM
 
 class SingleSubDeleteInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SingleSubDeleteAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel>) {
 
     }

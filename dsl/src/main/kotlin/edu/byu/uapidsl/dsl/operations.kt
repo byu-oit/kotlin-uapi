@@ -1,21 +1,23 @@
 package edu.byu.uapidsl.dsl
 
 import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.model.*
 import either.Either
 import either.Left
 import either.Right
+import either.fold
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 
 class OperationsInit<AuthContext, IdType, ResourceType>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<OperationModel<AuthContext, IdType, ResourceType>>(validation) {
 
     @PublishedApi
-    internal var createModel: CreateOperation<AuthContext, IdType, *>? by setOnce()
+    internal var createInit: CreateInit<AuthContext, IdType, *>? by setOnce()
 
     inline fun <reified CreateModel : Any> create(init: CreateInit<AuthContext, IdType, CreateModel>.() -> Unit) {
         val createInit = CreateInit<AuthContext, IdType, CreateModel>(
@@ -23,12 +25,11 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
             CreateModel::class
         )
         createInit.init()
-
-        this.createModel = createInit.toModel()
+        this.createInit = createInit
     }
 
     @PublishedApi
-    internal var updateModel: UpdateOperation<AuthContext, IdType, ResourceType, *>? by setOnce()
+    internal var updateInit: Either<UpdateInit<AuthContext, IdType, ResourceType, *>, CreateOrUpdateInit<AuthContext, IdType, ResourceType, *>>? by setOnce()
 
     inline fun <reified UpdateModel : Any> update(init: UpdateInit<AuthContext, IdType, ResourceType, UpdateModel>.() -> Unit) {
         val obj = UpdateInit<AuthContext, IdType, ResourceType, UpdateModel>(
@@ -36,7 +37,7 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
             UpdateModel::class
         )
         obj.init()
-        this.updateModel = obj.toModel()
+        this.updateInit = Left(obj)
     }
 
     inline fun <reified InputModel : Any> createOrUpdate(init: CreateOrUpdateInit<AuthContext, IdType, ResourceType, InputModel>.() -> Unit) {
@@ -45,31 +46,31 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
             InputModel::class
         )
         obj.init()
-        this.updateModel = obj.toModel()
+        this.updateInit = Right(obj)
     }
 
     @PublishedApi
-    internal var deleteModel: DeleteOperation<AuthContext, IdType, ResourceType>? by setOnce()
+    internal var deleteInit: DeleteInit<AuthContext, IdType, ResourceType>? by setOnce()
 
     inline fun delete(init: DeleteInit<AuthContext, IdType, ResourceType>.() -> Unit) {
         //TODO: Error if already set
         val obj = DeleteInit<AuthContext, IdType, ResourceType>(validation)
         obj.init()
-        this.deleteModel = obj.toModel()
+        this.deleteInit = obj
     }
 
     @PublishedApi
-    internal var readModel: ReadOperation<AuthContext, IdType, ResourceType> by setOnce()
+    internal var readInit: ReadInit<AuthContext, IdType, ResourceType> by setOnce()
 
     inline fun read(init: ReadInit<AuthContext, IdType, ResourceType>.() -> Unit) {
         //TODO: Error if already set
         val obj = ReadInit<AuthContext, IdType, ResourceType>(validation)
         obj.init()
-        this.readModel = obj.toModel()
+        this.readInit = obj
     }
 
     @PublishedApi
-    internal var listModel: ListOperation<AuthContext, IdType, ResourceType, *>? by setOnce()
+    internal var listInit: Either<SimpleListInit<AuthContext, IdType, ResourceType, *>, PagedCollectionInit<AuthContext, IdType, ResourceType, *>>? by setOnce()
 
     inline fun <reified FilterType : Any> listSimple(init: SimpleListInit<AuthContext, IdType, ResourceType, FilterType>.() -> Unit) {
         val obj = SimpleListInit<AuthContext, IdType, ResourceType, FilterType>(
@@ -77,7 +78,7 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
             FilterType::class
         )
         obj.init()
-        this.listModel = obj.toModel()
+        this.listInit = Left(obj)
     }
 
     inline fun <reified FilterType : Any> listPaged(
@@ -88,14 +89,24 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
             FilterType::class
         )
         obj.init()
-        this.listModel = obj.toModel()
+        this.listInit = Right(obj)
+    }
+
+    override fun toModel(context: ModelingContext): OperationModel<AuthContext, IdType, ResourceType> {
+        return OperationModel(
+            read = this.readInit.toModel(context),
+            create = this.createInit?.toModel(context),
+            update = this.updateInit?.fold({ it.toModel(context) }, { it.toModel(context) }),
+            delete = this.deleteInit?.toModel(context),
+            list = this.listInit?.fold({ it.toModel(context) }, { it.toModel(context) })
+        )
     }
 
 }
 
 class ReadInit<AuthContext, IdType, ResourceModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<ReadOperation<AuthContext, IdType, ResourceModel>>(validation) {
 
     private var authorizer: ReadAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
 
@@ -109,7 +120,7 @@ class ReadInit<AuthContext, IdType, ResourceModel>(
         this.handler = handler
     }
 
-    fun toModel(): ReadOperation<AuthContext, IdType, ResourceModel> {
+    override fun toModel(context: ModelingContext): ReadOperation<AuthContext, IdType, ResourceModel> {
         return ReadOperation(
             this.authorizer,
             this.handler
@@ -121,7 +132,7 @@ class ReadInit<AuthContext, IdType, ResourceModel>(
 class SimpleListInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
     validation: ValidationContext,
     private val filterType: KClass<FilterType>
-) : DSLInit(validation) {
+) : DSLInit<SimpleListOperation<AuthContext, IdType, ResourceModel, FilterType>>(validation) {
 
     private var handler: Either<
         ListHandler<AuthContext, FilterType, IdType>,
@@ -136,9 +147,12 @@ class SimpleListInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
         handler = Right(block)
     }
 
-    fun toModel(): SimpleListOperation<AuthContext, IdType, ResourceModel, FilterType> {
+    override fun toModel(context: ModelingContext): SimpleListOperation<AuthContext, IdType, ResourceModel, FilterType> {
         return SimpleListOperation(
-            filterType = Introspectable(filterType),
+            filterType = QueryParamModel(
+                context.models.queryParamSchemaFor(filterType),
+                context.models.queryParamReaderFor(filterType)
+            ),
             handle = handler
         )
     }
@@ -147,7 +161,7 @@ class SimpleListInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
 class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
     validation: ValidationContext,
     private val filterType: KClass<FilterType>
-) : DSLInit(validation) {
+) : DSLInit<PagedListOperation<AuthContext, IdType, ResourceModel, FilterType>>(validation) {
     var defaultSize: Int by setOnce()
     var maxSize: Int by setOnce()
 
@@ -164,9 +178,16 @@ class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
         PagedListHandler<AuthContext, FilterType, ResourceModel>
         > by setOnce()
 
-    fun toModel(): PagedListOperation<AuthContext, IdType, ResourceModel, FilterType> {
+    override fun toModel(context: ModelingContext): PagedListOperation<AuthContext, IdType, ResourceModel, FilterType> {
         return PagedListOperation(
-            filterType = Introspectable(filterType),
+            filterType = QueryParamModel(
+                context.models.queryParamSchemaFor(filterType),
+                context.models.queryParamReaderFor(filterType)
+            ),
+            pageParamModel = QueryParamModel(
+                context.models.queryParamSchemaFor(PagingParams::class),
+                context.models.queryParamReaderFor(PagingParams::class)
+            ),
             handle = handler
         )
     }
@@ -192,7 +213,7 @@ interface PagedListContext<AuthContext, FilterType> {
 class CreateInit<AuthContext, IdType, CreateModel : Any>(
     validation: ValidationContext,
     private val input: KClass<CreateModel>
-) : DSLInit(validation) {
+) : DSLInit<CreateOperation<AuthContext, IdType, CreateModel>>(validation) {
 
     private var authorizationHandler: CreateAuthorizer<AuthContext, CreateModel> by setOnce()
     private var handler: CreateHandler<AuthContext, IdType, CreateModel> by setOnce()
@@ -205,8 +226,12 @@ class CreateInit<AuthContext, IdType, CreateModel : Any>(
         this.handler = handler
     }
 
-    fun toModel(): CreateOperation<AuthContext, IdType, CreateModel> = CreateOperation(
-        input = Introspectable(input),
+    override fun toModel(context: ModelingContext): CreateOperation<AuthContext, IdType, CreateModel> = CreateOperation(
+        input = InputModel(
+            input,
+            context.models.jsonInputSchemaFor(input),
+            context.models.jsonReaderFor(input)
+        ),
         authorization = this.authorizationHandler,
         handle = this.handler
     )
@@ -215,7 +240,7 @@ class CreateInit<AuthContext, IdType, CreateModel : Any>(
 class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
     validation: ValidationContext,
     private val input: KClass<InputModel>
-) : DSLInit(validation) {
+) : DSLInit<UpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>(validation) {
 
     private var authorization: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
     private var handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
@@ -228,9 +253,13 @@ class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
         this.handler = handler
     }
 
-    fun toModel(): SimpleUpdateOperation<AuthContext, IdType, ResourceModel, InputModel> {
+    override fun toModel(context: ModelingContext): SimpleUpdateOperation<AuthContext, IdType, ResourceModel, InputModel> {
         return SimpleUpdateOperation(
-            input = Introspectable(this.input),
+            input = InputModel(
+                input,
+                context.models.jsonInputSchemaFor(input),
+                context.models.jsonReaderFor(input)
+            ),
             authorization = this.authorization,
             handle = this.handler
         )
@@ -240,7 +269,7 @@ class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
 class CreateOrUpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
     validation: ValidationContext,
     private val input: KClass<InputModel>
-) : DSLInit(validation) {
+) : DSLInit<CreateOrUpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>(validation) {
 
     private var authorization: CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
     private var handler: CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
@@ -253,9 +282,13 @@ class CreateOrUpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
         this.handler = handler
     }
 
-    fun toModel(): CreateOrUpdateOperation<AuthContext, IdType, ResourceModel, InputModel> {
+    override fun toModel(context: ModelingContext): CreateOrUpdateOperation<AuthContext, IdType, ResourceModel, InputModel> {
         return CreateOrUpdateOperation(
-            input = Introspectable(this.input),
+            input = InputModel(
+                input,
+                context.models.jsonInputSchemaFor(input),
+                context.models.jsonReaderFor(input)
+            ),
             authorization = this.authorization,
             handle = this.handler
         )
@@ -264,7 +297,7 @@ class CreateOrUpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
 
 class DeleteInit<AuthContext, IdType, ResourceModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<DeleteOperation<AuthContext, IdType, ResourceModel>>(validation) {
 
     private var authorization: DeleteAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
     private var handler: DeleteHandler<AuthContext, IdType, ResourceModel> by setOnce()
@@ -277,7 +310,7 @@ class DeleteInit<AuthContext, IdType, ResourceModel>(
         this.handler = handler
     }
 
-    fun toModel(): DeleteOperation<AuthContext, IdType, ResourceModel> {
+    override fun toModel(context: ModelingContext): DeleteOperation<AuthContext, IdType, ResourceModel> {
         return DeleteOperation(
             authorization = this.authorization,
             handle = this.handler
@@ -291,7 +324,6 @@ interface InputValidator {
     fun validate(message: String, condition: () -> Boolean)
 
     fun isNotEmpty(prop: Prop<String>)
-
 
 
 }

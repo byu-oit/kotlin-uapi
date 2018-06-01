@@ -3,13 +3,18 @@
 package edu.byu.uapidsl.dsl.subresource.list
 
 import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.CollectionWithTotal
 import edu.byu.uapidsl.dsl.PagingParams
 
 class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>>(validation) {
+    override fun toModel(context: ModelingContext): SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel> {
+        TODO("not implemented")
+    }
+
     inline fun <reified CreateModel> create(init: SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>.() -> Unit) {
 
     }
@@ -44,9 +49,17 @@ class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 
 }
 
+
+class SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+)
+
 class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SubReadAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 
     }
@@ -59,7 +72,11 @@ class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 
 class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     var defaultSize: Int = Int.MAX_VALUE
     var maxSize: Int = Int.MAX_VALUE
 
@@ -74,7 +91,10 @@ class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel
 
 class SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
 
     fun listIds(handler: SubListHandler<AuthContext, ParentId, ParentModel, FilterType, SubId>) {
 
@@ -102,7 +122,11 @@ interface SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType> {
 
 class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SubCreateAuthorizer<AuthContext, ParentId, ParentModel, CreateModel>) {
 
     }
@@ -114,7 +138,11 @@ class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
 
 class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SubUpdateAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>) {
 
     }
@@ -126,7 +154,11 @@ class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateM
 
 class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SubCreateOrUpdateAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>) {
 
     }
@@ -138,7 +170,11 @@ class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel,
 
 class SubDeleteInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(auth: SubDeleteAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 
     }

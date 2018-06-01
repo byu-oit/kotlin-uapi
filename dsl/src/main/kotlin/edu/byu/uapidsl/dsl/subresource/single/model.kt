@@ -1,11 +1,15 @@
 package edu.byu.uapidsl.dsl.subresource.single
 
 import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.ValidationContext
 
 class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
 
     fun <UAPIType> transform(handler: SingleSubTransformer<AuthContext, ParentId, ParentModel, SingleSubModel, UAPIType>) {
 
@@ -28,7 +32,11 @@ class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
 
 class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(authorizer: SingleSubRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>) {
 
     }
@@ -40,7 +48,11 @@ class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, 
 
 class SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
     validation: ValidationContext
-) : DSLInit(validation) {
+) : DSLInit<Nothing>(validation) {
+    override fun toModel(context: ModelingContext): Nothing {
+        TODO("not implemented")
+    }
+
     fun authorization(authorizer: SingleSubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SingleSubModel>) {
 
     }

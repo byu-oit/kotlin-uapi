@@ -2,7 +2,6 @@ package edu.byu.uapidsl.http
 
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.http.implementation.*
-import edu.byu.uapidsl.http.implementation.serialization.jacksonJsonMapper
 import edu.byu.uapidsl.http.path.CompoundPathVariablePart
 import edu.byu.uapidsl.http.path.PathPart
 import edu.byu.uapidsl.http.path.SimplePathVariablePart
@@ -10,6 +9,9 @@ import edu.byu.uapidsl.http.path.StaticPathPart
 import edu.byu.uapidsl.model.CreateOrUpdateOperation
 import edu.byu.uapidsl.model.ResourceModel
 import edu.byu.uapidsl.model.SimpleUpdateOperation
+import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
+import edu.byu.uapidsl.typemodeling.PathParamSchema
+import edu.byu.uapidsl.typemodeling.SimplePathParamSchema
 
 data class HttpPath(
     val pathParts: List<PathPart>,
@@ -36,9 +38,9 @@ private fun <AuthContext: Any> pathsFor(apiModel: UApiModel<AuthContext>, resour
     val basePath: List<PathPart> = listOf(StaticPathPart(resource.name))
 
     // TODO("Actually, you know, handle other types of IDs")
-    val idParamName = resource.idModel.names.first()
+    val idParamSchema = resource.idModel.schema
 
-    val resourcePath = basePath + SimplePathVariablePart(idParamName)
+    val resourcePath = basePath + idParamSchema.asPathPart()
 
     val collection = collectionHandlers(apiModel, resource)
 
@@ -55,16 +57,24 @@ private fun <AuthContext: Any> pathsFor(apiModel: UApiModel<AuthContext>, resour
     return result
 }
 
+private fun PathParamSchema<*>.asPathPart(): PathPart {
+    return when(this) {
+        is SimplePathParamSchema -> SimplePathVariablePart(this.name)
+        is ComplexPathParamSchema -> CompoundPathVariablePart(this.properties.map { it.name })
+    }
+}
+
 private fun <AuthContext: Any, IdType: Any, ModelType: Any> collectionHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers? {
-    if (resource.list == null && resource.create == null) {
+    val ops = resource.operations
+    if (ops.list == null && ops.create == null) {
         return null
     }
 
-    val create = resource.create
+    val create = ops.create
 
-    val get = if (resource.list != null) PagedListGet() else null
+    val get = if (ops.list != null) PagedListGet() else null
     val post = if (create != null) {
-        SimplePost(uapiModel, resource, create, jacksonJsonMapper)
+        SimplePost(uapiModel, resource, create, resource.responseModel.writer)
     } else null
 
     return MethodHandlers(
@@ -75,13 +85,14 @@ private fun <AuthContext: Any, IdType: Any, ModelType: Any> collectionHandlers(u
 }
 
 private fun <AuthContext: Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, *, *>): MethodHandlers {
-    val get = ResourceGet(uapiModel, resource, jacksonJsonMapper)
-    val put = when(resource.update) {
+    val ops = resource.operations
+    val get = ResourceGet(uapiModel, resource, resource.responseModel.writer)
+    val put = when(ops.update) {
         is SimpleUpdateOperation<AuthContext, *, *, *> -> SimplePut()
         is CreateOrUpdateOperation<AuthContext, *, *, *> -> MaybeCreatePut()
         null -> null
     }
-    val delete = if (resource.delete != null) SimpleDelete() else null
+    val delete = if (ops.delete != null) SimpleDelete() else null
     val options = AuthorizationAwareOptions()
 
     return MethodHandlers(

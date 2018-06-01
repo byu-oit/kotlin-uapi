@@ -1,6 +1,6 @@
 package edu.byu.uapidsl.http.implementation
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.ReadContext
 import edu.byu.uapidsl.http.GetHandler
@@ -11,12 +11,12 @@ import edu.byu.uapidsl.types.*
 class ResourceGet<AuthContext : Any, IdType : Any, ModelType : Any>(
     apiModel: UApiModel<AuthContext>,
     resource: ResourceModel<AuthContext, IdType, ModelType>,
-    jsonMapper: ObjectMapper
+    jsonWriter: ObjectWriter
 ) : ResourceBaseHandler<GetRequest, AuthContext, IdType, ModelType, ReadContext<AuthContext, IdType, ModelType>>(
-    apiModel, jsonMapper, resource
+    apiModel, jsonWriter, resource
 ), GetHandler {
 
-    override val authorizer = resource.read.authorization
+    override val authorizer = resource.operations.read.authorization
 
     override fun getAuthzContext(
         request: GetRequest,
@@ -31,20 +31,17 @@ class ResourceGet<AuthContext : Any, IdType : Any, ModelType : Any>(
         id: IdType,
         model: ModelType
     ): UAPIResponse<*> {
-        val props = resource.responseMapper.mapResponse(authContext, id, model)
-
         val metadata = UAPIResourceMeta(
             ValidationResponse.OK
         )
 
-        return BasicResourceResponse(
-            mapOf("basic" to UAPIMapResource(metadata, properties = props)),
+        return SimpleResourceResponse(
+            mapOf("basic" to UAPISimpleResource(metadata, properties = model)),
+            // TODO(Add other fieldsets and contexts)
             metadata
         )
     }
 }
-
-
 
 data class ReadContextImpl<AuthContext, IdType, ModelType>(
     override val authContext: AuthContext,

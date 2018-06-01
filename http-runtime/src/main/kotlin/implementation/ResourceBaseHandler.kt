@@ -1,6 +1,6 @@
 package edu.byu.uapidsl.http.implementation
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.ReadLoadContext
 import edu.byu.uapidsl.http.HttpRequest
@@ -14,11 +14,11 @@ import edu.byu.uapidsl.types.UAPIResponse
 
 abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdType : Any, ModelType : Any, AuthzContext : Any>(
     apiModel: UApiModel<AuthContext>,
-    jsonMapper: ObjectMapper,
+    jsonWriter: ObjectWriter,
     protected val resource: ResourceModel<AuthContext, IdType, ModelType>
-) : BaseHttpHandler<Request, AuthContext>(apiModel, jsonMapper) {
+) : BaseHttpHandler<Request, AuthContext>(apiModel, jsonWriter) {
 
-    private val loader = resource.read.handle
+    private val loader = resource.operations.read.handle
 
     final override fun handleAuthenticated(request: Request, authContext: AuthContext): UAPIResponse<*> {
         val id = idFrom(request.path)
@@ -42,20 +42,7 @@ abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdT
     abstract fun handleResource(request: Request, authContext: AuthContext, id: IdType, model: ModelType): UAPIResponse<*>
 
     private fun idFrom(pathParams: PathParams): IdType {
-        if (this.resource.idModel.isCompound) {
-            TODO("Compound path parameters aren't supported yet")
-        }
-        if (this.resource.idModel.type.type != String::class) {
-            TODO("Non-string ID types are not yet supported")
-        }
-        val name = this.resource.idModel.names.first()
-        println("ID Name: $name, params: $pathParams")
-        val value = pathParams[name]
-//        if (!this.resource.idModel.type.type.isInstance(value)) {
-//            throw IllegalStateException("Id value is not the proper type")
-//        }
-        @Suppress("UNCHECKED_CAST")
-        return pathParams[name] as IdType
+        return this.resource.idModel.reader.read(pathParams)
     }
 
     @Suppress("MemberVisibilityCanBePrivate")

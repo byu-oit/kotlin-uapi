@@ -1,6 +1,6 @@
 package edu.byu.uapidsl.http.implementation
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.jwt.ByuClientClaims
 import edu.byu.jwt.ByuGatewayClaims
 import edu.byu.jwt.ByuJwt
@@ -16,7 +16,7 @@ import edu.byu.uapidsl.types.UAPIResponse
 
 abstract class BaseHttpHandler<Request : HttpRequest, AuthContext : Any>(
     protected val apiModel: UApiModel<AuthContext>,
-    protected val jsonMapper: ObjectMapper
+    protected val jsonWriter: ObjectWriter
 ) : HttpHandler<Request> {
 
     private val jwtValidator: ByuJwtValidator = ByuJwtValidatorImpl(setOf(OIDDiscoveryLoaderImpl()))
@@ -27,17 +27,17 @@ abstract class BaseHttpHandler<Request : HttpRequest, AuthContext : Any>(
         return try {
             val response = handleUAPI(request)
 
-            UAPIHttpResponse(response, jsonMapper)
+            UAPIHttpResponse(response, jsonWriter)
         } catch (ex: HttpError) {
             ex.printStackTrace()
-            ErrorHttpResponse(ex, jsonMapper)
+            ErrorHttpResponse(ex, jsonWriter)
         } catch (ex: Throwable) {
             ex.printStackTrace()
             ErrorHttpResponse(
                 HttpError(500, "Unknown Error: ${ex.message}", listOf(
                     "Please try your action again.",
                     "If the problem persists, please contact technical support."
-                )), jsonMapper
+                )), jsonWriter
             )
         }
     }

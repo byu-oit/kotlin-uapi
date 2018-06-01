@@ -3,16 +3,20 @@ package edu.byu.uapidsl
 import edu.byu.jwt.ByuJwt
 import edu.byu.uapidsl.dsl.ResourceInit
 import edu.byu.uapidsl.dsl.setOnce
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.typemodeling.DefaultTypeModeler
+import edu.byu.uapidsl.typemodeling.TypeModeler
 import java.lang.annotation.Inherited
 
 inline fun <AuthContext : Any> apiModel(block: ApiModelInit<AuthContext>.() -> Unit): UApiModel<AuthContext> {
     val init = ApiModelInit<AuthContext>()
     init.block()
-    return init.toModel()
+    return init.toModel(ModelingContext(
+        ValidationContext(),
+        DefaultTypeModeler()
+    ))
 }
 
-class ApiModelInit<AuthContext: Any> : DSLInit(ValidationContext()) {
+class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>(ValidationContext()) {
 
     private var apiInfoInit: ApiInfoInit by setOnce()
 
@@ -27,25 +31,26 @@ class ApiModelInit<AuthContext: Any> : DSLInit(ValidationContext()) {
         this.authContextCreator = block
     }
 
-    var resources: MutableList<ResourceModel<AuthContext, *, *>> = mutableListOf()
+    @PublishedApi
+    internal var resources: MutableList<ResourceInit<AuthContext, *, *>> = mutableListOf()
 
     inline fun <reified IdType : Any, reified ResourceType : Any> resource(name: String, init: ResourceInit<AuthContext, IdType, ResourceType>.() -> Unit) {
         println("Resource: $name ${ResourceType::class.simpleName}")
         val res = ResourceInit<AuthContext, IdType, ResourceType>(validation, name, IdType::class, ResourceType::class)
         res.init()
 
-        resources.add(res.toResourceModel())
+        resources.add(res)
     }
 
     inline fun extend(block: ExtendInit.() -> Unit) {
 
     }
 
-    fun toModel(): UApiModel<AuthContext> {
+    override fun toModel(context: ModelingContext): UApiModel<AuthContext> {
         return UApiModel(
-            info = apiInfoInit.toModel(),
+            info = apiInfoInit.toModel(context),
             authContextCreator = authContextCreator,
-            resources = resources
+            resources = resources.map { it.toModel(context) }
         )
     }
 
@@ -53,12 +58,12 @@ class ApiModelInit<AuthContext: Any> : DSLInit(ValidationContext()) {
 
 class ApiInfoInit(
     validation: ValidationContext
-): DSLInit(validation) {
+): DSLInit<ApiInfo>(validation) {
     var name: String by setOnce()
     var version: String by setOnce()
     var description: String? by setOnce()
 
-    internal fun toModel(): ApiInfo {
+    override fun toModel(context: ModelingContext): ApiInfo {
         return ApiInfo(
             name = name,
             description = description,
@@ -88,6 +93,12 @@ data class AuthContextInput(
 annotation class UApiMarker
 
 @UApiMarker
-abstract class DSLInit(protected val validation: ValidationContext) {
+abstract class DSLInit<out ModelType>(protected val validation: ValidationContext) {
+    abstract fun toModel(context: ModelingContext): ModelType
 }
+
+data class ModelingContext(
+    val validation: ValidationContext,
+    val models: TypeModeler
+)
 

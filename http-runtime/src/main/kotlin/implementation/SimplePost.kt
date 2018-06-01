@@ -1,6 +1,7 @@
 package edu.byu.uapidsl.http.implementation
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectReader
+import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.CreateContext
 import edu.byu.uapidsl.http.*
@@ -13,17 +14,17 @@ class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(
     apiModel: UApiModel<AuthContext>,
     private val resource: ResourceModel<AuthContext, IdType, ModelType>,
     private val create: CreateOperation<AuthContext, IdType, InputType>,
-    jsonMapper: ObjectMapper
+    jsonMapper: ObjectWriter
 ): BaseHttpHandler<PostRequest, AuthContext>(
     apiModel, jsonMapper
 ), PostHandler {
 
     private val authorizer = create.authorization
     private val handler = create.handle
-    private val loader = resource.read.handle
+    private val loader = resource.operations.read.handle
 
     override fun handleAuthenticated(request: PostRequest, authContext: AuthContext): UAPIResponse<*> {
-        val body: InputType = request.body.readAs(create.input.type, jsonMapper)
+        val body: InputType = request.body.readAs(create.input.type, create.input.reader)
         val context = CreateContextImpl(authContext, body)
 
         val authorized = context.authorizer()
@@ -35,23 +36,20 @@ class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(
 
         val model = ReadLoadContextImpl(authContext, createdId).loader()!!
 
-        val props = resource.responseMapper.mapResponse(authContext, createdId, model)
-
         val metadata = UAPIResourceMeta(
             validationResponse = ValidationResponse(201, "Created")
         )
 
-        return BasicResourceResponse(
-            mapOf("basic" to UAPIMapResource(metadata, properties = props)),
+        return SimpleResourceResponse(
+            mapOf("basic" to UAPISimpleResource(metadata, properties = model)),
             metadata
         )
     }
-
 }
 
-fun <Type: Any> RequestBody.readAs(type: KClass<Type>, jsonMapper: ObjectMapper): Type {
+fun <Type: Any> RequestBody.readAs(type: KClass<Type>, jsonMapper: ObjectReader): Type {
     return when(this) {
-        is StringRequestBody -> jsonMapper.readValue(this.body, type.java)
+        is StringRequestBody -> jsonMapper.readValue(this.body)
         else -> throw IllegalStateException("Unable to deserialize body")
     }
 }

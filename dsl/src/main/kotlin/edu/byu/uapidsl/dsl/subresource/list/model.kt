@@ -4,52 +4,51 @@ import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ValidationContext
 
 
-class SubModelInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-    validation: ValidationContext
-) : DSLInit(validation) {
-
-    fun <UAPIType> transform(handler: SubTransformer<AuthContext, ParentId, ParentModel, SubId, SubModel, UAPIType>) {
-
-    }
-
-    inline fun <RelatedId, reified RelatedModel> relation(
-        name: String,
-        init: SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>.() -> Unit
-    ) {
-    }
-
-    inline fun externalRelation(
-        name: String,
-        init: SubExternalRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel>.() -> Unit
-    ) {
-
-    }
-
-}
-
-class SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>(
-    validation: ValidationContext
-) : DSLInit(validation) {
-    fun authorization(authorizer: SubRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>) {
-
-    }
-
-    fun handle(handler: SubRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId>) {
-
-    }
-}
-
-class SubExternalRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-    validation: ValidationContext
-) : DSLInit(validation) {
-    fun authorization(authorizer: SubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
-
-    }
-
-    fun handle(handler: SubExternalRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
-
-    }
-}
+//class SubModelInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+//    validation: ValidationContext
+//) : DSLInit(validation) {
+//
+//    fun <UAPIType> transform(handler: SubTransformer<AuthContext, ParentId, ParentModel, SubId, SubModel, UAPIType>) {
+//
+//    }
+//
+//    inline fun <RelatedId, reified RelatedModel> relation(
+//        name: String,
+//        init: SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>.() -> Unit
+//    ) {
+//    }
+//
+//    inline fun externalRelation(
+//        name: String,
+//        init: SubExternalRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel>.() -> Unit
+//    ) {
+//
+//    }
+//}
+//
+//class SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>(
+//    validation: ValidationContext
+//) : DSLInit(validation) {
+//    fun authorization(authorizer: SubRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>) {
+//
+//    }
+//
+//    fun handle(handler: SubRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId>) {
+//
+//    }
+//}
+//
+//class SubExternalRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+//    validation: ValidationContext
+//) : DSLInit(validation) {
+//    fun authorization(authorizer: SubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
+//
+//    }
+//
+//    fun handle(handler: SubExternalRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
+//
+//    }
+//}
 
 interface SubExternalRelationContext<AuthContext, ParentId, ParentModel, SubId, SubModel> {
     val authContext: AuthContext
