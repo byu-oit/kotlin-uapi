@@ -16,7 +16,7 @@ val personsModel = apiModel<Authorizer> {
     }
 
     authContext {
-//        Authorizer(if (jwt.hasResourceOwner()) jwt.resourceOwnerClaims!!.byuId!! else jwt.clientClaims.byuId!!)
+        //        Authorizer(if (jwt.hasResourceOwner()) jwt.resourceOwnerClaims!!.byuId!! else jwt.clientClaims.byuId!!)
         Authorizer("fake")
     }
 
@@ -69,7 +69,11 @@ val personsModel = apiModel<Authorizer> {
 //                }
 
                 handle {
-                    TODO()
+                    val p = Database.findPerson(id)!!
+                    val surname = input.surname
+                    if (surname != null) {
+                        p.name.surname = surname
+                    }
                 }
 
             }

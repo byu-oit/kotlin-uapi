@@ -109,18 +109,18 @@ data class CreatePerson(
 )
 
 data class UpdatePerson(
-    val firstName: String,
-    val surname: String,
+    val firstName: String? = null,
+    val surname: String? = null,
     val middleName: String? = null,
     val nameSuffix: String? = null,
     val preferredFirstName: String? = null,
     val preferredSurname: String? = null,
-    val sex: Sex = Sex.UNKNOWN,
+    val sex: Sex? = null,
     val highSchoolCode: String? = null,
     val homeCountryCode: String? = null,
     val homeStateCode: String? = null,
     val homeTown: String? = null,
-    val restricted: Boolean = false
+    val restricted: Boolean? = null
 )
 
 data class PersonFilters(
