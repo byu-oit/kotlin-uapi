@@ -100,12 +100,12 @@ object PathParamDecorators {
     val NONE: PathParamDecorator = {it}
 }
 
-fun stringifyPaths(pathParts: List<PathPart>, decorator: PathParamDecorator = PathParamDecorators.NONE): String {
+fun stringifyPaths(pathParts: List<PathPart>, paramDecorator: PathParamDecorator): String {
     return pathParts.joinToString(separator = "/", prefix = "/") { part ->
         when (part) {
             is StaticPathPart -> part.part
-            is SimplePathVariablePart -> decorator(part.name)
-            is CompoundPathVariablePart -> part.names.joinToString(separator = ",", transform = decorator)
+            is SimplePathVariablePart -> paramDecorator(part.name)
+            is CompoundPathVariablePart -> part.names.joinToString(separator = ",", transform = paramDecorator)
         }
     }
 }
