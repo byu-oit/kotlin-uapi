@@ -92,13 +92,20 @@ private fun <AuthContext: Any> singleHandlers(uapiModel: UApiModel<AuthContext>,
     )
 }
 
+typealias PathParamDecorator = (part: String) -> String
 
-fun stringifyPaths(pathParts: List<PathPart>): String {
+object PathParamDecorators {
+    val COLON: PathParamDecorator = { ":$it" }
+    val CURLY_BRACE: PathParamDecorator = {"{$it}"}
+    val NONE: PathParamDecorator = {it}
+}
+
+fun stringifyPaths(pathParts: List<PathPart>, decorator: PathParamDecorator = PathParamDecorators.NONE): String {
     return pathParts.joinToString(separator = "/", prefix = "/") { part ->
         when (part) {
             is StaticPathPart -> part.part
-            is SimplePathVariablePart -> ":" + part.name
-            is CompoundPathVariablePart -> part.names.joinToString(separator = ",") { ":$it" }
+            is SimplePathVariablePart -> decorator(part.name)
+            is CompoundPathVariablePart -> part.names.joinToString(separator = ",", transform = decorator)
         }
     }
 }
