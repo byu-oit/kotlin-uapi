@@ -18,7 +18,7 @@ class ResourceGet<AuthContext : Any, IdType : Any, ModelType : Any>(
 
     override val authorizer = resource.operations.read.authorization
 
-    override fun getAuthzContext(
+    override fun createRequestContext(
         request: GetRequest,
         authContext: AuthContext,
         id: IdType,
@@ -29,7 +29,8 @@ class ResourceGet<AuthContext : Any, IdType : Any, ModelType : Any>(
         request: GetRequest,
         authContext: AuthContext,
         id: IdType,
-        model: ModelType
+        model: ModelType,
+        requestContext: ReadContext<AuthContext, IdType, ModelType>
     ): UAPIResponse<*> {
         val metadata = UAPIResourceMeta(
             ValidationResponse.OK

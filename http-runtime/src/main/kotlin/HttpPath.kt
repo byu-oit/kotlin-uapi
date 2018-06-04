@@ -1,5 +1,6 @@
 package edu.byu.uapidsl.http
 
+import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.http.implementation.*
 import edu.byu.uapidsl.http.path.CompoundPathVariablePart
@@ -9,9 +10,11 @@ import edu.byu.uapidsl.http.path.StaticPathPart
 import edu.byu.uapidsl.model.CreateOrUpdateOperation
 import edu.byu.uapidsl.model.ResourceModel
 import edu.byu.uapidsl.model.SimpleUpdateOperation
+import edu.byu.uapidsl.model.UpdateOperation
 import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
 import edu.byu.uapidsl.typemodeling.PathParamSchema
 import edu.byu.uapidsl.typemodeling.SimplePathParamSchema
+import either.fold
 
 data class HttpPath(
     val pathParts: List<PathPart>,
@@ -28,12 +31,12 @@ data class MethodHandlers(
     val delete: DeleteHandler? = null
 )
 
-val <AuthContext: Any> UApiModel<AuthContext>.httpPaths: List<HttpPath>
+val <AuthContext : Any> UApiModel<AuthContext>.httpPaths: List<HttpPath>
     get() {
         return this.resources.flatMap { pathsFor(this, it) }
     }
 
-private fun <AuthContext: Any> pathsFor(apiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, *, *>): Iterable<HttpPath> {
+private fun <AuthContext : Any> pathsFor(apiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, *, *>): Iterable<HttpPath> {
 
     val basePath: List<PathPart> = listOf(StaticPathPart(resource.name))
 
@@ -58,13 +61,13 @@ private fun <AuthContext: Any> pathsFor(apiModel: UApiModel<AuthContext>, resour
 }
 
 private fun PathParamSchema<*>.asPathPart(): PathPart {
-    return when(this) {
+    return when (this) {
         is SimplePathParamSchema -> SimplePathVariablePart(this.name)
         is ComplexPathParamSchema -> CompoundPathVariablePart(this.properties.map { it.name })
     }
 }
 
-private fun <AuthContext: Any, IdType: Any, ModelType: Any> collectionHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers? {
+private fun <AuthContext : Any, IdType : Any, ModelType : Any> collectionHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers? {
     val ops = resource.operations
     if (ops.list == null && ops.create == null) {
         return null
@@ -84,14 +87,13 @@ private fun <AuthContext: Any, IdType: Any, ModelType: Any> collectionHandlers(u
     )
 }
 
-private fun <AuthContext: Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, *, *>): MethodHandlers {
+private fun <AuthContext : Any, IdType: Any, ModelType: Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers {
+    val writer = resource.responseModel.writer
     val ops = resource.operations
     val get = ResourceGet(uapiModel, resource, resource.responseModel.writer)
-    val put = when(ops.update) {
-        is SimpleUpdateOperation<AuthContext, *, *, *> -> SimplePut()
-        is CreateOrUpdateOperation<AuthContext, *, *, *> -> MaybeCreatePut()
-        null -> null
-    }
+
+    val put: PutHandler? = ops.update?.toHandler(uapiModel, resource, writer)
+
     val delete = if (ops.delete != null) SimpleDelete() else null
     val options = AuthorizationAwareOptions()
 
@@ -101,6 +103,15 @@ private fun <AuthContext: Any> singleHandlers(uapiModel: UApiModel<AuthContext>,
         put = put,
         delete = delete
     )
+}
+
+private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> UpdateOperation<AuthContext, IdType, ModelType, InputType>.toHandler(
+    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+): PutHandler {
+    return when (this) {
+        is SimpleUpdateOperation<AuthContext, IdType, ModelType, InputType> -> SimplePut(uapiModel, resource, this, writer)
+        is CreateOrUpdateOperation<AuthContext, IdType, ModelType, InputType> -> MaybeCreatePut()
+    }
 }
 
 typealias PathParamDecorator = (part: String) -> String

@@ -1,7 +1,6 @@
 package edu.byu.uapidsl.model
 
 import com.fasterxml.jackson.databind.ObjectReader
-import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.dsl.*
 import edu.byu.uapidsl.typemodeling.*
 import edu.byu.uapidsl.types.UAPIField
@@ -33,10 +32,14 @@ data class OperationModel<AuthContext, IdType, ResourceType>(
     val list: ListOperation<AuthContext, IdType, ResourceType, *>?,
     val create: CreateOperation<AuthContext, IdType, *>?,
     val update: UpdateOperation<AuthContext, IdType, ResourceType, *>?,
+//    val update: Either<
+//        SimpleUpdateOperation<AuthContext, IdType, ResourceType, *>,
+//        CreateOrUpdateOperation<AuthContext, IdType, ResourceType, *>
+//        >?,
     val delete: DeleteOperation<AuthContext, IdType, ResourceType>?
 )
 
-data class IdModel<Type: Any>(
+data class IdModel<Type : Any>(
     val schema: PathParamSchema<*>,
     val reader: PathParamReader<Type>
 )
@@ -50,7 +53,7 @@ sealed class UpdateOperation<AuthContext, IdType, DomainType, InputType : Any> {
     abstract val input: InputModel<InputType>
 }
 
-data class InputModel<Type: Any>(
+data class InputModel<Type : Any>(
     val type: KClass<Type>,
     val schema: JsonInputSchema,
     val reader: ObjectReader
@@ -89,7 +92,7 @@ data class SimpleListOperation<AuthContext, IdType, DomainType, Filters : Any>(
         >
 ) : ListOperation<AuthContext, IdType, DomainType, Filters>
 
-data class QueryParamModel<Type: Any>(
+data class QueryParamModel<Type : Any>(
     val schema: QueryParamSchema,
     val reader: QueryParamReader<Type>
 )

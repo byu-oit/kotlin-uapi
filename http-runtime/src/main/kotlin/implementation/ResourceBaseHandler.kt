@@ -12,7 +12,7 @@ import edu.byu.uapidsl.types.UAPIResponse
 
 //class ResourceBaseHandler
 
-abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdType : Any, ModelType : Any, AuthzContext : Any>(
+abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdType : Any, ModelType : Any, RequestContext : Any>(
     apiModel: UApiModel<AuthContext>,
     jsonWriter: ObjectWriter,
     protected val resource: ResourceModel<AuthContext, IdType, ModelType>
@@ -25,21 +25,21 @@ abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdT
 
         val model = loadModel(id, authContext)
 
-        val authzContext = getAuthzContext(request, authContext, id, model)
+        val requestContext = createRequestContext(request, authContext, id, model)
 
-        val authorized = authzContext.authorizer()
+        val authorized = requestContext.authorizer()
         if (!authorized) {
             throw NotAuthorizedToViewException()
         }
 
-        return handleResource(request, authContext, id, model)
+        return handleResource(request, authContext, id, model, requestContext)
     }
 
-    abstract val authorizer: AuthzContext.() -> Boolean
+    abstract val authorizer: RequestContext.() -> Boolean
 
-    abstract fun getAuthzContext(request: Request, authContext: AuthContext, id: IdType, model: ModelType): AuthzContext
+    abstract fun createRequestContext(request: Request, authContext: AuthContext, id: IdType, model: ModelType): RequestContext
 
-    abstract fun handleResource(request: Request, authContext: AuthContext, id: IdType, model: ModelType): UAPIResponse<*>
+    abstract fun handleResource(request: Request, authContext: AuthContext, id: IdType, model: ModelType, requestContext: RequestContext): UAPIResponse<*>
 
     private fun idFrom(pathParams: PathParams): IdType {
         return this.resource.idModel.reader.read(pathParams)

@@ -8,7 +8,6 @@ import edu.byu.uapidsl.http.*
 import edu.byu.uapidsl.model.CreateOperation
 import edu.byu.uapidsl.model.ResourceModel
 import edu.byu.uapidsl.types.*
-import kotlin.reflect.KClass
 
 class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(
     apiModel: UApiModel<AuthContext>,
@@ -24,7 +23,7 @@ class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(
     private val loader = resource.operations.read.handle
 
     override fun handleAuthenticated(request: PostRequest, authContext: AuthContext): UAPIResponse<*> {
-        val body: InputType = request.body.readAs(create.input.type, create.input.reader)
+        val body: InputType = request.body.readWith(create.input.reader)
         val context = CreateContextImpl(authContext, body)
 
         val authorized = context.authorizer()
@@ -47,9 +46,9 @@ class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(
     }
 }
 
-fun <Type: Any> RequestBody.readAs(type: KClass<Type>, jsonMapper: ObjectReader): Type {
+fun <Type: Any> RequestBody.readWith(reader: ObjectReader): Type {
     return when(this) {
-        is StringRequestBody -> jsonMapper.readValue(this.body)
+        is StringRequestBody -> reader.readValue(this.body)
         else -> throw IllegalStateException("Unable to deserialize body")
     }
 }
