@@ -14,7 +14,6 @@ import edu.byu.uapidsl.model.UpdateOperation
 import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
 import edu.byu.uapidsl.typemodeling.PathParamSchema
 import edu.byu.uapidsl.typemodeling.SimplePathParamSchema
-import either.fold
 
 data class HttpPath(
     val pathParts: List<PathPart>,
@@ -110,7 +109,7 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> 
 ): PutHandler {
     return when (this) {
         is SimpleUpdateOperation<AuthContext, IdType, ModelType, InputType> -> SimplePut(uapiModel, resource, this, writer)
-        is CreateOrUpdateOperation<AuthContext, IdType, ModelType, InputType> -> MaybeCreatePut()
+        is CreateOrUpdateOperation<AuthContext, IdType, ModelType, InputType> -> MaybeCreatePut(uapiModel, resource, this, writer)
     }
 }
 
