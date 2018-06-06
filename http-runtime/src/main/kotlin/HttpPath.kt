@@ -7,10 +7,7 @@ import edu.byu.uapidsl.http.path.CompoundPathVariablePart
 import edu.byu.uapidsl.http.path.PathPart
 import edu.byu.uapidsl.http.path.SimplePathVariablePart
 import edu.byu.uapidsl.http.path.StaticPathPart
-import edu.byu.uapidsl.model.CreateOrUpdateOperation
-import edu.byu.uapidsl.model.ResourceModel
-import edu.byu.uapidsl.model.SimpleUpdateOperation
-import edu.byu.uapidsl.model.UpdateOperation
+import edu.byu.uapidsl.model.*
 import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
 import edu.byu.uapidsl.typemodeling.PathParamSchema
 import edu.byu.uapidsl.typemodeling.SimplePathParamSchema
@@ -93,7 +90,8 @@ private fun <AuthContext : Any, IdType: Any, ModelType: Any> singleHandlers(uapi
 
     val put: PutHandler? = ops.update?.toHandler(uapiModel, resource, writer)
 
-    val delete = if (ops.delete != null) SimpleDelete() else null
+    val delete = ops.delete?.toHandler(uapiModel, resource, writer)
+
     val options = AuthorizationAwareOptions()
 
     return MethodHandlers(
@@ -102,6 +100,12 @@ private fun <AuthContext : Any, IdType: Any, ModelType: Any> singleHandlers(uapi
         put = put,
         delete = delete
     )
+}
+
+private fun <AuthContext : Any, IdType : Any, ModelType : Any> DeleteOperation<AuthContext, IdType, ModelType>.toHandler(
+    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+): DeleteHandler {
+    return SimpleDelete(uapiModel, resource, this, writer)
 }
 
 private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> UpdateOperation<AuthContext, IdType, ModelType, InputType>.toHandler(

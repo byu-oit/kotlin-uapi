@@ -43,5 +43,10 @@ data class UAPIMapResource(
     val properties: Map<String, UAPIField<*>>
 ): UAPIResource
 
+object UAPIEmptyResponse: UAPIResponse<UAPIResourceMeta> {
+    override val metadata: UAPIResourceMeta = UAPIResourceMeta()
+    override val links: UAPILinks = emptyMap()
+}
+
 
 

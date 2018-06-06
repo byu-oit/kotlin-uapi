@@ -12,6 +12,7 @@ import edu.byu.jwt.validate.JWTValidationException
 import edu.byu.uapidsl.AuthContextInput
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.http.*
+import edu.byu.uapidsl.types.UAPIEmptyResponse
 import edu.byu.uapidsl.types.UAPIResponse
 
 abstract class BaseHttpHandler<Request : HttpRequest, AuthContext : Any>(
@@ -27,7 +28,11 @@ abstract class BaseHttpHandler<Request : HttpRequest, AuthContext : Any>(
         return try {
             val response = handleUAPI(request)
 
-            UAPIHttpResponse(response, jsonWriter)
+            if (response == UAPIEmptyResponse) {
+                EmptyUAPIHttpResponse
+            } else {
+                UAPIHttpResponse(response, jsonWriter)
+            }
         } catch (ex: HttpError) {
             ex.printStackTrace()
             ErrorHttpResponse(ex, jsonWriter)

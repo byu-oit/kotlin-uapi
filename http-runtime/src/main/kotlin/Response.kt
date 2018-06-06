@@ -43,6 +43,18 @@ open class UAPIHttpResponse(uapiResponse: UAPIResponse<*>, jsonWriter: ObjectWri
 
 }
 
+object EmptyUAPIHttpResponse: HttpResponse {
+    override val status: Int = 204
+    override val headers: Headers = EmptyHeaders
+    override val body: ResponseBody = EmptyResponseBody
+}
+
+object EmptyResponseBody: ResponseBody {
+    override fun asString(): String {
+        return ""
+    }
+}
+
 class JacksonResponseBody(val body: UAPIResponse<*>, val writer: ObjectWriter) : ResponseBody {
     override fun asString(): String {
         return writer.writeValueAsString(body)
