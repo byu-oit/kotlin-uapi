@@ -43,20 +43,20 @@ val personsModel = apiModel<Authorizer> {
                     Database.findPerson(id)?.toDTO(authContext)
                 }
             }
-//
-//            listPaged<PersonFilters> {
-//                defaultSize = 50
-//                maxSize = 200
-//                listIds {
-//                    Database.searchPeoplePaged(filters, paging)
-//                }
-//            }
 
-            listSimple<PersonFilters> {
+            listPaged<PersonFilters> {
+                defaultSize = 50
+                maxSize = 200
                 listIds {
-                    Database.searchPeople(filters)
+                    Database.searchPeoplePaged(filters, paging)
                 }
             }
+
+//            listSimple<PersonFilters> {
+//                listIds {
+//                    Database.searchPeople(filters)
+//                }
+//            }
 
             create<CreatePerson> {
                 authorized { authContext.canCreatePerson() }

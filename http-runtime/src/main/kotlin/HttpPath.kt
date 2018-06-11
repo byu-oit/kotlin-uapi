@@ -123,7 +123,7 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any> Li
 ): GetHandler {
     return when (this) {
         is SimpleListOperation<AuthContext, IdType, ModelType, Filters> -> SimpleListGet(uapiModel, resource, this, writer)
-        is PagedListOperation<AuthContext, IdType, ModelType, Filters> -> PagedListGet()
+        is PagedListOperation<AuthContext, IdType, ModelType, Filters> -> PagedListGet(uapiModel, resource, this, writer)
     }
 }
 

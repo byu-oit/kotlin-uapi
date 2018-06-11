@@ -176,7 +176,9 @@ class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
                 context.models.queryParamSchemaFor(PagingParams::class),
                 context.models.queryParamReaderFor(PagingParams::class)
             ),
-            handle = handler
+            handle = handler,
+            defaultPageSize = defaultSize,
+            maxPageSize = maxSize
         )
     }
 }

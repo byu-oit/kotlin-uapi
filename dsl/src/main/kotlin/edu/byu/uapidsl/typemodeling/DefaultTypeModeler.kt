@@ -32,6 +32,7 @@ class DefaultTypeModeler(config: TypeModelerConfig = TypeModelerConfig()) : Type
 
     override fun jsonReaderFor(type: KClass<*>): ObjectReader {
         return objectMapper.readerFor(type.java).with(DeserializationFeature.EAGER_DESERIALIZER_FETCH)
+//        return objectMapper.reader()
     }
 
     override fun jsonMapper(): ObjectMapper = objectMapper

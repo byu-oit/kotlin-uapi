@@ -61,7 +61,7 @@ object Database {
     }
 
     fun searchPeoplePaged(filters: PersonFilters, paging: PagingParams): CollectionWithTotal<String> {
-        TODO("Implement paged search")
+        return CollectionWithTotal(people.size, people.keys.toList().sorted())
     }
 }
 

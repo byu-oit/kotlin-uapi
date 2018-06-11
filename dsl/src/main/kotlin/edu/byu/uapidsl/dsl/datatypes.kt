@@ -1,5 +1,8 @@
 package edu.byu.uapidsl.dsl
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
+import com.fasterxml.jackson.databind.annotation.JsonNaming
+
 //data class ApiDefinition<AuthContext>(
 //        val resources: Map<KClass<*>, ApiResource<AuthContext, *, *>>
 //)
@@ -40,9 +43,10 @@ package edu.byu.uapidsl.dsl
 
 data class CollectionWithTotal<IdType>(
     val totalItems: Int,
-    val ids: Collection<IdType>
-)
+    private val values: Collection<IdType>
+): Collection<IdType> by values
 
 data class PagingParams(
-    val pageStart: Int
+    val pageStart: Int,
+    val pageSize: Int
 )

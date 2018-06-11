@@ -101,6 +101,8 @@ data class QueryParamModel<Type : Any>(
 data class PagedListOperation<AuthContext, IdType, DomainType, Filters : Any>(
     val filterType: QueryParamModel<Filters>,
     val pageParamModel: QueryParamModel<PagingParams>,
+    val defaultPageSize: Int,
+    val maxPageSize: Int,
     val handle: Either<
         PagedListHandler<AuthContext, Filters, IdType>,
         PagedListHandler<AuthContext, Filters, DomainType>
