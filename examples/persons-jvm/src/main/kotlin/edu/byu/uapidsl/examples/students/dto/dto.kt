@@ -124,22 +124,22 @@ data class UpdatePerson(
 )
 
 data class PersonFilters(
-    val byuId: Set<String>,
-    val personId: Set<String>,
-    val netId: Set<String>,
-    val credentialType: CredentialType?,
-    val userName: Set<String>,
-    val ssn: Set<String>,
-    val emailAddress: String?,
-    val emailAlias: String?,
-    val phoneNumber: Set<String>,
-    val surname: String?,
-    val addresses: AddressFilters?
+    val byuId: Set<String> = emptySet(),
+    val personId: Set<String> = emptySet(),
+    val netId: Set<String> = emptySet(),
+    val credentialType: CredentialType? = null,
+    val userName: Set<String> = emptySet(),
+    val ssn: Set<String> = emptySet(),
+    val emailAddress: String? = null,
+    val emailAlias: String? = null,
+    val phoneNumber: Set<String> = emptySet(),
+    val surname: String? = null,
+    val addresses: AddressFilters? = null
 )
 
 data class AddressFilters(
-    val addressType: AddressType?,
-    val zipCode: Set<String>
+    val addressType: AddressType? = null,
+    val zipCode: Set<String> = emptySet()
 )
 
 enum class CredentialType {

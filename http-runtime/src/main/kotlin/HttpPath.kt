@@ -71,7 +71,7 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any> collectionHandler
 
     val create = ops.create
 
-    val get = if (ops.list != null) PagedListGet() else null
+    val get = ops.list?.toHandler(uapiModel, resource, resource.responseModel.writer)
     val post = if (create != null) {
         SimplePost(uapiModel, resource, create, resource.responseModel.writer)
     } else null
@@ -83,7 +83,7 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any> collectionHandler
     )
 }
 
-private fun <AuthContext : Any, IdType: Any, ModelType: Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers {
+private fun <AuthContext : Any, IdType : Any, ModelType : Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers {
     val writer = resource.responseModel.writer
     val ops = resource.operations
     val get = ResourceGet(uapiModel, resource, resource.responseModel.writer)
@@ -117,12 +117,23 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> 
     }
 }
 
+
+private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any> ListOperation<AuthContext, IdType, ModelType, Filters>.toHandler(
+    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+): GetHandler {
+    return when (this) {
+        is SimpleListOperation<AuthContext, IdType, ModelType, Filters> -> SimpleListGet(uapiModel, resource, this, writer)
+        is PagedListOperation<AuthContext, IdType, ModelType, Filters> -> PagedListGet()
+    }
+}
+
+
 typealias PathParamDecorator = (part: String) -> String
 
 object PathParamDecorators {
     val COLON: PathParamDecorator = { ":$it" }
-    val CURLY_BRACE: PathParamDecorator = {"{$it}"}
-    val NONE: PathParamDecorator = {it}
+    val CURLY_BRACE: PathParamDecorator = { "{$it}" }
+    val NONE: PathParamDecorator = { it }
 }
 
 fun stringifyPaths(pathParts: List<PathPart>, paramDecorator: PathParamDecorator): String {

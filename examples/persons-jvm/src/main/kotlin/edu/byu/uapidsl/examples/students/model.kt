@@ -1,6 +1,7 @@
 package edu.byu.uapidsl.examples.students
 
 import edu.byu.uapidsl.apiModel
+import edu.byu.uapidsl.dsl.PagingParams
 import edu.byu.uapidsl.examples.students.app.*
 import edu.byu.uapidsl.examples.students.authorization.Authorizer
 import edu.byu.uapidsl.examples.students.dto.*
@@ -42,12 +43,18 @@ val personsModel = apiModel<Authorizer> {
                     Database.findPerson(id)?.toDTO(authContext)
                 }
             }
+//
+//            listPaged<PersonFilters> {
+//                defaultSize = 50
+//                maxSize = 200
+//                listIds {
+//                    Database.searchPeoplePaged(filters, paging)
+//                }
+//            }
 
-            listPaged<PersonFilters> {
-                defaultSize = 50
-                maxSize = 200
+            listSimple<PersonFilters> {
                 listIds {
-                    Database.searchPeoplePaged(filters, paging)
+                    Database.searchPeople(filters)
                 }
             }
 

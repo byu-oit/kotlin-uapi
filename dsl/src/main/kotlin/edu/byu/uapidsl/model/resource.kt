@@ -15,6 +15,7 @@ data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
     val type: KClass<ResourceType>,
     val responseModel: ResponseModel<ResourceType>,
     val idModel: IdModel<IdType>,
+    val idExtractor: IdExtractor<IdType, ResourceType>,
     val name: String,
     val example: ResourceType,
     val operations: OperationModel<AuthContext, IdType, ResourceType>
@@ -82,7 +83,7 @@ data class DeleteOperation<AuthContext, IdType, DomainType>(
     val handle: DeleteHandler<AuthContext, IdType, DomainType>
 )
 
-interface ListOperation<AuthContext, IdType, DomainType, Filters : Any>
+sealed class ListOperation<AuthContext, IdType, DomainType, Filters : Any>
 
 data class SimpleListOperation<AuthContext, IdType, DomainType, Filters : Any>(
     val filterType: QueryParamModel<Filters>,
@@ -90,7 +91,7 @@ data class SimpleListOperation<AuthContext, IdType, DomainType, Filters : Any>(
         ListHandler<AuthContext, Filters, IdType>,
         ListHandler<AuthContext, Filters, DomainType>
         >
-) : ListOperation<AuthContext, IdType, DomainType, Filters>
+) : ListOperation<AuthContext, IdType, DomainType, Filters>()
 
 data class QueryParamModel<Type : Any>(
     val schema: QueryParamSchema,
@@ -104,5 +105,5 @@ data class PagedListOperation<AuthContext, IdType, DomainType, Filters : Any>(
         PagedListHandler<AuthContext, Filters, IdType>,
         PagedListHandler<AuthContext, Filters, DomainType>
         >
-) : ListOperation<AuthContext, IdType, DomainType, Filters>
+) : ListOperation<AuthContext, IdType, DomainType, Filters>()
 

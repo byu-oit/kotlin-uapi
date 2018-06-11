@@ -56,8 +56,12 @@ object Database {
         return value
     }
 
+    fun searchPeople(filters: PersonFilters): Collection<String> {
+        return people.keys.toList().sorted()
+    }
+
     fun searchPeoplePaged(filters: PersonFilters, paging: PagingParams): CollectionWithTotal<String> {
-        TODO("not implemented")
+        TODO("Implement paged search")
     }
 }
 

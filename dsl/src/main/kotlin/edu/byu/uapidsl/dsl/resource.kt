@@ -62,6 +62,7 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
                 context.models.pathParamSchemaFor(idType),
                 context.models.pathParamReaderFor(idType)
             ),
+            idExtractor = idFromModel,
             name = name,
             example = example,
             operations = this.operationsInit.toModel(context)
