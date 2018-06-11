@@ -2,11 +2,9 @@ package edu.byu.uapidsl.dsl.subresource.single
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.ValidationContext
 
 class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -31,8 +29,7 @@ class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
 }
 
 class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -47,8 +44,7 @@ class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, 
 }
 
 class SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }

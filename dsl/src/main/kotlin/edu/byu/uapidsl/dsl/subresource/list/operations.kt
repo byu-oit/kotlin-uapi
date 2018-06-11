@@ -4,13 +4,11 @@ package edu.byu.uapidsl.dsl.subresource.list
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.CollectionWithTotal
 import edu.byu.uapidsl.dsl.PagingParams
 
 class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-    validation: ValidationContext
-) : DSLInit<SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>>(validation) {
+) : DSLInit<SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>>() {
     override fun toModel(context: ModelingContext): SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel> {
         TODO("not implemented")
     }
@@ -54,8 +52,7 @@ class SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 )
 
 class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -71,8 +68,7 @@ class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 }
 
 class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -90,8 +86,7 @@ class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel
 }
 
 class SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -121,8 +116,7 @@ interface SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType> {
 }
 
 class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -137,8 +131,7 @@ class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
 }
 
 class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -153,8 +146,7 @@ class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateM
 }
 
 class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -169,8 +161,7 @@ class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel,
 }
 
 class SubDeleteInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }

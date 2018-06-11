@@ -1,8 +1,5 @@
 package edu.byu.uapidsl.dsl.subresource.list
 
-import edu.byu.uapidsl.DSLInit
-import edu.byu.uapidsl.ValidationContext
-
 
 //class SubModelInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 //    validation: ValidationContext

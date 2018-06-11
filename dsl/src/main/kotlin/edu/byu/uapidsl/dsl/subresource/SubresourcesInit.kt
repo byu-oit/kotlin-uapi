@@ -2,14 +2,12 @@ package edu.byu.uapidsl.dsl.subresource
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.dsl.subresource.list.SubResourceInit
 import edu.byu.uapidsl.dsl.subresource.single.SingleSubResourceInit
 
 
 class SubresourcesInit<AuthContext, IdType, ResourceModel : Any>(
-    validation: ValidationContext
-) : DSLInit<SubresourcesModel>(validation) {
+) : DSLInit<SubresourcesModel>() {
 
     inline fun <reified SubResourceId, reified SubResourceModel> collection(
         name: String,

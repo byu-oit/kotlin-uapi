@@ -16,12 +16,12 @@ inline fun <AuthContext : Any> apiModel(block: ApiModelInit<AuthContext>.() -> U
     ))
 }
 
-class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>(ValidationContext()) {
+class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>() {
 
     private var apiInfoInit: ApiInfoInit by setOnce()
 
     fun info(block: ApiInfoInit.() -> Unit) {
-        apiInfoInit = ApiInfoInit(validation)
+        apiInfoInit = ApiInfoInit()
         apiInfoInit.block()
     }
 
@@ -36,7 +36,7 @@ class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>(Validatio
 
     inline fun <reified IdType : Any, reified ResourceType : Any> resource(name: String, init: ResourceInit<AuthContext, IdType, ResourceType>.() -> Unit) {
         println("Resource: $name ${ResourceType::class.simpleName}")
-        val res = ResourceInit<AuthContext, IdType, ResourceType>(validation, name, IdType::class, ResourceType::class)
+        val res = ResourceInit<AuthContext, IdType, ResourceType>(name, IdType::class, ResourceType::class)
         res.init()
 
         resources.add(res)
@@ -56,9 +56,7 @@ class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>(Validatio
 
 }
 
-class ApiInfoInit(
-    validation: ValidationContext
-): DSLInit<ApiInfo>(validation) {
+class ApiInfoInit: DSLInit<ApiInfo>() {
     var name: String by setOnce()
     var version: String by setOnce()
     var description: String? by setOnce()
@@ -93,7 +91,7 @@ data class AuthContextInput(
 annotation class UApiMarker
 
 @UApiMarker
-abstract class DSLInit<out ModelType>(protected val validation: ValidationContext) {
+abstract class DSLInit<out ModelType> {
     abstract fun toModel(context: ModelingContext): ModelType
 }
 

@@ -2,12 +2,10 @@ package edu.byu.uapidsl.dsl.subresource.list
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.ValidationContext
 
 class SubResourceInit<AuthContext, ParentId, ParentModel, SubResourceId, SubResourceModel>(
-    validation: ValidationContext,
     val name: String
-) : DSLInit<SubResourceModel>(validation) {
+) : DSLInit<SubResourceModel>() {
 
     inline fun operations(init: SubOperationsInit<AuthContext, ParentId, ParentModel, SubResourceId, SubResourceModel>.() -> Unit) {
 

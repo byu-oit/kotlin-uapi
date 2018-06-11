@@ -2,7 +2,6 @@ package edu.byu.uapidsl.dsl
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.ValidationContext
 import edu.byu.uapidsl.model.*
 import either.Either
 import either.Left
@@ -12,16 +11,13 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 
-class OperationsInit<AuthContext, IdType, ResourceType>(
-    validation: ValidationContext
-) : DSLInit<OperationModel<AuthContext, IdType, ResourceType>>(validation) {
+class OperationsInit<AuthContext, IdType, ResourceType>: DSLInit<OperationModel<AuthContext, IdType, ResourceType>>() {
 
     @PublishedApi
     internal var createInit: CreateInit<AuthContext, IdType, *>? by setOnce()
 
     inline fun <reified CreateModel : Any> create(init: CreateInit<AuthContext, IdType, CreateModel>.() -> Unit) {
         val createInit = CreateInit<AuthContext, IdType, CreateModel>(
-            validation,
             CreateModel::class
         )
         createInit.init()
@@ -33,7 +29,6 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
 
     inline fun <reified UpdateModel : Any> update(init: UpdateInit<AuthContext, IdType, ResourceType, UpdateModel>.() -> Unit) {
         val obj = UpdateInit<AuthContext, IdType, ResourceType, UpdateModel>(
-            validation,
             UpdateModel::class
         )
         obj.init()
@@ -42,7 +37,6 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
 
     inline fun <reified InputModel : Any> createOrUpdate(init: CreateOrUpdateInit<AuthContext, IdType, ResourceType, InputModel>.() -> Unit) {
         val obj = CreateOrUpdateInit<AuthContext, IdType, ResourceType, InputModel>(
-            validation,
             InputModel::class
         )
         obj.init()
@@ -54,7 +48,7 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
 
     inline fun delete(init: DeleteInit<AuthContext, IdType, ResourceType>.() -> Unit) {
         //TODO: Error if already set
-        val obj = DeleteInit<AuthContext, IdType, ResourceType>(validation)
+        val obj = DeleteInit<AuthContext, IdType, ResourceType>()
         obj.init()
         this.deleteInit = obj
     }
@@ -64,7 +58,7 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
 
     inline fun read(init: ReadInit<AuthContext, IdType, ResourceType>.() -> Unit) {
         //TODO: Error if already set
-        val obj = ReadInit<AuthContext, IdType, ResourceType>(validation)
+        val obj = ReadInit<AuthContext, IdType, ResourceType>()
         obj.init()
         this.readInit = obj
     }
@@ -74,7 +68,6 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
 
     inline fun <reified FilterType : Any> listSimple(init: SimpleListInit<AuthContext, IdType, ResourceType, FilterType>.() -> Unit) {
         val obj = SimpleListInit<AuthContext, IdType, ResourceType, FilterType>(
-            validation,
             FilterType::class
         )
         obj.init()
@@ -85,7 +78,6 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
         init: PagedCollectionInit<AuthContext, IdType, ResourceType, FilterType>.() -> Unit
     ) {
         val obj = PagedCollectionInit<AuthContext, IdType, ResourceType, FilterType>(
-            validation,
             FilterType::class
         )
         obj.init()
@@ -104,9 +96,7 @@ class OperationsInit<AuthContext, IdType, ResourceType>(
 
 }
 
-class ReadInit<AuthContext, IdType, ResourceModel>(
-    validation: ValidationContext
-) : DSLInit<ReadOperation<AuthContext, IdType, ResourceModel>>(validation) {
+class ReadInit<AuthContext, IdType, ResourceModel>: DSLInit<ReadOperation<AuthContext, IdType, ResourceModel>>() {
 
     private var authorizer: ReadAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
 
@@ -130,9 +120,8 @@ class ReadInit<AuthContext, IdType, ResourceModel>(
 }
 
 class SimpleListInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
-    validation: ValidationContext,
     private val filterType: KClass<FilterType>
-) : DSLInit<SimpleListOperation<AuthContext, IdType, ResourceModel, FilterType>>(validation) {
+) : DSLInit<SimpleListOperation<AuthContext, IdType, ResourceModel, FilterType>>() {
 
     private var handler: Either<
         ListHandler<AuthContext, FilterType, IdType>,
@@ -159,9 +148,8 @@ class SimpleListInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
 }
 
 class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
-    validation: ValidationContext,
     private val filterType: KClass<FilterType>
-) : DSLInit<PagedListOperation<AuthContext, IdType, ResourceModel, FilterType>>(validation) {
+) : DSLInit<PagedListOperation<AuthContext, IdType, ResourceModel, FilterType>>() {
     var defaultSize: Int by setOnce()
     var maxSize: Int by setOnce()
 
@@ -211,9 +199,8 @@ interface PagedListContext<AuthContext, FilterType> {
 }
 
 class CreateInit<AuthContext, IdType, CreateModel : Any>(
-    validation: ValidationContext,
     private val input: KClass<CreateModel>
-) : DSLInit<CreateOperation<AuthContext, IdType, CreateModel>>(validation) {
+) : DSLInit<CreateOperation<AuthContext, IdType, CreateModel>>() {
 
     private var authorizationHandler: CreateAuthorizer<AuthContext, CreateModel> by setOnce()
     private var handler: CreateHandler<AuthContext, IdType, CreateModel> by setOnce()
@@ -238,9 +225,8 @@ class CreateInit<AuthContext, IdType, CreateModel : Any>(
 }
 
 class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
-    validation: ValidationContext,
     private val input: KClass<InputModel>
-) : DSLInit<UpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>(validation) {
+) : DSLInit<UpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>() {
 
     private var authorization: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
     private var handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
@@ -267,9 +253,8 @@ class UpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
 }
 
 class CreateOrUpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
-    validation: ValidationContext,
     private val input: KClass<InputModel>
-) : DSLInit<CreateOrUpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>(validation) {
+) : DSLInit<CreateOrUpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>() {
 
     private var authorization: CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
     private var handler: CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
@@ -296,8 +281,7 @@ class CreateOrUpdateInit<AuthContext, IdType, ResourceModel, InputModel : Any>(
 }
 
 class DeleteInit<AuthContext, IdType, ResourceModel>(
-    validation: ValidationContext
-) : DSLInit<DeleteOperation<AuthContext, IdType, ResourceModel>>(validation) {
+) : DSLInit<DeleteOperation<AuthContext, IdType, ResourceModel>>() {
 
     private var authorization: DeleteAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
     private var handler: DeleteHandler<AuthContext, IdType, ResourceModel> by setOnce()

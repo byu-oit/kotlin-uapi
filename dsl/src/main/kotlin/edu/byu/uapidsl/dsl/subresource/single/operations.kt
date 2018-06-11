@@ -2,11 +2,9 @@ package edu.byu.uapidsl.dsl.subresource.single
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.ValidationContext
 
 class SingleSubOperationsInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -26,8 +24,7 @@ class SingleSubOperationsInit<AuthContext, ParentId, ParentModel, SingleSubModel
 }
 
 class SingleSubReadInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -43,8 +40,7 @@ class SingleSubReadInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
 }
 
 class SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubModel, UpdateModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -59,8 +55,7 @@ class SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubM
 }
 
 class SingleSubDeleteInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-    validation: ValidationContext
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }

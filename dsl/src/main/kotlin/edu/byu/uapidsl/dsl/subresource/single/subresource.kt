@@ -2,13 +2,11 @@ package edu.byu.uapidsl.dsl.subresource.single
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.ValidationContext
 
 
 class SingleSubResourceInit<AuthContext, ParentId, ParentModel, SingleSubResourceModel>(
-    validation: ValidationContext,
     val name: String
-) : DSLInit<Nothing>(validation) {
+) : DSLInit<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
