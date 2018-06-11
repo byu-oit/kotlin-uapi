@@ -21,6 +21,19 @@ val personsModel = apiModel<Authorizer> {
     }
 
     resource<String, PersonDTO>("persons") {
+
+        example = joe.person.toDTO(Authorizer(""))
+
+//        output<UAPIPerson> {
+//            transform {
+//                UAPIPerson(resource)
+//            }
+//        }
+
+        idFromModel { it.byuId.value }
+
+        isRestricted { resource.restricted.value }
+
         operations {
             read {
                 authorized { authContext.canSeePerson(id) }
@@ -91,17 +104,6 @@ val personsModel = apiModel<Authorizer> {
             }
 
         }
-
-        example = joe.person.toDTO(Authorizer(""))
-
-//        output<UAPIPerson> {
-//
-//
-//            transform {
-//                UAPIPerson(resource)
-//            }
-//
-//        }
 
         subresources {
 

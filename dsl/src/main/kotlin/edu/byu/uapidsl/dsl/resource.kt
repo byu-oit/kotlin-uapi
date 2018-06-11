@@ -35,25 +35,39 @@ class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
 //    }
 
 
+    private var idFromModel: IdExtractor<IdType, DomainType> by setOnce()
+
+    fun idFromModel(func: IdExtractor<IdType, DomainType>) {
+        idFromModel = func
+    }
+
+    private var isRestricted: IsRestrictedFunc<AuthContext, IdType, DomainType>? by setOnce()
+
+    fun isRestricted(func: IsRestrictedFunc<AuthContext, IdType, DomainType>) {
+        isRestricted = func
+    }
 
     inline fun subresources(init: SubresourcesInit<AuthContext, IdType, DomainType>.() -> Unit) {
         //TODO
     }
 
-    override fun toModel(ctx: ModelingContext): ResourceModel<AuthContext, IdType, DomainType> {
+    override fun toModel(context: ModelingContext): ResourceModel<AuthContext, IdType, DomainType> {
         return ResourceModel(
             type = modelType,
             responseModel = ResponseModel(
-                ctx.models.outputSchemaFor(modelType),
-                ctx.models.genericJsonWriter()
+                context.models.outputSchemaFor(modelType),
+                context.models.genericJsonWriter()
             ),
             idModel = IdModel(
-                ctx.models.pathParamSchemaFor(idType),
-                ctx.models.pathParamReaderFor(idType)
+                context.models.pathParamSchemaFor(idType),
+                context.models.pathParamReaderFor(idType)
             ),
             name = name,
             example = example,
-            operations = this.operationsInit.toModel(ctx)
+            operations = this.operationsInit.toModel(context)
         )
     }
 }
+
+typealias IdExtractor<IdType, ModelType> = (ModelType) -> IdType
+typealias IsRestrictedFunc<AuthContext, IdType, DomainType> = ReadContext<AuthContext, IdType, DomainType>.() -> Boolean
