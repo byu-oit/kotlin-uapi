@@ -11,6 +11,8 @@ import edu.byu.uapidsl.model.*
 import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
 import edu.byu.uapidsl.typemodeling.PathParamSchema
 import edu.byu.uapidsl.typemodeling.SimplePathParamSchema
+import either.Either
+import either.fold
 
 data class HttpPath(
     val pathParts: List<PathPart>,
@@ -117,14 +119,28 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> 
     }
 }
 
+//
+//private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any, RequestContext: ListContext<AuthContext, Filters>, IdCollection: Collection<IdType>, ModelCollection: Collection<ModelType>>
+//    ListOperation<AuthContext, IdType, ModelType, Filters, RequestContext, IdCollection, ModelCollection>.toHandler(
+//    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+//): GetHandler {
+//    return when (this) {
+//        is SimpleListOperation<AuthContext, IdType, ModelType, Filters> -> SimpleListGet(uapiModel, resource, this, writer)
+//        is PagedListOperation<AuthContext, IdType, ModelType, Filters> -> PagedListGet(uapiModel, resource, this, writer)
+//    }
+//}
 
-private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any> ListOperation<AuthContext, IdType, ModelType, Filters>.toHandler(
+private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any>
+    Either<
+        SimpleListOperation<AuthContext, IdType, ModelType, Filters>,
+        PagedListOperation<AuthContext, IdType, ModelType, Filters>
+        >.toHandler(
     uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
 ): GetHandler {
-    return when (this) {
-        is SimpleListOperation<AuthContext, IdType, ModelType, Filters> -> SimpleListGet(uapiModel, resource, this, writer)
-        is PagedListOperation<AuthContext, IdType, ModelType, Filters> -> PagedListGet(uapiModel, resource, this, writer)
-    }
+    return this.fold(
+        {edu.byu.uapidsl.http.implementation.SimpleListGet(uapiModel, resource, it, writer)},
+        {edu.byu.uapidsl.http.implementation.PagedListGet(uapiModel, resource, it, writer)}
+    )
 }
 
 

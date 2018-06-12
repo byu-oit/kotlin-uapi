@@ -30,7 +30,11 @@ data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
 
 data class OperationModel<AuthContext, IdType, ResourceType>(
     val read: ReadOperation<AuthContext, IdType, ResourceType>,
-    val list: ListOperation<AuthContext, IdType, ResourceType, *>?,
+//    val list: ListOperation<AuthContext, IdType, ResourceType, *, *, *, *>?,
+    val list: Either<
+        SimpleListOperation<AuthContext, IdType, ResourceType, Any>,
+        PagedListOperation<AuthContext, IdType, ResourceType, Any>
+        >?,
     val create: CreateOperation<AuthContext, IdType, *>?,
     val update: UpdateOperation<AuthContext, IdType, ResourceType, *>?,
 //    val update: Either<
@@ -83,15 +87,29 @@ data class DeleteOperation<AuthContext, IdType, DomainType>(
     val handle: DeleteHandler<AuthContext, IdType, DomainType>
 )
 
-sealed class ListOperation<AuthContext, IdType, DomainType, Filters : Any>
+sealed class ListOperation<AuthContext, IdType, DomainType, Filters : Any, RequestContext : ListContext<AuthContext, Filters>, IdCollection : Collection<IdType>, DomainCollection : Collection<DomainType>> {
+    abstract val filterType: QueryParamModel<Filters>
+    abstract val handle: Either<
+        RequestContext.() -> IdCollection,
+        RequestContext.() -> DomainCollection
+        >
+}
 
 data class SimpleListOperation<AuthContext, IdType, DomainType, Filters : Any>(
-    val filterType: QueryParamModel<Filters>,
-    val handle: Either<
+    override val filterType: QueryParamModel<Filters>,
+    override val handle: Either<
         ListHandler<AuthContext, Filters, IdType>,
         ListHandler<AuthContext, Filters, DomainType>
         >
-) : ListOperation<AuthContext, IdType, DomainType, Filters>()
+) : ListOperation<
+    AuthContext,
+    IdType,
+    DomainType,
+    Filters,
+    ListContext<AuthContext, Filters>,
+    Collection<IdType>,
+    Collection<DomainType>
+    >()
 
 data class QueryParamModel<Type : Any>(
     val schema: QueryParamSchema,
@@ -99,13 +117,21 @@ data class QueryParamModel<Type : Any>(
 )
 
 data class PagedListOperation<AuthContext, IdType, DomainType, Filters : Any>(
-    val filterType: QueryParamModel<Filters>,
+    override val filterType: QueryParamModel<Filters>,
     val pageParamModel: QueryParamModel<PagingParams>,
     val defaultPageSize: Int,
     val maxPageSize: Int,
-    val handle: Either<
+    override val handle: Either<
         PagedListHandler<AuthContext, Filters, IdType>,
         PagedListHandler<AuthContext, Filters, DomainType>
         >
-) : ListOperation<AuthContext, IdType, DomainType, Filters>()
+) : ListOperation<
+    AuthContext,
+    IdType,
+    DomainType,
+    Filters,
+    PagedListContext<AuthContext, Filters>,
+    CollectionWithTotal<IdType>,
+    CollectionWithTotal<DomainType>
+    >()
 
