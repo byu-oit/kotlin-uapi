@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.*
 import edu.byu.uapidsl.http.*
-import edu.byu.uapidsl.model.PagedListOperation
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.ops.PagedListOperation
+import edu.byu.uapidsl.model.resource.ResourceModel
 import implementation.BaseListGet
 
 class PagedListGet<AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any>(
@@ -17,29 +17,7 @@ class PagedListGet<AuthContext : Any, IdType : Any, ModelType : Any, Filters : A
     apiModel, resource, jsonMapper
 ), GetHandler {
 
-    override fun getRequestContext(request: GetRequest, authContext: AuthContext, filters: Filters): PagedListContext<AuthContext, Filters> {
-        val pagingQueryParams = mapOf(
-            "page_size" to setOf(list.defaultPageSize.toString()),
-            "page_start" to setOf("0")
-        ).plus(request.query)
-
-        val paging = list.pageParamModel.reader.read(pagingQueryParams)
-
-        return PagedListContextImpl(
-            authContext, filters, paging
-        )
+    override fun extractPagingParams(request: GetRequest): PagingParams? {
+        return list.pageParamModel.reader.read(request.query)
     }
-
-    override fun idToModelCollection(ids: CollectionWithTotal<IdType>, models: List<ModelType>): CollectionWithTotal<ModelType> {
-        return CollectionWithTotal(ids.totalItems, models)
-    }
-
-    override fun getTotalSize(list: CollectionWithTotal<ModelType>) = list.totalItems
-
 }
-
-data class PagedListContextImpl<AuthContext, Filters>(
-    override val authContext: AuthContext,
-    override val filters: Filters,
-    override val paging: PagingParams
-) : PagedListContext<AuthContext, Filters>

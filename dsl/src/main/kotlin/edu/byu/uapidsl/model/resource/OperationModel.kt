@@ -1,40 +1,18 @@
-package edu.byu.uapidsl.model
+package edu.byu.uapidsl.model.resource
 
 import com.fasterxml.jackson.databind.ObjectReader
 import edu.byu.uapidsl.dsl.*
+import edu.byu.uapidsl.model.resource.ops.ListOperation
+import edu.byu.uapidsl.model.resource.ops.PagedListOperation
+import edu.byu.uapidsl.model.resource.ops.SimpleListOperation
 import edu.byu.uapidsl.typemodeling.*
-import edu.byu.uapidsl.types.UAPIField
-import either.Either
+import edu.byu.uapidsl.types.*
 import kotlin.reflect.KClass
-
-interface ModelResponseMapper<AuthContext, IdType, ModelType> {
-    fun mapResponse(authContext: AuthContext, idType: IdType, modelType: ModelType): Map<String, UAPIField<*>>
-}
-
-data class ResourceModel<AuthContext, IdType : Any, ResourceType : Any>(
-    val type: KClass<ResourceType>,
-    val responseModel: ResponseModel<ResourceType>,
-    val idModel: IdModel<IdType>,
-    val idExtractor: IdExtractor<IdType, ResourceType>,
-    val name: String,
-    val example: ResourceType,
-    val operations: OperationModel<AuthContext, IdType, ResourceType>
-//    val output: OutputModel<AuthContext, IdType, ResourceType, *>,
-//    val responseMapper: ModelResponseMapper<AuthContext, IdType, ResourceType>
-//  val subresources: List<SubResourceModel<AuthContext, IdType, ResourceType, Any>>
-) {
-    init {
-
-    }
-}
 
 data class OperationModel<AuthContext, IdType, ResourceType>(
     val read: ReadOperation<AuthContext, IdType, ResourceType>,
 //    val list: ListOperation<AuthContext, IdType, ResourceType, *, *, *, *>?,
-    val list: Either<
-        SimpleListOperation<AuthContext, IdType, ResourceType, Any>,
-        PagedListOperation<AuthContext, IdType, ResourceType, Any>
-        >?,
+    val list: ListOperation<AuthContext, IdType, ResourceType, *, *, *, *>?,
     val create: CreateOperation<AuthContext, IdType, *>?,
     val update: UpdateOperation<AuthContext, IdType, ResourceType, *>?,
 //    val update: Either<
@@ -42,7 +20,45 @@ data class OperationModel<AuthContext, IdType, ResourceType>(
 //        CreateOrUpdateOperation<AuthContext, IdType, ResourceType, *>
 //        >?,
     val delete: DeleteOperation<AuthContext, IdType, ResourceType>?
-)
+) {
+
+    val listable: Boolean = list != null
+    val listStyle: ListStyle? = when (list) {
+        null -> null
+        is SimpleListOperation -> TODO()
+        is PagedListOperation -> TODO()
+    }
+
+    val updatable: Boolean = update != null
+    val updateStyle: UpdateStyle? = when (update) {
+        null -> null
+        is SimpleUpdateOperation -> UpdateStyle.SIMPLE
+        is CreateOrUpdateOperation -> UpdateStyle.UPSERT
+    }
+
+    val creatable: Boolean = create != null || updateStyle == UpdateStyle.UPSERT
+    val createStyle: CreateStyle? = when {
+        create != null -> CreateStyle.SIMPLE
+        updateStyle == UpdateStyle.UPSERT -> CreateStyle.UPSERT
+        else -> null
+    }
+
+    val deletable: Boolean = delete != null
+
+
+}
+
+enum class UpdateStyle {
+    SIMPLE, UPSERT
+}
+
+enum class CreateStyle {
+    SIMPLE, UPSERT
+}
+
+enum class ListStyle {
+    PAGED, SIMPLE
+}
 
 data class IdModel<Type : Any>(
     val schema: PathParamSchema<*>,
@@ -52,7 +68,22 @@ data class IdModel<Type : Any>(
 data class ReadOperation<AuthContext, IdType, DomainType>(
     val authorization: ReadAuthorizer<AuthContext, IdType, DomainType>,
     val handle: ReadHandler<AuthContext, IdType, DomainType>
-)
+): DomainModelOps<AuthContext, IdType, DomainType> {
+
+    override fun modelToResult(authContext: AuthContext, model: DomainType): UAPIResponse<*> {
+        TODO("not implemented")
+    }
+
+    override fun idToModel(authContext: AuthContext, id: IdType): DomainType? {
+        TODO("not implemented")
+    }
+}
+
+data class ReadLoadContextImpl<AuthContext, IdType>(
+    override val authContext: AuthContext,
+    override val id: IdType
+) : ReadLoadContext<AuthContext, IdType>
+
 
 sealed class UpdateOperation<AuthContext, IdType, DomainType, InputType : Any> {
     abstract val input: InputModel<InputType>
@@ -87,51 +118,9 @@ data class DeleteOperation<AuthContext, IdType, DomainType>(
     val handle: DeleteHandler<AuthContext, IdType, DomainType>
 )
 
-sealed class ListOperation<AuthContext, IdType, DomainType, Filters : Any, RequestContext : ListContext<AuthContext, Filters>, IdCollection : Collection<IdType>, DomainCollection : Collection<DomainType>> {
-    abstract val filterType: QueryParamModel<Filters>
-    abstract val handle: Either<
-        RequestContext.() -> IdCollection,
-        RequestContext.() -> DomainCollection
-        >
-}
-
-data class SimpleListOperation<AuthContext, IdType, DomainType, Filters : Any>(
-    override val filterType: QueryParamModel<Filters>,
-    override val handle: Either<
-        ListHandler<AuthContext, Filters, IdType>,
-        ListHandler<AuthContext, Filters, DomainType>
-        >
-) : ListOperation<
-    AuthContext,
-    IdType,
-    DomainType,
-    Filters,
-    ListContext<AuthContext, Filters>,
-    Collection<IdType>,
-    Collection<DomainType>
-    >()
-
 data class QueryParamModel<Type : Any>(
     val schema: QueryParamSchema,
     val reader: QueryParamReader<Type>
 )
 
-data class PagedListOperation<AuthContext, IdType, DomainType, Filters : Any>(
-    override val filterType: QueryParamModel<Filters>,
-    val pageParamModel: QueryParamModel<PagingParams>,
-    val defaultPageSize: Int,
-    val maxPageSize: Int,
-    override val handle: Either<
-        PagedListHandler<AuthContext, Filters, IdType>,
-        PagedListHandler<AuthContext, Filters, DomainType>
-        >
-) : ListOperation<
-    AuthContext,
-    IdType,
-    DomainType,
-    Filters,
-    PagedListContext<AuthContext, Filters>,
-    CollectionWithTotal<IdType>,
-    CollectionWithTotal<DomainType>
-    >()
 

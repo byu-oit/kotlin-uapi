@@ -11,6 +11,10 @@
 
     <name>Kotlin UAPI Parent POM</name>
 
+    <prerequisites>
+        <maven>3.1</maven>
+    </prerequisites>
+
     <modules>
         <module>uapi-types</module>
         <module>dsl</module>
@@ -24,11 +28,11 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.2.50</kotlin.version>
+        <kotlin.version>1.2.51</kotlin.version>
 
         <junit.platform.version>1.2.0</junit.platform.version>
         <junit.version>5.2.0</junit.version>
-        <jackson.version>2.9.5</jackson.version>
+        <jackson.version>2.9.6</jackson.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     </properties>
 
@@ -51,7 +55,7 @@
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-test-junit</artifactId>
+                <artifactId>kotlin-test-junit5</artifactId>
                 <version>${kotlin.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -76,6 +80,13 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+
+                    <dependency>
+                        <groupId>org.junit.platform</groupId>
+                        <artifactId>junit-platform-surefire-provider</artifactId>
+                        <version>${junit.platform.version}</version>
+                        <scope>test</scope>
+                    </dependency>
     </dependencies>
 
     <build>
@@ -111,13 +122,14 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.21.0</version>
+                <inherited>true</inherited>
                 <dependencies>
-                    <dependency>
-                        <groupId>org.junit.platform</groupId>
-                        <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>${junit.platform.version}</version>
-                    </dependency>
                 </dependencies>
+                <configuration>
+                    <includes>
+                        <include>**/*Test*</include>
+                    </includes>
+                </configuration>
             </plugin>
         </plugins>
     </build>

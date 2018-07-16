@@ -2,13 +2,18 @@ package edu.byu.uapidsl.dsl
 
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.model.*
-import either.*
+import edu.byu.uapidsl.model.resource.*
+import edu.byu.uapidsl.model.resource.ops.PagedListOperation
+import edu.byu.uapidsl.model.resource.ops.SimpleListOperation
+import either.Either
+import either.Left
+import either.Right
+import either.fold
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 
-class OperationsInit<AuthContext, IdType, ResourceType>: DSLInit<OperationModel<AuthContext, IdType, ResourceType>>() {
+class OperationsInit<AuthContext, IdType, ResourceType> : DSLInit<OperationModel<AuthContext, IdType, ResourceType>>() {
 
     @PublishedApi
     internal var createInit: CreateInit<AuthContext, IdType, *>? by setOnce()
@@ -89,39 +94,12 @@ class OperationsInit<AuthContext, IdType, ResourceType>: DSLInit<OperationModel<
             create = this.createInit?.toModel(context),
             update = this.updateInit?.fold({ it.toModel(context) }, { it.toModel(context) }),
             delete = this.deleteInit?.toModel(context),
-            list = this.listInit?.toModel(context)
+            list = this.listInit?.fold({ it.toModel(context) }, { it.toModel(context) })
         )
     }
 }
 
-//private fun <AuthContext, IdType, ResourceType>
-//    Either<SimpleListInit<AuthContext, IdType, ResourceType, *>, PagedCollectionInit<AuthContext, IdType, ResourceType, *>>.toModel(
-//    context: ModelingContext
-//): ListOperation<AuthContext, IdType, ResourceType, *, *, *, *> {
-//    return this.fold(
-//        {it.toModel(context)},
-//        {it.toModel(context)}
-//    )
-//}
-
-
-private fun <AuthContext, IdType, ResourceType>
-    Either<SimpleListInit<AuthContext, IdType, ResourceType, Any>, PagedCollectionInit<AuthContext, IdType, ResourceType, Any>>.toModel(
-    context: ModelingContext
-): Either<SimpleListOperation<AuthContext, IdType, ResourceType, Any>, PagedListOperation<AuthContext, IdType, ResourceType, Any>> {
-//    return this.fold(
-//        {it.toModel(context)},
-//        {it.toModel(context)}
-//    )
-    return when(this) {
-        is Left -> Left(this.value.toModel(context))
-        is Right -> Right(this.value.toModel(context))
-    }
-}
-
-
-
-class ReadInit<AuthContext, IdType, ResourceModel>: DSLInit<ReadOperation<AuthContext, IdType, ResourceModel>>() {
+class ReadInit<AuthContext, IdType, ResourceModel> : DSLInit<ReadOperation<AuthContext, IdType, ResourceModel>>() {
 
     private var authorizer: ReadAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
 
@@ -211,14 +189,14 @@ class PagedCollectionInit<AuthContext, IdType, ResourceModel, FilterType : Any>(
 typealias ListHandler<AuthContext, FilterType, ResultType> =
     ListContext<AuthContext, FilterType>.() -> Collection<ResultType>
 
-interface ListContext<AuthContext, FilterType>: AuthorizedContext<AuthContext> {
+interface ListContext<AuthContext, FilterType> : AuthorizedContext<AuthContext> {
     val filters: FilterType
 }
 
 typealias PagedListHandler<AuthContext, FilterType, ResultType> =
     PagedListContext<AuthContext, FilterType>.() -> CollectionWithTotal<ResultType>
 
-interface PagedListContext<AuthContext, FilterType>: ListContext<AuthContext, FilterType> {
+interface PagedListContext<AuthContext, FilterType> : ListContext<AuthContext, FilterType> {
     val paging: PagingParams
 }
 
@@ -384,29 +362,29 @@ interface AuthorizedContext<AuthContext> {
     val authContext: AuthContext
 }
 
-interface IdentifiedContext<AuthContext, IdType>: AuthorizedContext<AuthContext> {
+interface IdentifiedContext<AuthContext, IdType> : AuthorizedContext<AuthContext> {
     val id: IdType
 }
 
-interface IdentifiedResourceContext<AuthContext, IdType, ModelType>: IdentifiedContext<AuthContext, IdType> {
+interface IdentifiedResourceContext<AuthContext, IdType, ModelType> : IdentifiedContext<AuthContext, IdType> {
     val resource: ModelType
 }
 
 
-interface CreateContext<AuthContext, CreateModel>: AuthorizedContext<AuthContext>, InputContext<CreateModel>
+interface CreateContext<AuthContext, CreateModel> : AuthorizedContext<AuthContext>, InputContext<CreateModel>
 
-interface ReadLoadContext<AuthContext, IdType>: IdentifiedContext<AuthContext, IdType>
+interface ReadLoadContext<AuthContext, IdType> : IdentifiedContext<AuthContext, IdType>
 
-interface ReadContext<AuthContext, IdType, ModelType>: IdentifiedResourceContext<AuthContext, IdType, ModelType>
+interface ReadContext<AuthContext, IdType, ModelType> : IdentifiedResourceContext<AuthContext, IdType, ModelType>
 
 interface InputContext<InputModel> {
     val input: InputModel
 }
 
-interface UpdateContext<AuthContext, IdType, ModelType, UpdateModel>: IdentifiedResourceContext<AuthContext, IdType, ModelType>, InputContext<UpdateModel>
+interface UpdateContext<AuthContext, IdType, ModelType, UpdateModel> : IdentifiedResourceContext<AuthContext, IdType, ModelType>, InputContext<UpdateModel>
 
-interface CreateOrUpdateContext<AuthContext, IdType, ModelType, UpdateModel>: IdentifiedContext<AuthContext, IdType>, InputContext<UpdateModel> {
+interface CreateOrUpdateContext<AuthContext, IdType, ModelType, UpdateModel> : IdentifiedContext<AuthContext, IdType>, InputContext<UpdateModel> {
     val resource: ModelType?
 }
 
-interface DeleteContext<AuthContext, IdType, ModelType>: IdentifiedResourceContext<AuthContext, IdType, ModelType>
+interface DeleteContext<AuthContext, IdType, ModelType> : IdentifiedResourceContext<AuthContext, IdType, ModelType>

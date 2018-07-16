@@ -5,7 +5,7 @@ import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.ReadContext
 import edu.byu.uapidsl.http.GetHandler
 import edu.byu.uapidsl.http.GetRequest
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.*
 
 class ResourceGet<AuthContext : Any, IdType : Any, ModelType : Any>(

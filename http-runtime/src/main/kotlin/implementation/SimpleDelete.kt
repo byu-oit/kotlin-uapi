@@ -5,8 +5,8 @@ import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.DeleteContext
 import edu.byu.uapidsl.http.DeleteHandler
 import edu.byu.uapidsl.http.DeleteRequest
-import edu.byu.uapidsl.model.DeleteOperation
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.DeleteOperation
+import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.UAPIEmptyResponse
 import edu.byu.uapidsl.types.UAPIResponse
 

@@ -7,7 +7,10 @@ import edu.byu.uapidsl.http.path.CompoundPathVariablePart
 import edu.byu.uapidsl.http.path.PathPart
 import edu.byu.uapidsl.http.path.SimplePathVariablePart
 import edu.byu.uapidsl.http.path.StaticPathPart
-import edu.byu.uapidsl.model.*
+import edu.byu.uapidsl.model.resource.*
+import edu.byu.uapidsl.model.resource.ops.ListOperation
+import edu.byu.uapidsl.model.resource.ops.PagedListOperation
+import edu.byu.uapidsl.model.resource.ops.SimpleListOperation
 import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
 import edu.byu.uapidsl.typemodeling.PathParamSchema
 import edu.byu.uapidsl.typemodeling.SimplePathParamSchema
@@ -131,18 +134,14 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> 
 //}
 
 private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any>
-    Either<
-        SimpleListOperation<AuthContext, IdType, ModelType, Filters>,
-        PagedListOperation<AuthContext, IdType, ModelType, Filters>
-        >.toHandler(
+    ListOperation<AuthContext, IdType, ModelType, Filters, *, *, *>.toHandler(
     uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
 ): GetHandler {
-    return this.fold(
-        {edu.byu.uapidsl.http.implementation.SimpleListGet(uapiModel, resource, it, writer)},
-        {edu.byu.uapidsl.http.implementation.PagedListGet(uapiModel, resource, it, writer)}
-    )
+    return when(this) {
+        is SimpleListOperation -> SimpleListGet(uapiModel, resource, this, writer)
+        is PagedListOperation -> PagedListGet(uapiModel, resource, this, writer)
+    }
 }
-
 
 typealias PathParamDecorator = (part: String) -> String
 

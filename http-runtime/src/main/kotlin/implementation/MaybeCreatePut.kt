@@ -7,8 +7,8 @@ import edu.byu.uapidsl.http.NotAuthorizedToViewException
 import edu.byu.uapidsl.http.PathParams
 import edu.byu.uapidsl.http.PutHandler
 import edu.byu.uapidsl.http.PutRequest
-import edu.byu.uapidsl.model.CreateOrUpdateOperation
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.CreateOrUpdateOperation
+import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.*
 
 class MaybeCreatePut<AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any>(

@@ -5,8 +5,8 @@ import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.UpdateContext
 import edu.byu.uapidsl.http.PutHandler
 import edu.byu.uapidsl.http.PutRequest
-import edu.byu.uapidsl.model.ResourceModel
-import edu.byu.uapidsl.model.SimpleUpdateOperation
+import edu.byu.uapidsl.model.resource.ResourceModel
+import edu.byu.uapidsl.model.resource.SimpleUpdateOperation
 import edu.byu.uapidsl.types.*
 
 class SimplePut<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(

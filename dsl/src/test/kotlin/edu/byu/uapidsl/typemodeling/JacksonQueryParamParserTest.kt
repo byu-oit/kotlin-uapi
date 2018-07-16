@@ -1,8 +1,9 @@
 package edu.byu.uapidsl.typemodeling
 
 import edu.byu.uapidsl.dsl.PagingParams
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
+
 
 
 class JacksonQueryParamParserTest {

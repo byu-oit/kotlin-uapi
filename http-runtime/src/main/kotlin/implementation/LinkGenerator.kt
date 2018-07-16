@@ -1,7 +1,7 @@
 package edu.byu.uapidsl.http.implementation
 
 import edu.byu.uapidsl.http.HttpRequest
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.LinkMethod
 import edu.byu.uapidsl.types.UAPILink
 import edu.byu.uapidsl.types.UAPILinks

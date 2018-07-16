@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.dsl.CreateContext
 import edu.byu.uapidsl.http.*
-import edu.byu.uapidsl.model.CreateOperation
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.CreateOperation
+import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.*
 
 class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(

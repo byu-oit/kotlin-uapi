@@ -3,12 +3,12 @@ package edu.byu.uapidsl.dsl
 import edu.byu.uapidsl.DSLInit
 import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.dsl.subresource.SubresourcesInit
-import edu.byu.uapidsl.model.IdModel
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.IdModel
+import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.model.ResponseModel
 import kotlin.reflect.KClass
 
-class ResourceInit<AuthContext, IdType : Any, DomainType : Any>(
+class ResourceInit<AuthContext: Any, IdType : Any, DomainType : Any>(
     private val name: String,
     private val idType: KClass<IdType>,
     private val modelType: KClass<DomainType>

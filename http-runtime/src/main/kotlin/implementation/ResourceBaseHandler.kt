@@ -7,7 +7,7 @@ import edu.byu.uapidsl.http.HttpRequest
 import edu.byu.uapidsl.http.NotAuthorizedToViewException
 import edu.byu.uapidsl.http.NotFoundException
 import edu.byu.uapidsl.http.PathParams
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.UAPIResponse
 
 //class ResourceBaseHandler

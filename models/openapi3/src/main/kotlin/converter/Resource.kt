@@ -1,6 +1,6 @@
 package edu.byu.uapidsl.adapters.openapi3.converter
 
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.ResourceModel
 import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.media.Schema

@@ -1,7 +1,7 @@
 package edu.byu.uapidsl
 
 import com.google.common.base.CaseFormat
-import edu.byu.uapidsl.model.ResourceModel
+import edu.byu.uapidsl.model.resource.ResourceModel
 import java.util.*
 
 data class UApiModel<AuthContext : Any>(
