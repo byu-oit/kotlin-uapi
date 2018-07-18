@@ -187,6 +187,16 @@ val personsModel = apiModel<Authorizer> {
         }
     }
 
+    /*
+    singletonResource<PersonAPISettings>("settings") {
+        authorized {
+
+        }
+        fetch {
+        }
+    }
+     */
+
     extend {
 
     }

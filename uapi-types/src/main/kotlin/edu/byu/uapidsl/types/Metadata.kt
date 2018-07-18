@@ -1,5 +1,6 @@
 package edu.byu.uapidsl.types
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import java.time.Instant
 
 
@@ -54,6 +55,9 @@ data class ValidationResponse(
     companion object {
         val OK = ValidationResponse()
     }
+
+    @JsonIgnore
+    val successful = code in 200..299
 }
 
 data class CacheMeta(

@@ -1,14 +1,14 @@
 package edu.byu.uapidsl
 
 import edu.byu.jwt.ByuJwt
-import edu.byu.uapidsl.dsl.ResourceInit
+import edu.byu.uapidsl.dsl.ResourceDSL
 import edu.byu.uapidsl.dsl.setOnce
 import edu.byu.uapidsl.typemodeling.DefaultTypeModeler
 import edu.byu.uapidsl.typemodeling.TypeModeler
 import java.lang.annotation.Inherited
 
-inline fun <AuthContext : Any> apiModel(block: ApiModelInit<AuthContext>.() -> Unit): UApiModel<AuthContext> {
-    val init = ApiModelInit<AuthContext>()
+inline fun <AuthContext : Any> apiModel(block: ApiModelDSL<AuthContext>.() -> Unit): UApiModel<AuthContext> {
+    val init = ApiModelDSL<AuthContext>()
     init.block()
     return init.toModel(ModelingContext(
         ValidationContext(),
@@ -16,12 +16,12 @@ inline fun <AuthContext : Any> apiModel(block: ApiModelInit<AuthContext>.() -> U
     ))
 }
 
-class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>() {
+class ApiModelDSL<AuthContext: Any> : DslPart<UApiModel<AuthContext>>() {
 
-    private var apiInfoInit: ApiInfoInit by setOnce()
+    private var apiInfoInit: ApiInfoDSL by setOnce()
 
-    fun info(block: ApiInfoInit.() -> Unit) {
-        apiInfoInit = ApiInfoInit()
+    fun info(block: ApiInfoDSL.() -> Unit) {
+        apiInfoInit = ApiInfoDSL()
         apiInfoInit.block()
     }
 
@@ -32,11 +32,11 @@ class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>() {
     }
 
     @PublishedApi
-    internal var resources: MutableList<ResourceInit<AuthContext, *, *>> = mutableListOf()
+    internal var resources: MutableList<ResourceDSL<AuthContext, *, *>> = mutableListOf()
 
-    inline fun <reified IdType : Any, reified ResourceType : Any> resource(name: String, init: ResourceInit<AuthContext, IdType, ResourceType>.() -> Unit) {
+    inline fun <reified IdType : Any, reified ResourceType : Any> resource(name: String, init: ResourceDSL<AuthContext, IdType, ResourceType>.() -> Unit) {
         println("Resource: $name ${ResourceType::class.simpleName}")
-        val res = ResourceInit<AuthContext, IdType, ResourceType>(name, IdType::class, ResourceType::class)
+        val res = ResourceDSL<AuthContext, IdType, ResourceType>(name, IdType::class, ResourceType::class)
         res.init()
 
         resources.add(res)
@@ -56,7 +56,7 @@ class ApiModelInit<AuthContext: Any> : DSLInit<UApiModel<AuthContext>>() {
 
 }
 
-class ApiInfoInit: DSLInit<ApiInfo>() {
+class ApiInfoDSL: DslPart<ApiInfo>() {
     var name: String by setOnce()
     var version: String by setOnce()
     var description: String? by setOnce()
@@ -91,7 +91,7 @@ data class AuthContextInput(
 annotation class UApiMarker
 
 @UApiMarker
-abstract class DSLInit<out ModelType> {
+abstract class DslPart<out ModelType> {
     abstract fun toModel(context: ModelingContext): ModelType
 }
 

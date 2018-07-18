@@ -1,13 +1,13 @@
 package edu.byu.uapidsl.dsl.subresource.list
 
-import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
 
-class SubResourceInit<AuthContext, ParentId, ParentModel, SubResourceId, SubResourceModel>(
+class SubResourceDSL<AuthContext, ParentId, ParentModel, SubResourceId, SubResourceModel>(
     val name: String
-) : DSLInit<SubResourceModel>() {
+) : DslPart<SubResourceModel>() {
 
-    inline fun operations(init: SubOperationsInit<AuthContext, ParentId, ParentModel, SubResourceId, SubResourceModel>.() -> Unit) {
+    inline fun operations(init: SubOperationsDSL<AuthContext, ParentId, ParentModel, SubResourceId, SubResourceModel>.() -> Unit) {
 
     }
 

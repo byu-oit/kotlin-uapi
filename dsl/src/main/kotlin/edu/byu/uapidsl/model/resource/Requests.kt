@@ -40,15 +40,6 @@ data class UpdateResourceRequest<
     val input: Input
 ): MutatingResourceRequest<AuthContext>()
 
-data class CreateOrUpdateResourceRequest<
-    AuthContext,
-    IdType,
-    Input>(
-    override val authContext: AuthContext,
-    val id: IdType,
-    val input: Input
-): MutatingResourceRequest<AuthContext>()
-
 data class DeleteResourceRequest<
     AuthContext,
     IdType>(

@@ -3,9 +3,9 @@ package edu.byu.uapidsl.http.implementation
 import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
-import edu.byu.uapidsl.dsl.CreateContext
 import edu.byu.uapidsl.http.*
-import edu.byu.uapidsl.model.resource.CreateOperation
+import edu.byu.uapidsl.model.resource.CreateResourceRequest
+import edu.byu.uapidsl.model.resource.ops.CreateOperation
 import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.*
 
@@ -18,29 +18,23 @@ class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(
     apiModel, jsonMapper
 ), PostHandler {
 
-    private val authorizer = create.authorization
-    private val handler = create.handle
-    private val loader = resource.operations.read.handle
-
     override fun handleAuthenticated(request: PostRequest, authContext: AuthContext): UAPIResponse<*> {
         val body: InputType = request.body.readWith(create.input.reader)
-        val context = CreateContextImpl(authContext, body)
 
-        val authorized = context.authorizer()
-        if (!authorized) {
-            throw NotAuthorizedToViewException()
+        val response = resource.handleCreateRequest(
+            CreateResourceRequest(authContext, body)
+        )
+
+        if (!response.metadata.validationResponse.successful) {
+            return response
         }
-
-        val createdId = context.handler()
-
-        val model = ReadLoadContextImpl(authContext, createdId).loader()!!
 
         val metadata = UAPIResourceMeta(
             validationResponse = ValidationResponse(201, "Created")
         )
 
         return SimpleResourceResponse(
-            mapOf("basic" to UAPISimpleResource(metadata, properties = model)),
+            mapOf("basic" to response),
             metadata
         )
     }
@@ -52,9 +46,4 @@ fun <Type: Any> RequestBody.readWith(reader: ObjectReader): Type {
         else -> throw IllegalStateException("Unable to deserialize body")
     }
 }
-
-data class CreateContextImpl<AuthContext, InputType> (
-    override val authContext: AuthContext,
-    override val input: InputType
-): CreateContext<AuthContext, InputType>
 

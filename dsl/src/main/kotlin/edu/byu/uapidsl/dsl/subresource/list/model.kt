@@ -3,7 +3,7 @@ package edu.byu.uapidsl.dsl.subresource.list
 
 //class SubModelInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 //    validation: ValidationContext
-//) : DSLInit(validation) {
+//) : DslPart(validation) {
 //
 //    fun <UAPIType> transform(handler: SubTransformer<AuthContext, ParentId, ParentModel, SubId, SubModel, UAPIType>) {
 //
@@ -25,7 +25,7 @@ package edu.byu.uapidsl.dsl.subresource.list
 //
 //class SubRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>(
 //    validation: ValidationContext
-//) : DSLInit(validation) {
+//) : DslPart(validation) {
 //    fun authorization(authorizer: SubRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId, RelatedModel>) {
 //
 //    }
@@ -37,7 +37,7 @@ package edu.byu.uapidsl.dsl.subresource.list
 //
 //class SubExternalRelationInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 //    validation: ValidationContext
-//) : DSLInit(validation) {
+//) : DslPart(validation) {
 //    fun authorization(authorizer: SubExternalRelationAuthorizer<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 //
 //    }

@@ -51,7 +51,7 @@ fun <Type> uapiKey(
 //class OutputInit<AuthContext, IdType, ResourceModel : Any, UAPIType: Any>(
 //    validation: ValidationContext,
 //    private val type: Introspectable<UAPIType>
-//) : DSLInit(validation) {
+//) : DslPart(validation) {
 //
 //    var example: UAPIType by setOnce()
 //
@@ -86,7 +86,7 @@ fun <Type> uapiKey(
 
 //class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>(
 //    validation: ValidationContext
-//) : DSLInit(validation) {
+//) : DslPart(validation) {
 //    fun authorization(authorizer: RelationAuthorizer<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>) {
 //
 //    }
@@ -98,7 +98,7 @@ fun <Type> uapiKey(
 
 //class ExternalRelationInit<AuthContext, IdType, ResourceModel>(
 //    validation: ValidationContext
-//) : DSLInit(validation) {
+//) : DslPart(validation) {
 //    fun authorization(authorizer: ExternalRelationAuthorizer<AuthContext, IdType, ResourceModel>) {
 //
 //    }

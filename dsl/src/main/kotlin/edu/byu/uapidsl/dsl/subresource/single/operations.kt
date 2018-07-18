@@ -1,30 +1,30 @@
 package edu.byu.uapidsl.dsl.subresource.single
 
-import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
 
-class SingleSubOperationsInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-) : DSLInit<Nothing>() {
+class SingleSubOperationsDSL<AuthContext, ParentId, ParentModel, SingleSubModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
 
-    inline fun <reified InputModel> createOrUpdate(init: SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubModel, InputModel>.() -> Unit) {
+    inline fun <reified InputModel> createOrUpdate(init: SingleSubCreateOrUpdateDSL<AuthContext, ParentId, ParentModel, SingleSubModel, InputModel>.() -> Unit) {
 
     }
 
-    inline fun delete(init: SingleSubDeleteInit<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit) {
+    inline fun delete(init: SingleSubDeleteDSL<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit) {
 
     }
 
-    inline fun read(init: SingleSubReadInit<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit) {
+    inline fun read(init: SingleSubReadDSL<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit) {
 
     }
 
 }
 
-class SingleSubReadInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-) : DSLInit<Nothing>() {
+class SingleSubReadDSL<AuthContext, ParentId, ParentModel, SingleSubModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -39,8 +39,8 @@ class SingleSubReadInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
 
 }
 
-class SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubModel, UpdateModel>(
-) : DSLInit<Nothing>() {
+class SingleSubCreateOrUpdateDSL<AuthContext, ParentId, ParentModel, SingleSubModel, UpdateModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -54,8 +54,8 @@ class SingleSubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SingleSubM
     }
 }
 
-class SingleSubDeleteInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-) : DSLInit<Nothing>() {
+class SingleSubDeleteDSL<AuthContext, ParentId, ParentModel, SingleSubModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }

@@ -1,8 +1,7 @@
 package edu.byu.uapidsl.model
 
 import edu.byu.uapidsl.dsl.*
-import edu.byu.uapidsl.model.resource.*
-import edu.byu.uapidsl.model.resource.ops.ListOperation
+import edu.byu.uapidsl.model.resource.ops.*
 import either.Either
 import kotlin.reflect.KClass
 
@@ -12,7 +11,7 @@ data class SubResourceModel<AuthContext : Any, SubId : Any, SubModel : Any>(
     val read: ReadOperation<AuthContext, SubId, SubModel>,
     val list: ListOperation<AuthContext, SubId, SubModel, Any, *, *, *>?,
     val create: CreateOperation<AuthContext, SubId, Any>?,
-    val update: UpdateOperation<AuthContext, SubId, SubModel, Any>?,
+    val update: UpdateOperation<AuthContext, SubId, SubModel, Any, *>?,
     val delete: DeleteOperation<AuthContext, SubId, SubModel>?
 //    val example: SubModel,
 //    val transform: TransformModel<AuthContext, SubId, SubModel, Any>

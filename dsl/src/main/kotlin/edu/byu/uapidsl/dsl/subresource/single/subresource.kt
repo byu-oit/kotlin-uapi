@@ -1,21 +1,21 @@
 package edu.byu.uapidsl.dsl.subresource.single
 
-import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
 
 
-class SingleSubResourceInit<AuthContext, ParentId, ParentModel, SingleSubResourceModel>(
+class SingleSubResourceDSL<AuthContext, ParentId, ParentModel, SingleSubResourceModel>(
     val name: String
-) : DSLInit<Nothing>() {
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
 
-    inline fun operations(init: SingleSubOperationsInit<AuthContext, ParentId, ParentModel, SingleSubResourceModel>.() -> Unit) {
+    inline fun operations(init: SingleSubOperationsDSL<AuthContext, ParentId, ParentModel, SingleSubResourceModel>.() -> Unit) {
 
     }
 
-    inline fun model(init: SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubResourceModel>.() -> Unit) {
+    inline fun model(init: SingleSubModelDSL<AuthContext, ParentId, ParentModel, SingleSubResourceModel>.() -> Unit) {
 
     }
 

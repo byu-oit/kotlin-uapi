@@ -1,29 +1,29 @@
 package edu.byu.uapidsl.dsl
 
-import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
-import edu.byu.uapidsl.dsl.subresource.SubresourcesInit
+import edu.byu.uapidsl.dsl.subresource.SubresourcesDSL
 import edu.byu.uapidsl.model.resource.IdModel
 import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.model.ResponseModel
 import kotlin.reflect.KClass
 
-class ResourceInit<AuthContext: Any, IdType : Any, DomainType : Any>(
+class ResourceDSL<AuthContext: Any, IdType : Any, DomainType : Any>(
     private val name: String,
     private val idType: KClass<IdType>,
     private val modelType: KClass<DomainType>
-) : DSLInit<ResourceModel<AuthContext, IdType, DomainType>>() {
+) : DslPart<ResourceModel<AuthContext, IdType, DomainType>>() {
 
     var example: DomainType by setOnce()
 
     @PublishedApi
-    internal var operationsInit: OperationsInit<AuthContext, IdType, DomainType> by setOnce()
+    internal var operationsInit: OperationsDSL<AuthContext, IdType, DomainType> by setOnce()
 //    @PublishedApi
 //    internal var outputInit: OutputInit<AuthContext, IdType, DomainType, *> by setOnce()
 //    private var subresourcesInit: SubresourcesModel<AuthContext, IdType, DomainType> by setOnce()
 
-    inline fun operations(init: OperationsInit<AuthContext, IdType, DomainType>.() -> Unit) {
-        val operations = OperationsInit<AuthContext, IdType, DomainType>()
+    inline fun operations(init: OperationsDSL<AuthContext, IdType, DomainType>.() -> Unit) {
+        val operations = OperationsDSL<AuthContext, IdType, DomainType>(this)
         operations.init()
         this.operationsInit = operations
     }
@@ -35,7 +35,7 @@ class ResourceInit<AuthContext: Any, IdType : Any, DomainType : Any>(
 //    }
 
 
-    private var idFromModel: IdExtractor<IdType, DomainType> by setOnce()
+    internal var idFromModel: IdExtractor<IdType, DomainType> by setOnce()
 
     fun idFromModel(func: IdExtractor<IdType, DomainType>) {
         idFromModel = func
@@ -47,7 +47,7 @@ class ResourceInit<AuthContext: Any, IdType : Any, DomainType : Any>(
         isRestricted = func
     }
 
-    inline fun subresources(init: SubresourcesInit<AuthContext, IdType, DomainType>.() -> Unit) {
+    inline fun subresources(init: SubresourcesDSL<AuthContext, IdType, DomainType>.() -> Unit) {
         //TODO
     }
 

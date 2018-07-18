@@ -2,50 +2,32 @@ package edu.byu.uapidsl.http.implementation
 
 import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
-import edu.byu.uapidsl.dsl.ReadContext
 import edu.byu.uapidsl.http.GetHandler
 import edu.byu.uapidsl.http.GetRequest
+import edu.byu.uapidsl.model.resource.FetchResourceRequest
 import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.*
 
 class ResourceGet<AuthContext : Any, IdType : Any, ModelType : Any>(
     apiModel: UApiModel<AuthContext>,
-    resource: ResourceModel<AuthContext, IdType, ModelType>,
+    private val resource: ResourceModel<AuthContext, IdType, ModelType>,
     jsonWriter: ObjectWriter
-) : ResourceBaseHandler<GetRequest, AuthContext, IdType, ModelType, ReadContext<AuthContext, IdType, ModelType>>(
-    apiModel, jsonWriter, resource
+) : BaseHttpHandler<GetRequest, AuthContext>(
+    apiModel, jsonWriter
 ), GetHandler {
 
-    override val authorizer = resource.operations.read.authorization
-
-    override fun createRequestContext(
-        request: GetRequest,
-        authContext: AuthContext,
-        id: IdType,
-        model: ModelType
-    ): ReadContext<AuthContext, IdType, ModelType> = ReadContextImpl(authContext, id, model)
-
-    override fun handleResource(
-        request: GetRequest,
-        authContext: AuthContext,
-        id: IdType,
-        model: ModelType,
-        requestContext: ReadContext<AuthContext, IdType, ModelType>
-    ): UAPIResponse<*> {
-        val metadata = UAPIResourceMeta(
-            ValidationResponse.OK
-        )
+    override fun handleAuthenticated(request: GetRequest, authContext: AuthContext): UAPIResponse<*> {
+        val basic = resource.handleFetchRequest(FetchResourceRequest(
+            authContext, resource.idModel.reader.read(request.path)
+        ))
 
         return SimpleResourceResponse(
-            mapOf("basic" to UAPISimpleResource(metadata, properties = model)),
-            // TODO(Add other fieldsets and contexts)
-            metadata
+            mapOf("basic" to basic),
+            UAPIResourceMeta(
+                validationResponse = basic.metadata.validationResponse,
+                validationInformation = basic.metadata.validationInformation
+            )
         )
     }
 }
 
-data class ReadContextImpl<AuthContext, IdType, ModelType>(
-    override val authContext: AuthContext,
-    override val id: IdType,
-    override val resource: ModelType
-) : ReadContext<AuthContext, IdType, ModelType>

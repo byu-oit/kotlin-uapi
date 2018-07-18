@@ -2,45 +2,45 @@
 
 package edu.byu.uapidsl.dsl.subresource.list
 
-import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.dsl.CollectionWithTotal
 import edu.byu.uapidsl.dsl.PagingParams
 
-class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-) : DSLInit<SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>>() {
+class SubOperationsDSL<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+) : DslPart<SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>>() {
     override fun toModel(context: ModelingContext): SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel> {
         TODO("not implemented")
     }
 
-    inline fun <reified CreateModel> create(init: SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>.() -> Unit) {
+    inline fun <reified CreateModel> create(init: SubCreateDSL<AuthContext, ParentId, ParentModel, SubId, CreateModel>.() -> Unit) {
 
     }
 
-    inline fun <reified UpdateModel> update(init: SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>.() -> Unit) {
+    inline fun <reified UpdateModel> update(init: SubUpdateDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>.() -> Unit) {
 
     }
 
-    inline fun <reified InputModel> createOrUpdate(init: SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, InputModel>.() -> Unit) {
+    inline fun <reified InputModel> createOrUpdate(init: SubCreateOrUpdateDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, InputModel>.() -> Unit) {
 
     }
 
-    inline fun delete(init: SubDeleteInit<AuthContext, ParentId, ParentModel, SubId, SubModel>.() -> Unit) {
+    inline fun delete(init: SubDeleteDSL<AuthContext, ParentId, ParentModel, SubId, SubModel>.() -> Unit) {
 
     }
 
-    inline fun read(init: SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>.() -> Unit) {
+    inline fun read(init: SubReadDSL<AuthContext, ParentId, ParentModel, SubId, SubModel>.() -> Unit) {
 
     }
 
     inline fun <reified FilterType> listSimple(
-        init: SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>.() -> Unit
+        init: SubSimpleCollectionDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>.() -> Unit
     ) {
 
     }
 
     inline fun <reified FilterType> listPaged(
-        init: SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>.() -> Unit
+        init: SubPagedCollectionDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>.() -> Unit
     ) {
 
     }
@@ -51,8 +51,8 @@ class SubOperationsInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 class SubOperationModel<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 )
 
-class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-) : DSLInit<Nothing>() {
+class SubReadDSL<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -67,8 +67,8 @@ class SubReadInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
 
 }
 
-class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
-) : DSLInit<Nothing>() {
+class SubPagedCollectionDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -85,8 +85,8 @@ class SubPagedCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel
     }
 }
 
-class SubSimpleCollectionInit<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
-) : DSLInit<Nothing>() {
+class SubSimpleCollectionDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, FilterType>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -115,8 +115,8 @@ interface SubPagedListContext<AuthContext, ParentId, ParentModel, FilterType> {
     val paging: PagingParams
 }
 
-class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
-) : DSLInit<Nothing>() {
+class SubCreateDSL<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -130,8 +130,8 @@ class SubCreateInit<AuthContext, ParentId, ParentModel, SubId, CreateModel>(
     }
 }
 
-class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
-) : DSLInit<Nothing>() {
+class SubUpdateDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -145,8 +145,8 @@ class SubUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateM
     }
 }
 
-class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
-) : DSLInit<Nothing>() {
+class SubCreateOrUpdateDSL<AuthContext, ParentId, ParentModel, SubId, SubModel, UpdateModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -160,8 +160,8 @@ class SubCreateOrUpdateInit<AuthContext, ParentId, ParentModel, SubId, SubModel,
     }
 }
 
-class SubDeleteInit<AuthContext, ParentId, ParentModel, SubId, SubModel>(
-) : DSLInit<Nothing>() {
+class SubDeleteDSL<AuthContext, ParentId, ParentModel, SubId, SubModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }

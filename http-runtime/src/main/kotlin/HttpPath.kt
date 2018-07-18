@@ -8,14 +8,10 @@ import edu.byu.uapidsl.http.path.PathPart
 import edu.byu.uapidsl.http.path.SimplePathVariablePart
 import edu.byu.uapidsl.http.path.StaticPathPart
 import edu.byu.uapidsl.model.resource.*
-import edu.byu.uapidsl.model.resource.ops.ListOperation
-import edu.byu.uapidsl.model.resource.ops.PagedListOperation
-import edu.byu.uapidsl.model.resource.ops.SimpleListOperation
+import edu.byu.uapidsl.model.resource.ops.*
 import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
 import edu.byu.uapidsl.typemodeling.PathParamSchema
 import edu.byu.uapidsl.typemodeling.SimplePathParamSchema
-import either.Either
-import either.fold
 
 data class HttpPath(
     val pathParts: List<PathPart>,
@@ -110,16 +106,13 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any> singleHandlers(ua
 private fun <AuthContext : Any, IdType : Any, ModelType : Any> DeleteOperation<AuthContext, IdType, ModelType>.toHandler(
     uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
 ): DeleteHandler {
-    return SimpleDelete(uapiModel, resource, this, writer)
+    return SimpleDelete(uapiModel, resource, writer)
 }
 
-private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> UpdateOperation<AuthContext, IdType, ModelType, InputType>.toHandler(
+private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> UpdateOperation<AuthContext, IdType, ModelType, InputType, *>.toHandler(
     uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
 ): PutHandler {
-    return when (this) {
-        is SimpleUpdateOperation<AuthContext, IdType, ModelType, InputType> -> SimplePut(uapiModel, resource, this, writer)
-        is CreateOrUpdateOperation<AuthContext, IdType, ModelType, InputType> -> MaybeCreatePut(uapiModel, resource, this, writer)
-    }
+    return ResourcePut(uapiModel, resource, this, writer)
 }
 
 //

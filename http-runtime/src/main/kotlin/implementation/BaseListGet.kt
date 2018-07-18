@@ -7,13 +7,10 @@ import edu.byu.uapidsl.dsl.PagingParams
 import edu.byu.uapidsl.http.GetHandler
 import edu.byu.uapidsl.http.GetRequest
 import edu.byu.uapidsl.http.implementation.BaseHttpHandler
-import edu.byu.uapidsl.http.implementation.ReadContextImpl
-import edu.byu.uapidsl.http.implementation.ReadLoadContextImpl
 import edu.byu.uapidsl.model.resource.ListResourceRequest
 import edu.byu.uapidsl.model.resource.ops.ListOperation
 import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.types.*
-import either.fold
 
 abstract class BaseListGet<AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any, RequestContext: ListContext<AuthContext, Filters>, IdCollection: Collection<IdType>, ModelCollection: Collection<ModelType>>(
     apiModel: UApiModel<AuthContext>,

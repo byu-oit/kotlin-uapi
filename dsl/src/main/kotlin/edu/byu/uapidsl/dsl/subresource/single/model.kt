@@ -1,10 +1,10 @@
 package edu.byu.uapidsl.dsl.subresource.single
 
-import edu.byu.uapidsl.DSLInit
+import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
 
-class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-) : DSLInit<Nothing>() {
+class SingleSubModelDSL<AuthContext, ParentId, ParentModel, SingleSubModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -15,21 +15,21 @@ class SingleSubModelInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
 
     inline fun <RelatedId, reified RelatedModel> relation(
         name: String,
-        init: SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>.() -> Unit
+        init: SingleSubRelationDSL<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>.() -> Unit
     ) {
     }
 
     inline fun externalRelation(
         name: String,
-        init: SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit
+        init: SingleSubExternalRelationDSL<AuthContext, ParentId, ParentModel, SingleSubModel>.() -> Unit
     ) {
 
     }
 
 }
 
-class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>(
-) : DSLInit<Nothing>() {
+class SingleSubRelationDSL<AuthContext, ParentId, ParentModel, SingleSubModel, RelatedId, RelatedModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
@@ -43,8 +43,8 @@ class SingleSubRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel, 
     }
 }
 
-class SingleSubExternalRelationInit<AuthContext, ParentId, ParentModel, SingleSubModel>(
-) : DSLInit<Nothing>() {
+class SingleSubExternalRelationDSL<AuthContext, ParentId, ParentModel, SingleSubModel>(
+) : DslPart<Nothing>() {
     override fun toModel(context: ModelingContext): Nothing {
         TODO("not implemented")
     }
