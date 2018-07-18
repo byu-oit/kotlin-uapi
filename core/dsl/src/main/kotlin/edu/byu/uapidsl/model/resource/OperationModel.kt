@@ -7,14 +7,9 @@ import kotlin.reflect.KClass
 
 data class OperationModel<AuthContext, IdType, ResourceType: Any>(
     val read: ReadOperation<AuthContext, IdType, ResourceType>,
-//    val list: ListOperation<AuthContext, IdType, ResourceType, *, *, *, *>?,
     val list: ListOperation<AuthContext, IdType, ResourceType, *, *, *, *>?,
     val create: CreateOperation<AuthContext, IdType, *>?,
     val update: UpdateOperation<AuthContext, IdType, ResourceType, *, *>?,
-//    val update: Either<
-//        SimpleUpdateOperation<AuthContext, IdType, ResourceType, *>,
-//        CreateOrUpdateOperation<AuthContext, IdType, ResourceType, *>
-//        >?,
     val delete: DeleteOperation<AuthContext, IdType, ResourceType>?
 ) {
 

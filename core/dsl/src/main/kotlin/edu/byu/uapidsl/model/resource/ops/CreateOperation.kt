@@ -1,13 +1,12 @@
 package edu.byu.uapidsl.model.resource.ops
 
-import edu.byu.uapidsl.dsl.CreateAuthorizer
-import edu.byu.uapidsl.dsl.CreateContext
-import edu.byu.uapidsl.dsl.CreateHandler
+import edu.byu.uapidsl.model.resource.CreateAuthorizer
+import edu.byu.uapidsl.model.resource.CreateContext
+import edu.byu.uapidsl.model.resource.CreateHandler
 import edu.byu.uapidsl.model.resource.CreateResourceRequest
 import edu.byu.uapidsl.model.resource.DomainModelOps
 import edu.byu.uapidsl.model.resource.InputModel
 import edu.byu.uapidsl.types.ErrorResponse
-import edu.byu.uapidsl.types.ResponseMetadata
 import edu.byu.uapidsl.types.UAPIResponse
 
 data class CreateOperation<AuthContext, IdType, InputType : Any>(

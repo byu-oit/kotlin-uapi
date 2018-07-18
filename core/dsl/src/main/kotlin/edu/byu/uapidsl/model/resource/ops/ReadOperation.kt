@@ -1,8 +1,6 @@
 package edu.byu.uapidsl.model.resource.ops
 
-import edu.byu.uapidsl.dsl.*
-import edu.byu.uapidsl.model.resource.DomainModelOps
-import edu.byu.uapidsl.model.resource.FetchResourceRequest
+import edu.byu.uapidsl.model.resource.*
 import edu.byu.uapidsl.types.*
 
 data class ReadOperation<AuthContext, IdType, DomainType: Any>(

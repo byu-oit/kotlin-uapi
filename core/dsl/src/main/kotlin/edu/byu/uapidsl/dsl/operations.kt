@@ -9,7 +9,6 @@ import either.Left
 import either.Right
 import either.fold
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty1
 
 
 class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
@@ -190,20 +189,6 @@ class PagedCollectionDSL<AuthContext, IdType, ResourceModel, FilterType : Any>(
     }
 }
 
-typealias ListHandler<AuthContext, FilterType, ResultType> =
-    ListContext<AuthContext, FilterType>.() -> Collection<ResultType>
-
-interface ListContext<AuthContext, FilterType> : AuthorizedContext<AuthContext> {
-    val filters: FilterType
-}
-
-typealias PagedListHandler<AuthContext, FilterType, ResultType> =
-    PagedListContext<AuthContext, FilterType>.() -> CollectionWithTotal<ResultType>
-
-interface PagedListContext<AuthContext, FilterType> : ListContext<AuthContext, FilterType> {
-    val paging: PagingParams
-}
-
 class CreateDSL<AuthContext, IdType, CreateModel : Any>(
     private val input: KClass<CreateModel>
 ) : DslPart<CreateOperation<AuthContext, IdType, CreateModel>>() {
@@ -308,87 +293,4 @@ class DeleteDSL<AuthContext, IdType, ResourceModel>(
     }
 }
 
-typealias Prop<Type> = KProperty1<*, Type>
 
-interface InputValidator {
-    fun validate(message: String, condition: () -> Boolean)
-
-    fun isNotEmpty(prop: Prop<String>)
-
-
-}
-
-typealias CreateHandler<AuthContext, IdType, CreateModel> =
-    CreateContext<AuthContext, CreateModel>.() -> IdType
-
-typealias UpdateHandler<AuthContext, IdType, ResourceModel, UpdateModel> =
-    UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>.() -> Unit
-
-typealias CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel> =
-    CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>.() -> Unit
-
-typealias DeleteHandler<AuthContext, IdType, ResourceModel> =
-    DeleteContext<AuthContext, IdType, ResourceModel>.() -> Unit
-
-typealias ReadHandler<AuthContext, IdType, ResourceModel> =
-    ReadLoadContext<AuthContext, IdType>.() -> ResourceModel?
-
-
-typealias ReadAuthorizer<AuthContext, IdType, ResourceModel> =
-    ReadContext<AuthContext, IdType, ResourceModel>.() -> Boolean
-
-typealias CreateAuthorizer<AuthContext, CreateModel> =
-    CreateContext<AuthContext, CreateModel>.() -> Boolean
-
-typealias CreateAllower<AuthContext, CreateModel> =
-    CreateContext<AuthContext, CreateModel>.() -> Boolean
-
-typealias CreateValidator<AuthContext, CreateModel> =
-    CreateContext<AuthContext, CreateModel>.() -> Boolean
-
-typealias UpdateAuthorizer<AuthContext, IdType, ResourceModel, UpdateModel> =
-    UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>.() -> Boolean
-
-typealias UpdateAllower<AuthContext, IdType, ResourceModel, UpdateModel> =
-    UpdateContext<AuthContext, IdType, ResourceModel, UpdateModel>.() -> Boolean
-
-typealias CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> =
-    CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>.() -> Boolean
-
-typealias CreateOrUpdateAllower<AuthContext, IdType, ResourceModel, InputModel> =
-    CreateOrUpdateContext<AuthContext, IdType, ResourceModel, InputModel>.() -> Boolean
-
-typealias DeleteAuthorizer<AuthContext, IdType, ResourceModel> =
-    DeleteContext<AuthContext, IdType, ResourceModel>.() -> Boolean
-
-
-interface AuthorizedContext<AuthContext> {
-    val authContext: AuthContext
-}
-
-interface IdentifiedContext<AuthContext, IdType> : AuthorizedContext<AuthContext> {
-    val id: IdType
-}
-
-interface IdentifiedResourceContext<AuthContext, IdType, ModelType> : IdentifiedContext<AuthContext, IdType> {
-    val resource: ModelType
-}
-
-
-interface CreateContext<AuthContext, CreateModel> : AuthorizedContext<AuthContext>, InputContext<CreateModel>
-
-interface ReadLoadContext<AuthContext, IdType> : IdentifiedContext<AuthContext, IdType>
-
-interface ReadContext<AuthContext, IdType, ModelType> : IdentifiedResourceContext<AuthContext, IdType, ModelType>
-
-interface InputContext<InputModel> {
-    val input: InputModel
-}
-
-interface UpdateContext<AuthContext, IdType, ModelType, UpdateModel> : IdentifiedResourceContext<AuthContext, IdType, ModelType>, InputContext<UpdateModel>
-
-interface CreateOrUpdateContext<AuthContext, IdType, ModelType, UpdateModel> : IdentifiedContext<AuthContext, IdType>, InputContext<UpdateModel> {
-    val resource: ModelType?
-}
-
-interface DeleteContext<AuthContext, IdType, ModelType> : IdentifiedResourceContext<AuthContext, IdType, ModelType>

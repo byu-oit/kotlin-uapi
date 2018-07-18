@@ -6,6 +6,8 @@ import edu.byu.uapidsl.dsl.subresource.SubresourcesDSL
 import edu.byu.uapidsl.model.resource.IdModel
 import edu.byu.uapidsl.model.resource.ResourceModel
 import edu.byu.uapidsl.model.ResponseModel
+import edu.byu.uapidsl.model.resource.IdExtractor
+import edu.byu.uapidsl.model.resource.IsRestrictedFunc
 import kotlin.reflect.KClass
 
 class ResourceDSL<AuthContext: Any, IdType : Any, DomainType : Any>(
@@ -70,5 +72,3 @@ class ResourceDSL<AuthContext: Any, IdType : Any, DomainType : Any>(
     }
 }
 
-typealias IdExtractor<IdType, ModelType> = (ModelType) -> IdType
-typealias IsRestrictedFunc<AuthContext, IdType, DomainType> = ReadContext<AuthContext, IdType, DomainType>.() -> Boolean

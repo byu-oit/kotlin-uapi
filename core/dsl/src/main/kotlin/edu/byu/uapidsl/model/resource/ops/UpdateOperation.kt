@@ -1,9 +1,6 @@
 package edu.byu.uapidsl.model.resource.ops
 
-import edu.byu.uapidsl.dsl.*
-import edu.byu.uapidsl.model.resource.DomainModelOps
-import edu.byu.uapidsl.model.resource.InputModel
-import edu.byu.uapidsl.model.resource.UpdateResourceRequest
+import edu.byu.uapidsl.model.resource.*
 import edu.byu.uapidsl.types.ErrorResponse
 import edu.byu.uapidsl.types.UAPIResponse
 import either.Either

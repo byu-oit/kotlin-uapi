@@ -17,11 +17,11 @@
 
     <modules>
         <module>uapi-types</module>
-        <module>dsl</module>
-        <module>models</module>
-        <module>http-runtime</module>
+        <!--<module>core/model</module>-->
+        <module>core/dsl</module>
+        <module>old/http-runtime</module>
 
-        <module>adapters</module>
+        <module>old/adapters</module>
 
         <module>examples</module>
     </modules>
@@ -81,12 +81,12 @@
             <scope>test</scope>
         </dependency>
 
-                    <dependency>
-                        <groupId>org.junit.platform</groupId>
-                        <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>${junit.platform.version}</version>
-                        <scope>test</scope>
-                    </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-surefire-provider</artifactId>
+            <version>${junit.platform.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

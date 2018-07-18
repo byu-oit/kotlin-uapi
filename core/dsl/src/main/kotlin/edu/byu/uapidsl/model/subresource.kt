@@ -1,6 +1,7 @@
 package edu.byu.uapidsl.model
 
 import edu.byu.uapidsl.dsl.*
+import edu.byu.uapidsl.model.resource.*
 import edu.byu.uapidsl.model.resource.ops.*
 import either.Either
 import kotlin.reflect.KClass

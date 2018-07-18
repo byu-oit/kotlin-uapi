@@ -1,9 +1,7 @@
 package edu.byu.uapidsl.model.resource.ops
 
 import edu.byu.uapidsl.dsl.*
-import edu.byu.uapidsl.model.resource.DomainModelOps
-import edu.byu.uapidsl.model.resource.ListResourceRequest
-import edu.byu.uapidsl.model.resource.QueryParamModel
+import edu.byu.uapidsl.model.resource.*
 import edu.byu.uapidsl.types.*
 import either.Either
 import either.fold

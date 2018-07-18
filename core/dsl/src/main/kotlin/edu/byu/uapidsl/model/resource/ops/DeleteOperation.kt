@@ -1,8 +1,8 @@
 package edu.byu.uapidsl.model.resource.ops
 
-import edu.byu.uapidsl.dsl.DeleteAuthorizer
-import edu.byu.uapidsl.dsl.DeleteContext
-import edu.byu.uapidsl.dsl.DeleteHandler
+import edu.byu.uapidsl.model.resource.DeleteAuthorizer
+import edu.byu.uapidsl.model.resource.DeleteContext
+import edu.byu.uapidsl.model.resource.DeleteHandler
 import edu.byu.uapidsl.model.resource.DeleteResourceRequest
 import edu.byu.uapidsl.model.resource.DomainModelOps
 import edu.byu.uapidsl.types.ErrorResponse

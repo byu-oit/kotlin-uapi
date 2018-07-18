@@ -189,10 +189,19 @@ val personsModel = apiModel<Authorizer> {
 
     /*
     singletonResource<PersonAPISettings>("settings") {
-        authorized {
-
+        operations {
+            read {
+                authorized {}
+                handle {}
+            }
+            update {
+                authorized {}
+                handle {}
+            }
         }
-        fetch {
+
+        subresources {
+
         }
     }
      */

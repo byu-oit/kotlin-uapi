@@ -1,6 +1,5 @@
 package edu.byu.uapidsl.model.resource
 
-import edu.byu.uapidsl.dsl.IdExtractor
 import edu.byu.uapidsl.model.ResponseModel
 import edu.byu.uapidsl.model.resource.ops.CreateOperation
 import edu.byu.uapidsl.model.resource.ops.DeleteOperation
