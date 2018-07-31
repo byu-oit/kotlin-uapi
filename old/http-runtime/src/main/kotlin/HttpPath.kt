@@ -7,7 +7,8 @@ import edu.byu.uapidsl.http.path.CompoundPathVariablePart
 import edu.byu.uapidsl.http.path.PathPart
 import edu.byu.uapidsl.http.path.SimplePathVariablePart
 import edu.byu.uapidsl.http.path.StaticPathPart
-import edu.byu.uapidsl.model.resource.*
+import edu.byu.uapidsl.model.resource.identified.IdentifiedResource
+import edu.byu.uapidsl.model.resource.identified.ops.*
 import edu.byu.uapidsl.model.resource.ops.*
 import edu.byu.uapidsl.typemodeling.ComplexPathParamSchema
 import edu.byu.uapidsl.typemodeling.PathParamSchema
@@ -33,7 +34,7 @@ val <AuthContext : Any> UApiModel<AuthContext>.httpPaths: List<HttpPath>
         return this.resources.flatMap { pathsFor(this, it) }
     }
 
-private fun <AuthContext : Any> pathsFor(apiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, *, *>): Iterable<HttpPath> {
+private fun <AuthContext : Any> pathsFor(apiModel: UApiModel<AuthContext>, resource: IdentifiedResource<AuthContext, *, *>): Iterable<HttpPath> {
 
     val basePath: List<PathPart> = listOf(StaticPathPart(resource.name))
 
@@ -64,7 +65,7 @@ private fun PathParamSchema<*>.asPathPart(): PathPart {
     }
 }
 
-private fun <AuthContext : Any, IdType : Any, ModelType : Any> collectionHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers? {
+private fun <AuthContext : Any, IdType : Any, ModelType : Any> collectionHandlers(uapiModel: UApiModel<AuthContext>, resource: IdentifiedResource<AuthContext, IdType, ModelType>): MethodHandlers? {
     val ops = resource.operations
     if (ops.list == null && ops.create == null) {
         return null
@@ -84,7 +85,7 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any> collectionHandler
     )
 }
 
-private fun <AuthContext : Any, IdType : Any, ModelType : Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>): MethodHandlers {
+private fun <AuthContext : Any, IdType : Any, ModelType : Any> singleHandlers(uapiModel: UApiModel<AuthContext>, resource: IdentifiedResource<AuthContext, IdType, ModelType>): MethodHandlers {
     val writer = resource.responseModel.writer
     val ops = resource.operations
     val get = ResourceGet(uapiModel, resource, resource.responseModel.writer)
@@ -104,13 +105,13 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any> singleHandlers(ua
 }
 
 private fun <AuthContext : Any, IdType : Any, ModelType : Any> DeleteOperation<AuthContext, IdType, ModelType>.toHandler(
-    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+    uapiModel: UApiModel<AuthContext>, resource: IdentifiedResource<AuthContext, IdType, ModelType>, writer: ObjectWriter
 ): DeleteHandler {
     return SimpleDelete(uapiModel, resource, writer)
 }
 
 private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> UpdateOperation<AuthContext, IdType, ModelType, InputType, *>.toHandler(
-    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+    uapiModel: UApiModel<AuthContext>, resource: IdentifiedResource<AuthContext, IdType, ModelType>, writer: ObjectWriter
 ): PutHandler {
     return ResourcePut(uapiModel, resource, this, writer)
 }
@@ -118,7 +119,7 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> 
 //
 //private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any, RequestContext: ListContext<AuthContext, Filters>, IdCollection: Collection<IdType>, ModelCollection: Collection<ModelType>>
 //    ListOperation<AuthContext, IdType, ModelType, Filters, RequestContext, IdCollection, ModelCollection>.toHandler(
-//    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+//    uapiModel: UApiModel<AuthContext>, resource: IdentifiedResource<AuthContext, IdType, ModelType>, writer: ObjectWriter
 //): GetHandler {
 //    return when (this) {
 //        is SimpleListOperation<AuthContext, IdType, ModelType, Filters> -> SimpleListGet(uapiModel, resource, this, writer)
@@ -128,7 +129,7 @@ private fun <AuthContext : Any, IdType : Any, ModelType : Any, InputType : Any> 
 
 private fun <AuthContext : Any, IdType : Any, ModelType : Any, Filters : Any>
     ListOperation<AuthContext, IdType, ModelType, Filters, *, *, *>.toHandler(
-    uapiModel: UApiModel<AuthContext>, resource: ResourceModel<AuthContext, IdType, ModelType>, writer: ObjectWriter
+    uapiModel: UApiModel<AuthContext>, resource: IdentifiedResource<AuthContext, IdType, ModelType>, writer: ObjectWriter
 ): GetHandler {
     return when(this) {
         is SimpleListOperation -> SimpleListGet(uapiModel, resource, this, writer)

@@ -1,7 +1,7 @@
-package edu.byu.uapidsl.model.resource.ops
+package edu.byu.uapidsl.model.resource.identified.ops
 
 import edu.byu.uapidsl.dsl.*
-import edu.byu.uapidsl.model.resource.*
+import edu.byu.uapidsl.model.resource.identified.*
 import edu.byu.uapidsl.types.*
 import either.Either
 import either.fold

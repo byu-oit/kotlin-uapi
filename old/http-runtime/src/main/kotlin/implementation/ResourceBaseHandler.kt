@@ -7,7 +7,7 @@ import edu.byu.uapidsl.http.HttpRequest
 import edu.byu.uapidsl.http.NotAuthorizedToViewException
 import edu.byu.uapidsl.http.NotFoundException
 import edu.byu.uapidsl.http.PathParams
-import edu.byu.uapidsl.model.resource.ResourceModel
+import edu.byu.uapidsl.model.resource.identified.IdentifiedResource
 import edu.byu.uapidsl.types.UAPIResponse
 
 //class ResourceBaseHandler
@@ -15,7 +15,7 @@ import edu.byu.uapidsl.types.UAPIResponse
 abstract class ResourceBaseHandler<Request : HttpRequest, AuthContext : Any, IdType : Any, ModelType : Any, RequestContext : Any>(
     apiModel: UApiModel<AuthContext>,
     jsonWriter: ObjectWriter,
-    protected val resource: ResourceModel<AuthContext, IdType, ModelType>
+    protected val resource: IdentifiedResource<AuthContext, IdType, ModelType>
 ) : BaseHttpHandler<Request, AuthContext>(apiModel, jsonWriter) {
 
     private val loader = resource.operations.read.handle

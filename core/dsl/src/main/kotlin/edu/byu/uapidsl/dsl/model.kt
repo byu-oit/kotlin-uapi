@@ -48,33 +48,33 @@ fun <Type> uapiKey(
     displayLabel = displayLabel
 )
 
-//class OutputInit<AuthContext, IdType, ResourceModel : Any, UAPIType: Any>(
-//    validation: ValidationContext,
+//class OutputInit<AuthContext, IdType, IdentifiedResource : Any, UAPIType: Any>(
+//    validation: Validating,
 //    private val type: Introspectable<UAPIType>
 //) : DslPart(validation) {
 //
 //    var example: UAPIType by setOnce()
 //
-//    var transformModel: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType> by setOnce()
+//    var transformModel: TransformModelHandler<AuthContext, IdType, IdentifiedResource, UAPIType> by setOnce()
 //
-//    fun transform(block: TransformModelHandler<AuthContext, IdType, ResourceModel, UAPIType>) {
+//    fun transform(block: TransformModelHandler<AuthContext, IdType, IdentifiedResource, UAPIType>) {
 //        this.transformModel = block
 //    }
 //
 ////  inline fun <RelatedId, reified RelatedModel> relation(
 ////    name: String,
-////    init: RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>.() -> Unit
+////    init: RelationInit<AuthContext, IdType, IdentifiedResource, RelatedId, RelatedModel>.() -> Unit
 ////  ) {
 ////  }
 ////
 ////  inline fun externalRelation(
 ////    name: String,
-////    init: ExternalRelationInit<AuthContext, IdType, ResourceModel>.() -> Unit
+////    init: ExternalRelationInit<AuthContext, IdType, IdentifiedResource>.() -> Unit
 ////  ) {
 ////
 ////  }
 //
-////    fun toModel(): OutputModel<AuthContext, IdType, ResourceModel, UAPIType> {
+////    fun toModel(): OutputModel<AuthContext, IdType, IdentifiedResource, UAPIType> {
 ////        return OutputModel(
 ////            type = this.type,
 ////            example = this.example,
@@ -84,26 +84,26 @@ fun <Type> uapiKey(
 //
 //}
 
-//class RelationInit<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>(
-//    validation: ValidationContext
+//class RelationInit<AuthContext, IdType, IdentifiedResource, RelatedId, RelatedModel>(
+//    validation: Validating
 //) : DslPart(validation) {
-//    fun authorization(authorizer: RelationAuthorizer<AuthContext, IdType, ResourceModel, RelatedId, RelatedModel>) {
+//    fun authorization(authorizer: RelationAuthorizer<AuthContext, IdType, IdentifiedResource, RelatedId, RelatedModel>) {
 //
 //    }
 //
-//    fun handle(handler: RelationHandler<AuthContext, IdType, ResourceModel, RelatedId>) {
+//    fun handle(handler: RelationHandler<AuthContext, IdType, IdentifiedResource, RelatedId>) {
 //
 //    }
 //}
 
-//class ExternalRelationInit<AuthContext, IdType, ResourceModel>(
-//    validation: ValidationContext
+//class ExternalRelationInit<AuthContext, IdType, IdentifiedResource>(
+//    validation: Validating
 //) : DslPart(validation) {
-//    fun authorization(authorizer: ExternalRelationAuthorizer<AuthContext, IdType, ResourceModel>) {
+//    fun authorization(authorizer: ExternalRelationAuthorizer<AuthContext, IdType, IdentifiedResource>) {
 //
 //    }
 //
-//    fun handle(handler: ExternalRelationHandler<AuthContext, IdType, ResourceModel>) {
+//    fun handle(handler: ExternalRelationHandler<AuthContext, IdType, IdentifiedResource>) {
 //
 //    }
 //}

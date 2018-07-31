@@ -3,18 +3,18 @@ package edu.byu.uapidsl.dsl
 import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.dsl.subresource.SubresourcesDSL
-import edu.byu.uapidsl.model.resource.IdModel
-import edu.byu.uapidsl.model.resource.ResourceModel
+import edu.byu.uapidsl.model.resource.identified.IdModel
+import edu.byu.uapidsl.model.resource.identified.IdentifiedResource
 import edu.byu.uapidsl.model.ResponseModel
-import edu.byu.uapidsl.model.resource.IdExtractor
-import edu.byu.uapidsl.model.resource.IsRestrictedFunc
+import edu.byu.uapidsl.model.resource.identified.IdExtractor
+import edu.byu.uapidsl.model.resource.identified.IsRestrictedFunc
 import kotlin.reflect.KClass
 
 class ResourceDSL<AuthContext: Any, IdType : Any, DomainType : Any>(
     private val name: String,
     private val idType: KClass<IdType>,
     private val modelType: KClass<DomainType>
-) : DslPart<ResourceModel<AuthContext, IdType, DomainType>>() {
+) : DslPart<IdentifiedResource<AuthContext, IdType, DomainType>>() {
 
     var example: DomainType by setOnce()
 
@@ -53,8 +53,8 @@ class ResourceDSL<AuthContext: Any, IdType : Any, DomainType : Any>(
         //TODO
     }
 
-    override fun toModel(context: ModelingContext): ResourceModel<AuthContext, IdType, DomainType> {
-        return ResourceModel(
+    override fun toModel(context: ModelingContext): IdentifiedResource<AuthContext, IdType, DomainType> {
+        return IdentifiedResource(
             type = modelType,
             responseModel = ResponseModel(
                 context.models.outputSchemaFor(modelType),

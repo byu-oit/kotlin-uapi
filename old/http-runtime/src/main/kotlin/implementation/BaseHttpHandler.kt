@@ -123,7 +123,7 @@ abstract class BaseHttpHandler<Request : HttpRequest, AuthContext : Any>(
     private fun String.decodeAndValidateAsJwt(sourceHeader: String): ByuJwt = try {
         jwtValidator.decodeAndValidateJwt(this)
     } catch (ex: JWTValidationException) {
-        throw BadCredentialsException("Unable to validate JWT from header '$sourceHeader'")
+        throw BadCredentialsException("Unable to validateInput JWT from header '$sourceHeader'")
     }
 }
 

@@ -1,12 +1,12 @@
 package edu.byu.uapidsl.examples.students
 
 import edu.byu.uapidsl.apiModel
-import edu.byu.uapidsl.dsl.PagingParams
 import edu.byu.uapidsl.examples.students.app.*
 import edu.byu.uapidsl.examples.students.authorization.Authorizer
 import edu.byu.uapidsl.examples.students.dto.*
 import edu.byu.uapidsl.examples.students.dto.EmailType
 import edu.byu.uapidsl.examples.students.dto.EmployeeSummary
+import edu.byu.uapidsl.model.validation.expectNotBlank
 
 val personsModel = apiModel<Authorizer> {
 
@@ -37,7 +37,7 @@ val personsModel = apiModel<Authorizer> {
 
         operations {
             read {
-                authorized { authContext.canSeePerson(id) }
+                authorized { authContext.canSeePerson(resource.id) }
                 handle {
                     println("Loading person for id $id")
                     Database.findPerson(id)?.toDTO(authContext)
@@ -66,8 +66,8 @@ val personsModel = apiModel<Authorizer> {
 //                }
 //
 //                validateInput {
-//                    validate.isNotEmpty(input::name)
-//                    validate.matches("""""".toRegex(), input::name)
+//                    validateInput.isNotEmpty(input::name)
+//                    validateInput.matches("""""".toRegex(), input::name)
 //                }
 
                 handle {
@@ -77,19 +77,17 @@ val personsModel = apiModel<Authorizer> {
 
             update<UpdatePerson> {
                 authorized {
-                    authContext.canModifyPerson(id)
+                    authContext.canModifyPerson(resource.id)
                 }
 
-//                possible {
-//
-//                }
-//
-//                validateInput {
-//
-//                }
+                validateInput {
+                    if (input.firstName != null) {
+                        expectNotBlank(input::firstName)
+                    }
+                }
 
                 handle {
-                    val p = Database.findPerson(id)!!
+                    val p = Database.findPerson(resource.id)!!
                     val surname = input.surname
                     if (surname != null) {
                         p.name.surname = surname
@@ -99,14 +97,14 @@ val personsModel = apiModel<Authorizer> {
             }
 
             delete {
-                authorized { authContext.canDeletePerson(resource.personId.value) }
+                authorized { authContext.canDeletePerson(resource.model.personId.value) }
 
 //                possible {
 //
 //                }
 
                 handle {
-                    Database.deletePerson(id)
+                    Database.deletePerson(resource.id)
                 }
             }
 

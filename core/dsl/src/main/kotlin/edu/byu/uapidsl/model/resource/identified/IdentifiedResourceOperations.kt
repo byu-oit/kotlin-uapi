@@ -1,17 +1,23 @@
-package edu.byu.uapidsl.model.resource
+package edu.byu.uapidsl.model.resource.identified
 
 import com.fasterxml.jackson.databind.ObjectReader
-import edu.byu.uapidsl.model.resource.ops.*
+import edu.byu.uapidsl.model.resource.ResourceOperations
+import edu.byu.uapidsl.model.resource.identified.ops.*
 import edu.byu.uapidsl.typemodeling.*
 import kotlin.reflect.KClass
 
-data class OperationModel<AuthContext, IdType, ResourceType: Any>(
-    val read: ReadOperation<AuthContext, IdType, ResourceType>,
-    val list: ListOperation<AuthContext, IdType, ResourceType, *, *, *, *>?,
-    val create: CreateOperation<AuthContext, IdType, *>?,
-    val update: UpdateOperation<AuthContext, IdType, ResourceType, *, *>?,
-    val delete: DeleteOperation<AuthContext, IdType, ResourceType>?
-) {
+data class IdentifiedResourceOperations<AuthContext: Any, Id: Any, Model: Any>(
+    override val read: ReadOperation<AuthContext, Id, Model>,
+    val list: ListOperation<AuthContext, Id, Model, *, *, *, *>?,
+    val create: CreateOperation<AuthContext, Id, *>?,
+    override val update: SimpleUpdateOperation<AuthContext, Id, Model, *>?,
+    override val createOrUpdate: CreateOrUpdateOperation<AuthContext, Id, Model, *>?,
+    override val delete: DeleteOperation<AuthContext, Id, Model>?
+): ResourceOperations<
+    AuthContext,
+    Model,
+    IdentifiedResourceModelContext<Id, Model>,
+    IdentifiedResourceOptionalModelContext<Id, Model>> {
 
     val listable: Boolean = list != null
     val listStyle: ListStyle? = when (list) {
@@ -21,10 +27,10 @@ data class OperationModel<AuthContext, IdType, ResourceType: Any>(
     }
 
     val updatable: Boolean = update != null
-    val updateStyle: UpdateStyle? = when (update) {
-        null -> null
-        is SimpleUpdateOperation<*, *, *, *> -> UpdateStyle.SIMPLE
-        is CreateOrUpdateOperation<*, *, *, *> -> UpdateStyle.UPSERT
+    val updateStyle: UpdateStyle? = when {
+        create != null -> UpdateStyle.SIMPLE
+        update != null -> UpdateStyle.UPSERT
+        else -> null
     }
 
     val creatable: Boolean = create != null || updateStyle == UpdateStyle.UPSERT
@@ -35,7 +41,6 @@ data class OperationModel<AuthContext, IdType, ResourceType: Any>(
     }
 
     val deletable: Boolean = delete != null
-
 
 }
 

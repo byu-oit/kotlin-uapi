@@ -3,7 +3,9 @@ package edu.byu.uapidsl.dsl
 import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
 import edu.byu.uapidsl.model.resource.*
-import edu.byu.uapidsl.model.resource.ops.*
+import edu.byu.uapidsl.model.resource.identified.*
+import edu.byu.uapidsl.model.resource.identified.ops.*
+import edu.byu.uapidsl.model.resource.identified.ops.DeleteContext
 import either.Either
 import either.Left
 import either.Right
@@ -13,7 +15,7 @@ import kotlin.reflect.KClass
 
 class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
     @PublishedApi internal val resource: ResourceDSL<AuthContext, IdType, ResourceType>
-): DslPart<OperationModel<AuthContext, IdType, ResourceType>>() {
+): DslPart<IdentifiedResourceOperations<AuthContext, IdType, ResourceType>>() {
 
     @PublishedApi
     internal var createInit: CreateDSL<AuthContext, IdType, *>? by setOnce()
@@ -27,22 +29,25 @@ class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
     }
 
     @PublishedApi
-    internal var updateInit: Either<UpdateDSL<AuthContext, IdType, ResourceType, *>, CreateOrUpdateDSL<AuthContext, IdType, ResourceType, *>>? by setOnce()
+    internal var updateInit: UpdateDSL<AuthContext, IdType, ResourceType, *>? by setOnce()
 
     inline fun <reified UpdateModel : Any> update(init: UpdateDSL<AuthContext, IdType, ResourceType, UpdateModel>.() -> Unit) {
         val obj = UpdateDSL<AuthContext, IdType, ResourceType, UpdateModel>(
             UpdateModel::class
         )
         obj.init()
-        this.updateInit = Left(obj)
+        this.updateInit = obj
     }
+
+    @PublishedApi
+    internal var createOrUpdateInit: CreateOrUpdateDSL<AuthContext, IdType, ResourceType, *>? by setOnce()
 
     inline fun <reified InputModel : Any> createOrUpdate(init: CreateOrUpdateDSL<AuthContext, IdType, ResourceType, InputModel>.() -> Unit) {
         val obj = CreateOrUpdateDSL<AuthContext, IdType, ResourceType, InputModel>(
             InputModel::class
         )
         obj.init()
-        this.updateInit = Right(obj)
+        this.createOrUpdateInit = obj
     }
 
     @PublishedApi
@@ -88,34 +93,35 @@ class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
         this.listInit = Right(obj) as Either<SimpleListDSL<AuthContext, IdType, ResourceType, Any>, PagedCollectionDSL<AuthContext, IdType, ResourceType, Any>>
     }
 
-    override fun toModel(context: ModelingContext): OperationModel<AuthContext, IdType, ResourceType> {
-        return OperationModel(
+    override fun toModel(context: ModelingContext): IdentifiedResourceOperations<AuthContext, IdType, ResourceType> {
+        return IdentifiedResourceOperations(
             read = this.readInit.toModel(context),
             create = this.createInit?.toModel(context),
-            update = this.updateInit?.fold({ it.toModel(context) }, { it.toModel(context) }),
+            update = this.updateInit?.toModel(context),
+            createOrUpdate = this.createOrUpdateInit?.toModel(context),
             delete = this.deleteInit?.toModel(context),
             list = this.listInit?.fold({ it.toModel(context) }, { it.toModel(context) })
         )
     }
 }
 
-class ReadDSL<AuthContext: Any, IdType: Any, ResourceModel: Any>(
-    private val resource: ResourceDSL<AuthContext, IdType, ResourceModel>
-) : DslPart<ReadOperation<AuthContext, IdType, ResourceModel>>() {
+class ReadDSL<Auth: Any, Id: Any, Model: Any>(
+    private val resource: ResourceDSL<Auth, Id, Model>
+) : DslPart<ReadOperation<Auth, Id, Model>>() {
 
-    private var authorizer: ReadAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
+    private var authorizer: Authorizer<IdentifiedReadContext<Auth, Id, Model>> by setOnce()
 
-    fun authorized(auth: ReadAuthorizer<AuthContext, IdType, ResourceModel>) {
+    fun authorized(auth: Authorizer<IdentifiedReadContext<Auth, Id, Model>>) {
         this.authorizer = auth
     }
 
-    private var handler: ReadHandler<AuthContext, IdType, ResourceModel> by setOnce()
+    private var handler: Loader<IdentifiedLoadContext<Auth, Id>, Model> by setOnce()
 
-    fun handle(handler: ReadHandler<AuthContext, IdType, ResourceModel>) {
+    fun handle(handler: Loader<IdentifiedLoadContext<Auth, Id>, Model>) {
         this.handler = handler
     }
 
-    override fun toModel(context: ModelingContext): ReadOperation<AuthContext, IdType, ResourceModel> {
+    override fun toModel(context: ModelingContext): ReadOperation<Auth, Id, Model> {
         return ReadOperation(
             this.authorizer,
             this.handler,
@@ -193,8 +199,9 @@ class CreateDSL<AuthContext, IdType, CreateModel : Any>(
     private val input: KClass<CreateModel>
 ) : DslPart<CreateOperation<AuthContext, IdType, CreateModel>>() {
 
-    private var authorizationHandler: CreateAuthorizer<AuthContext, CreateModel> by setOnce()
+    private var authorizationHandler: Authorizer<CreateContext<AuthContext, CreateModel>> by setOnce()
     private var handler: CreateHandler<AuthContext, IdType, CreateModel> by setOnce()
+    private var validator: Validator<CreateValidationContext<AuthContext, CreateModel>> by setOnce()
 
     fun authorized(auth: CreateAuthorizer<AuthContext, CreateModel>) {
         authorizationHandler = auth
@@ -204,6 +211,10 @@ class CreateDSL<AuthContext, IdType, CreateModel : Any>(
         this.handler = handler
     }
 
+    fun validateInput(validator: Validator<CreateValidationContext<AuthContext, CreateModel>>) {
+        this.validator = validator
+    }
+
     override fun toModel(context: ModelingContext): CreateOperation<AuthContext, IdType, CreateModel> = CreateOperation(
         input = InputModel(
             input,
@@ -211,83 +222,96 @@ class CreateDSL<AuthContext, IdType, CreateModel : Any>(
             context.models.jsonReaderFor(input)
         ),
         authorization = this.authorizationHandler,
-        handle = this.handler
+        handle = this.handler,
+        validator = this.validator
     )
 }
 
-class UpdateDSL<AuthContext, IdType, ResourceModel, InputModel : Any>(
-    private val input: KClass<InputModel>
-) : DslPart<SimpleUpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>() {
+class UpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
+    private val input: KClass<Input>
+) : DslPart<SimpleUpdateOperation<Auth, Id, Model, Input>>() {
 
-    private var authorization: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
-    private var handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
+    private var authorization: Authorizer<IdentifiedUpdateContext<Auth, Id, Model, Input>> by setOnce()
+    private var handler: Handler<IdentifiedUpdateContext<Auth, Id, Model, Input>> by setOnce()
+    private var validate: Validator<IdentifiedUpdateValidationContext<Auth, Id, Model, Input>> by setOnce()
 
-    fun authorized(auth: UpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>) {
+    fun authorized(auth: Authorizer<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
         this.authorization = auth
     }
 
-    fun handle(handler: UpdateHandler<AuthContext, IdType, ResourceModel, InputModel>) {
+    fun handle(handler: Handler<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
         this.handler = handler
     }
 
-    override fun toModel(context: ModelingContext): SimpleUpdateOperation<AuthContext, IdType, ResourceModel, InputModel> {
+    fun validateInput(validator: Validator<IdentifiedUpdateValidationContext<Auth, Id, Model, Input>>) {
+        this.validate = validator
+    }
+
+    override fun toModel(context: ModelingContext): SimpleUpdateOperation<Auth, Id, Model, Input> {
         return SimpleUpdateOperation(
             input = InputModel(
                 input,
                 context.models.jsonInputSchemaFor(input),
                 context.models.jsonReaderFor(input)
             ),
-            authorization = this.authorization,
-            handle = this.handler
+            authorized = this.authorization,
+            handle = this.handler,
+            validate = this.validate
         )
     }
 }
 
-class CreateOrUpdateDSL<AuthContext, IdType, ResourceModel, InputModel : Any>(
-    private val input: KClass<InputModel>
-) : DslPart<CreateOrUpdateOperation<AuthContext, IdType, ResourceModel, InputModel>>() {
+class CreateOrUpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
+    private val input: KClass<Input>
+) : DslPart<CreateOrUpdateOperation<Auth, Id, Model, Input>>() {
 
-    private var authorization: CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
-    private var handler: CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel> by setOnce()
+    private var authorization: Authorizer<IdentifiedCreateOrUpdateContext<Auth, Id, Model, Input>> by setOnce()
+    private var handler: Handler<IdentifiedCreateOrUpdateContext<Auth, Id, Model, Input>> by setOnce()
+    private var validator: Validator<IdentifiedCreateOrUpdateValidationContext<Auth, Id, Model, Input>> by setOnce()
 
-    fun authorization(auth: CreateOrUpdateAuthorizer<AuthContext, IdType, ResourceModel, InputModel>) {
+    fun authorized(auth: Authorizer<IdentifiedCreateOrUpdateContext<Auth, Id, Model, Input>>) {
         this.authorization = auth
     }
 
-    fun handle(handler: CreateOrUpdateHandler<AuthContext, IdType, ResourceModel, InputModel>) {
+    fun handle(handler: Handler<IdentifiedCreateOrUpdateContext<Auth, Id, Model, Input>>) {
         this.handler = handler
     }
 
-    override fun toModel(context: ModelingContext): CreateOrUpdateOperation<AuthContext, IdType, ResourceModel, InputModel> {
+    fun validateInput(validator: Validator<IdentifiedCreateOrUpdateValidationContext<Auth, Id, Model, Input>>) {
+        this.validator = validator
+    }
+
+    override fun toModel(context: ModelingContext): CreateOrUpdateOperation<Auth, Id, Model, Input> {
         return CreateOrUpdateOperation(
             input = InputModel(
                 input,
                 context.models.jsonInputSchemaFor(input),
                 context.models.jsonReaderFor(input)
             ),
-            authorization = this.authorization,
-            handle = this.handler
+            authorized = this.authorization,
+            handle = this.handler,
+            validate = validator
         )
     }
 }
 
-class DeleteDSL<AuthContext, IdType, ResourceModel>(
-) : DslPart<DeleteOperation<AuthContext, IdType, ResourceModel>>() {
+class DeleteDSL<Auth: Any, Id: Any, Model: Any>(
+) : DslPart<DeleteOperation<Auth, Id, Model>>() {
 
-    private var authorization: DeleteAuthorizer<AuthContext, IdType, ResourceModel> by setOnce()
-    private var handler: DeleteHandler<AuthContext, IdType, ResourceModel> by setOnce()
+    private var authorization: Authorizer<DeleteContext<Auth, Id, Model>> by setOnce()
+    private var handler: Handler<DeleteContext<Auth, Id, Model>> by setOnce()
 
-    fun authorized(auth: DeleteAuthorizer<AuthContext, IdType, ResourceModel>) {
+    fun authorized(auth: Authorizer<DeleteContext<Auth, Id, Model>>) {
         this.authorization = auth
     }
 
-    fun handle(handler: DeleteHandler<AuthContext, IdType, ResourceModel>) {
+    fun handle(handler: Handler<DeleteContext<Auth, Id, Model>>) {
         this.handler = handler
     }
 
-    override fun toModel(context: ModelingContext): DeleteOperation<AuthContext, IdType, ResourceModel> {
+    override fun toModel(context: ModelingContext): DeleteOperation<Auth, Id, Model> {
         return DeleteOperation(
-            authorization = this.authorization,
+            authorized = this.authorization,
             handle = this.handler
         )
     }

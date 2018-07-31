@@ -1,4 +1,4 @@
-package edu.byu.uapidsl.model.resource
+package edu.byu.uapidsl.model.resource.identified
 
 import edu.byu.uapidsl.dsl.CollectionWithTotal
 

@@ -1,13 +1,13 @@
 package edu.byu.uapidsl
 
 import com.google.common.base.CaseFormat
-import edu.byu.uapidsl.model.resource.ResourceModel
+import edu.byu.uapidsl.model.resource.identified.IdentifiedResource
 import java.util.*
 
 data class UApiModel<AuthContext : Any>(
     val info: ApiInfo,
     val authContextCreator: AuthContextCreator<AuthContext>,
-    val resources: List<ResourceModel<AuthContext, *, *>>
+    val resources: List<IdentifiedResource<AuthContext, *, *>>
 
 ) {
 

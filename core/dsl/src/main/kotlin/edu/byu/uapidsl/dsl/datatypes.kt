@@ -7,20 +7,20 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 //        val resources: Map<KClass<*>, ApiResource<AuthContext, *, *>>
 //)
 //
-//data class ApiResource<AuthContext, IdType, ResourceModel>(
+//data class ApiResource<AuthContext, IdType, IdentifiedResource>(
 //  val name: String,
-//  val authorized: ResourceAuthorization<AuthContext, IdType, ResourceModel>,
-//  val loader: ResourceLoader<IdType, ResourceModel>,
+//  val authorized: ResourceAuthorization<AuthContext, IdType, IdentifiedResource>,
+//  val loader: ResourceLoader<IdType, IdentifiedResource>,
 //  val collection: CollectionDefinition<IdType, *>,
-//  val fieldCustomizer: FieldCustomizer<AuthContext, ResourceModel>
+//  val fieldCustomizer: FieldCustomizer<AuthContext, IdentifiedResource>
 //)
 //
-//data class ResourceAuthorization<AuthContext, IdType, ResourceModel>(
+//data class ResourceAuthorization<AuthContext, IdType, IdentifiedResource>(
 //        val string: String
 //)
 //
 //
-//typealias ResourceLoader<IdType, ResourceModel> = (IdType) -> ResourceModel
+//typealias ResourceLoader<IdType, IdentifiedResource> = (IdType) -> IdentifiedResource
 //
 //interface CollectionDefinition<IdType, FilterType>
 //
@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 //typealias SimpleCollectionLoader<IdType, FilterType> = (FilterType) -> Collection<IdType>
 //typealias PagedCollectionLoader<IdType, FilterType> = (FilterType, PagingParams) -> CollectionWithTotal<IdType>
 //
-//typealias FieldCustomizer<AuthContext, ResourceModel> = (AuthContext, ResourceModel, String) -> UAPIField<*>
+//typealias FieldCustomizer<AuthContext, IdentifiedResource> = (AuthContext, IdentifiedResource, String) -> UAPIField<*>
 //
 //data class UAPIField<Type>(
 //        val value: Type?

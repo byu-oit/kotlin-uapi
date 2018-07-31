@@ -1,17 +1,17 @@
 package edu.byu.uapidsl.model.resource.ops
 
+import edu.byu.uapidsl.model.resource.identified.ops.SimpleListOperation
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.*
 import kotlin.test.Ignore
 
 @Ignore
 internal class SimpleListOperationTest {
 
     private lateinit var instance: SimpleListOperation<
-            FakeAuth, String, FakeDomain, FakeFilters>
+        FakeAuth, String, FakeDomain, FakeFilters>
 
     class FakeDomain {
 

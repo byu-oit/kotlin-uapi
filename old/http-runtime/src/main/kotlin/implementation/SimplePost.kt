@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.ObjectWriter
 import edu.byu.uapidsl.UApiModel
 import edu.byu.uapidsl.http.*
-import edu.byu.uapidsl.model.resource.CreateResourceRequest
-import edu.byu.uapidsl.model.resource.ops.CreateOperation
-import edu.byu.uapidsl.model.resource.ResourceModel
+import edu.byu.uapidsl.model.resource.identified.CreateResourceRequest
+import edu.byu.uapidsl.model.resource.identified.ops.CreateOperation
+import edu.byu.uapidsl.model.resource.identified.IdentifiedResource
 import edu.byu.uapidsl.types.*
 
 class SimplePost<AuthContext: Any, IdType: Any, ModelType: Any, InputType: Any>(
     apiModel: UApiModel<AuthContext>,
-    private val resource: ResourceModel<AuthContext, IdType, ModelType>,
+    private val resource: IdentifiedResource<AuthContext, IdType, ModelType>,
     private val create: CreateOperation<AuthContext, IdType, InputType>,
     jsonMapper: ObjectWriter
 ): BaseHttpHandler<PostRequest, AuthContext>(
