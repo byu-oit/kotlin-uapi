@@ -66,4 +66,4 @@ Whenever an input is passed as part of an operation, such as in a Create, you wi
 validates that input.  This function will be passed an instance of the `Validating` class.  This class can be used
 to collect a series of assertions about the input, and will then return to the caller a list of all of the assertions which failed.
 
-See 
+See [Validation](./validating-inputs.md) for more.

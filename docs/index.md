@@ -10,13 +10,15 @@ Add the following to your pom.xml:
 
 ```xml
   <dependencyManagement>
-    <dependency>
-      <groupId>edu.byu.uapi.kotlin</groupId>
-      <artifactId>uapi-bom</artifactId>
-      <version>{insert current version here}</version>
-      <scope>import</scope>
-      <type>pom</type>
-    </dependency>
+    <dependencies>
+      <dependency>
+        <groupId>edu.byu.uapi.kotlin</groupId>
+        <artifactId>uapi-bom</artifactId>
+        <version>{insert current version here}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
   </dependencyManagement>
   
   <dependencies>

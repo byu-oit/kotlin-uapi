@@ -5,7 +5,6 @@ import edu.byu.uapi.server.validation.Validating
 import either.Left
 import either.Right
 import io.kotlintest.data.forall
-import io.kotlintest.forAll
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.DescribeSpec
 import io.kotlintest.tables.row
@@ -17,7 +16,9 @@ class IdentifiedResourceSpec : DescribeSpec({
             row(IdentifiedResource<String, String, String>::createOperation, ::WithCreate),
             row(IdentifiedResource<String, String, String>::updateOperation, ::WithUpdate),
             row(IdentifiedResource<String, String, String>::createWithIdOperation, ::WithCreateWithId),
-            row(IdentifiedResource<String, String, String>::deleteOperation, ::WithDelete)
+            row(IdentifiedResource<String, String, String>::deleteOperation, ::WithDelete),
+            row(IdentifiedResource<String, String, String>::listView, ::WithListable),
+            row(IdentifiedResource<String, String, String>::pagedListView, ::WithPagedListable)
 
         )
         it("should be null if the operation interface hasn't been implemented") {
@@ -36,26 +37,11 @@ class IdentifiedResourceSpec : DescribeSpec({
                 op.get(instance).shouldBe(instance)
             }
         }
-
-        context("list views") {
-            it("it should be null by default") {
-                Base().listView.shouldBe(null)
-            }
-            it("should be the resource instance if PagedListable has been implemented") {
-                val instance = WithPagedListable()
-                instance.listView.shouldBe(Right(instance))
-            }
-            it("should be the resource instance if Listable has been implemented") {
-                val instance = WithListable()
-                instance.listView.shouldBe(Left(instance))
-            }
-            it("should have some behavior if both PagedListable and Listable are implemented")
-        }
     }
 
 }) {
 
-    private open class Base: IdentifiedResource<String, String, String> {
+    private open class Base : IdentifiedResource<String, String, String> {
         override val idType: KClass<String>
             get() = TODO("not implemented")
         override val modelType: KClass<String>
@@ -74,7 +60,7 @@ class IdentifiedResourceSpec : DescribeSpec({
         }
     }
 
-    private class WithCreate: Base(), IdentifiedResource.Creatable<String, String, String, String> {
+    private class WithCreate : Base(), IdentifiedResource.Creatable<String, String, String, String> {
         override fun canUserCreate(userContext: String): Boolean {
             TODO("not implemented")
         }
@@ -91,7 +77,7 @@ class IdentifiedResourceSpec : DescribeSpec({
             get() = TODO("not implemented")
     }
 
-    private class WithUpdate: Base(), IdentifiedResource.Updatable<String, String, String, String> {
+    private class WithUpdate : Base(), IdentifiedResource.Updatable<String, String, String, String> {
         override fun canUserUpdate(userContext: String, id: String, model: String): Boolean {
             TODO("not implemented")
         }
@@ -113,7 +99,7 @@ class IdentifiedResourceSpec : DescribeSpec({
 
     }
 
-    private class WithCreateWithId: Base(), IdentifiedResource.CreatableWithId<String, String, String, String> {
+    private class WithCreateWithId : Base(), IdentifiedResource.CreatableWithId<String, String, String, String> {
         override fun canUserCreate(userContext: String, id: String): Boolean {
             TODO("not implemented")
         }
@@ -131,7 +117,7 @@ class IdentifiedResourceSpec : DescribeSpec({
 
     }
 
-    private class WithDelete: Base(), IdentifiedResource.Deletable<String, String, String> {
+    private class WithDelete : Base(), IdentifiedResource.Deletable<String, String, String> {
         override fun canUserDelete(userContext: String, id: String, model: String): Boolean {
             TODO("not implemented")
         }
@@ -146,7 +132,7 @@ class IdentifiedResourceSpec : DescribeSpec({
 
     }
 
-    private class WithListable: Base(), IdentifiedResource.Listable<String, String, String, String> {
+    private class WithListable : Base(), IdentifiedResource.Listable<String, String, String, String> {
         override fun list(userContext: String, filters: String): Collection<String> {
             TODO("not implemented")
         }
@@ -156,7 +142,7 @@ class IdentifiedResourceSpec : DescribeSpec({
 
     }
 
-    private class WithPagedListable: Base(), IdentifiedResource.PagedListable<String, String, String, String> {
+    private class WithPagedListable : Base(), IdentifiedResource.PagedListable<String, String, String, String> {
         override fun list(userContext: String, filters: String, paging: PagingParams): CollectionWithTotal<String> {
             TODO("not implemented")
         }

@@ -91,7 +91,7 @@ class FooResource: IdentifiedResource<MyUserContext, String, FooDTO>,
 ```
 
 * If `canUserCreate` returns false, an HTTP 403 will be returned.
-* If any failed assertions are recorded in `validateCreateInput`, an HTTP 400 will be returned.  See TODO for information about validation.
+* If any failed assertions are recorded in `validateCreateInput`, an HTTP 400 will be returned.  See [Validation](./validating-inputs.md) for information about validation.
 
 ### Updatable
 
@@ -111,7 +111,7 @@ class FooResource: IdentifiedResource<MyUserContext, String, FooDTO>,
       TODO("Check if a user can update this record. Return 'true' if they can.")
     }
     
-    override fun canBeUpdated(id: String, model: Model): Boolean {
+    override fun canBeUpdated(id: String, model: FooDTO): Boolean {
       TODO("Return 'true' if the provided record can be updated at all, regardless of user authorizations.")
     }
     
@@ -130,7 +130,7 @@ class FooResource: IdentifiedResource<MyUserContext, String, FooDTO>,
 * If no record exists with the provided ID (as determined by calling `loadModel`), an HTTP 404 will be returned.
 * If `canUserUpdate` returns false, an HTTP 403 will be returned.
 * If `canBeUpdated` returns false, an HTTP 409 will be returned.
-* If any failed assertions are recorded in `validateUpdateInput`, an HTTP 400 will be returned.  See TODO for information about validation.
+* If any failed assertions are recorded in `validateUpdateInput`, an HTTP 400 will be returned.  See [Validation](./validating-inputs.md) for information about validation.
 
 ### CreatableWithId
 
@@ -157,7 +157,7 @@ class FooResource: IdentifiedResource<MyUserContext, String, FooDTO>,
       TODO("Check if a user can delete this record. Return 'true' if they can.")
     }
     
-    override fun canBeDeleted(id: String, model: Model): Boolean {
+    override fun canBeDeleted(id: String, model: FooDTO): Boolean {
       TODO("Return 'true' if the provided record can be deleted at all, regardless of user authorizations.")
     }
     
@@ -231,8 +231,70 @@ that match the specified filters, not just the number that fit into the requeste
 ## Re-usable Operations
 
 It may be desirable to have reusable implementations of these operations.  For example, your API may have a 'foos' resource
-and a 'bars' resource, and you have a common way to delete both a Foo and a Bar. To reuse this code, you could implement
-the `Deletable` interface in both of your 
+and a 'bars' resource, and you have a common way to delete both a Foo and a Bar (for example, by calling a method on a
+shared `Repository` interface). 
+
+One way to reuse this code would be to implement the `Deletable` interface in both of your resources, and have the 
+methods point to a third class containing the shared logic.
+
+The Runtime offers another alternative, though.  You can have your shared class implement `Deletable` directly, then
+override the `deleteOperation` val in your resource classes:
+
+```kotlin
+// SharedDelete.kt
+
+class SharedDelete<ModelType: Any>: IdentifiedResource.Deletable<MyUserContext, String, ModelType> {
+
+  override fun canUserDelete(userContext: MyUserContext, id: String, model: ModelType): Boolean {
+    TODO("Check if a user can delete this record. Return 'true' if they can.")
+  }
+    
+  override fun canBeDeleted(id: String, model: ModelType): Boolean {
+    TODO("Return 'true' if the provided record can be deleted at all, regardless of user authorizations.")
+  }
+  
+  override fun handleDelete(userContext: UserContext, id: String, model: ModelType) {
+    TODO("Actually delete the record.")
+  }
+  
+}
+
+
+// FooResource.kt
+class FooResource: IdentifiedResource<MyUserContext, String, FooDTO> {
+
+  // ... other resource methods ...
+    
+  override val deleteOperation = SharedDeletable<FooDTO>()
+  
+}
+
+// BarResource.kt
+class BarResource: IdentifiedResource<MyUserContext, String, BarDTO> {
+
+  // ... other resource methods ...
+    
+  override val deleteOperation = SharedDeletable<BarDTO>()
+  
+}
+
+```
+
+Each operation interface has a corresponding val that can be overridden to provide an implementation of that interface,
+rather than implementing it directly:
+
+Interface | val to override
+----------|-----------------
+Creatable | createOperation
+Updatable | updateOperation
+CreatableWithId | createWithIdOperation
+Deletable | deleteOperation
+Listable  | listView
+PagedListable | pagedListView
+
+## TODO: Lifecycle Hooks
+
+Examples: beforeFetch, afterFetch, beforeUpdate, afterUpdate, etc. 
 
 # TODO: DSL Style
 

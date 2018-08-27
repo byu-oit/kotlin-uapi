@@ -6,11 +6,6 @@ import either.Left
 import either.Right
 import kotlin.reflect.KClass
 
-typealias ListViewEither<UserContext, Id, Model, Filter> = Either<
-    IdentifiedResource.Listable<UserContext, Id, Model, Filter>,
-    IdentifiedResource.PagedListable<UserContext, Id, Model, Filter>
-    >
-
 interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
     val idType: KClass<Id>
@@ -29,16 +24,11 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
     val deleteOperation: Deletable<UserContext, Id, Model>?
         get() = this.takeIfType()
 
-    val listView: ListViewEither<UserContext, Id, Model, *>?
-        get() {
-            val right: PagedListable<UserContext, Id, Model, *>? = this.takeIfType()
-            val left: Listable<UserContext, Id, Model, *>? = this.takeIfType()
-            return when {
-                right != null -> Right(right)
-                left != null -> Left(left)
-                else -> null
-            }
-        }
+    val listView: Listable<UserContext, Id, Model, *>?
+        get() = this.takeIfType()
+
+    val pagedListView: PagedListable<UserContext, Id, Model, *>?
+        get() = this.takeIfType()
 
     interface Creatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
         fun canUserCreate(userContext: UserContext): Boolean
