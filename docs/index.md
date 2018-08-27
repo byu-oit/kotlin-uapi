@@ -4,6 +4,8 @@ This set of libraries provides tools for easily building APIs in Kotlin which ad
 
 # Getting Started
 
+Before you start developing, it is important that you understand some [Key Concepts](./key-concepts.md).
+
 ## Dependencies
 
 Add the following to your pom.xml:
