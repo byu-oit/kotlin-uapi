@@ -1,10 +1,40 @@
 package edu.byu.uapi.server
 
 import edu.byu.uapi.server.types.*
+import java.util.*
 
 class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     private val resource: IdentifiedResource<UserContext, Id, Model>
 ) {
+
+    enum class Operation {
+        FETCH,
+        CREATE,
+        UPDATE,
+        DELETE,
+        LIST
+    }
+
+    val availableOperations: Set<Operation>
+
+    init {
+        val ops = EnumSet.of(Operation.FETCH)
+
+        if (resource.createOperation != null) {
+            ops.add(Operation.CREATE)
+        }
+        if (resource.updateOperation != null) {
+            ops.add(Operation.UPDATE)
+        }
+        if (resource.deleteOperation != null) {
+            ops.add(Operation.DELETE)
+        }
+        if (resource.listView != null || resource.pagedListView != null) {
+            ops.add(Operation.LIST)
+        }
+
+        availableOperations = Collections.unmodifiableSet(ops)
+    }
 
 //    @Suppress("UNCHECKED_CAST")
 //    fun <Filters : Any> handleListRequest(
