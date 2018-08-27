@@ -8,7 +8,19 @@ be mixed-and-matched.
 
 With this style, you must implement a series of interfaces, then register them with a UAPI runtime instance.
 
-Here is a very basic example, which only supports fetching a single instance of a resource from an ID:
+```kotlin
+
+fun main(args: Array<String>) {
+  val runtime = UAPIRuntime()
+  
+  runtime.register(FooResource())
+  
+  runtime.startSparkServer(port = 8080) // Requires uapi-spark-server modules
+}
+
+```
+
+Here is a very basic resource, which only supports fetching a single instance of a resource from an ID:
 
 ```kotlin
 
