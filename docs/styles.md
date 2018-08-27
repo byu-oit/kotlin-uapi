@@ -1,5 +1,7 @@
 # Implementation Styles
 
+**Note**: Make sure you're familiar with the [Key Concepts](./key-concepts.md) before proceeding!
+
 There are two styles that can be followed when implementing a UAPI resource: Interface or DSL. These styles can
 be mixed-and-matched.
 
