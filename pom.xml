@@ -16,15 +16,15 @@
     </prerequisites>
 
     <modules>
-        <module>uapi-types</module>
+        <!--<module>uapi-types</module>-->
         <!--<module>core/model</module>-->
-        <module>core/dsl</module>
+        <!--<module>core/dsl</module>-->
         <module>core/runtime</module>
-        <module>old/http-runtime</module>
+        <!--<module>old/http-runtime</module>-->
 
-        <module>old/adapters</module>
+        <!--<module>old/adapters</module>-->
 
-        <module>examples</module>
+        <!--<module>examples</module>-->
     </modules>
 
     <properties>

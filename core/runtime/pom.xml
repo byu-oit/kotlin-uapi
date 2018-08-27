@@ -43,11 +43,6 @@
             <artifactId>kotlin-reflect</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapidsl</groupId>
-            <artifactId>kotlin-uapi-types</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>edu.byu.jwt</groupId>
             <artifactId>byu-jwt</artifactId>
             <version>${byu-jwt.version}</version>

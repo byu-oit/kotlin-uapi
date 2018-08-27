@@ -1,0 +1,20 @@
+version: 1
+
+name: kotlin-uapi
+
+pipelines:
+  master:
+    phases:
+    - type: github
+      name: GitHub
+      owner: byu-oit
+      repo: kotlin-uapi-dsl
+      branch: refactor
+    - type: codebuild
+      name: Build
+      build_image: <account>/docker-openjdk-maven
+      cache: s3
+    - type: slack_notify
+      name: Notify
+      channel: "#genesys-builds"
+      message: "Successfully built and deployed kotlin-uapi to maven repo"
