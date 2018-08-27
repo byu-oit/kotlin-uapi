@@ -4,17 +4,17 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.byu.uapi.kotlin</groupId>
-    <artifactId>kotlin-uapi-runtime</artifactId>
+    <artifactId>uapi-runtime</artifactId>
 
     <packaging>jar</packaging>
 
     <name>Kotlin UAPI Runtime</name>
 
     <parent>
-        <groupId>edu.byu.uapidsl</groupId>
-        <artifactId>kotlin-uapi-dsl-pom</artifactId>
+        <groupId>edu.byu.uapi.kotlin</groupId>
+        <artifactId>kotlin-uapi-pom</artifactId>
         <version>1.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <properties>

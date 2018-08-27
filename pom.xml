@@ -4,8 +4,8 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.byu.uapidsl</groupId>
-    <artifactId>kotlin-uapi-dsl-pom</artifactId>
+    <groupId>edu.byu.uapi.kotlin</groupId>
+    <artifactId>kotlin-uapi-pom</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -25,6 +25,7 @@
         <!--<module>old/adapters</module>-->
 
         <!--<module>examples</module>-->
+        <module>bom</module>
     </modules>
 
     <properties>
