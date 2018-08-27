@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.byu.uapi.kotlin</groupId>
+    <artifactId>kotlin-uapi-runtime</artifactId>
+
+    <packaging>jar</packaging>
+
+    <name>Kotlin UAPI Runtime</name>
+
+    <parent>
+        <groupId>edu.byu.uapidsl</groupId>
+        <artifactId>kotlin-uapi-dsl-pom</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <byu-jwt.version>2.0.0</byu-jwt.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.byu.uapidsl</groupId>
+            <artifactId>kotlin-uapi-types</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.byu.jwt</groupId>
+            <artifactId>byu-jwt</artifactId>
+            <version>${byu-jwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <!-- Android flavor to support Java 7 -->
+            <version>25.0-android</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.adelnizamutdinov</groupId>
+            <artifactId>kotlin-either</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jsonSchema</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.6.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.kotlintest</groupId>
+            <artifactId>kotlintest-runner-junit5</artifactId>
+            <version>3.1.7</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.platform</groupId>
+                        <artifactId>junit-platform-surefire-provider</artifactId>
+                        <version>${junit.platform.version}</version>
+                   </dependency>
+                </dependencies>
+                <configuration>
+                    <includes>
+                        <include>**/*Test*</include>
+                        <include>**/*Spec*</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--<build>-->
+    <!--<sourceDirectory>src/main/kotlin</sourceDirectory>-->
+    <!--<testSourceDirectory>src/test/kotlin</testSourceDirectory>-->
+
+    <!--<plugins>-->
+    <!--<plugin>-->
+    <!--<groupId>org.jetbrains.kotlin</groupId>-->
+    <!--<artifactId>kotlin-maven-plugin</artifactId>-->
+    <!--<version>${kotlin.version}</version>-->
+    <!--<executions>-->
+    <!--<execution>-->
+    <!--<id>compile</id>-->
+    <!--<phase>compile</phase>-->
+    <!--<goals>-->
+    <!--<goal>compile</goal>-->
+    <!--</goals>-->
+    <!--</execution>-->
+    <!--<execution>-->
+    <!--<id>test-compile</id>-->
+    <!--<phase>test-compile</phase>-->
+    <!--<goals>-->
+    <!--<goal>test-compile</goal>-->
+    <!--</goals>-->
+    <!--</execution>-->
+    <!--</executions>-->
+    <!--</plugin>-->
+    <!--</plugins>-->
+    <!--</build>-->
+
+</project>

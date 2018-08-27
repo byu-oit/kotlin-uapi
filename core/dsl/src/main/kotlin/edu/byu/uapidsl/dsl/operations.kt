@@ -2,6 +2,7 @@ package edu.byu.uapidsl.dsl
 
 import edu.byu.uapidsl.DslPart
 import edu.byu.uapidsl.ModelingContext
+import edu.byu.uapidsl.UApiMarker
 import edu.byu.uapidsl.model.resource.*
 import edu.byu.uapidsl.model.resource.identified.*
 import edu.byu.uapidsl.model.resource.identified.ops.*
@@ -13,15 +14,15 @@ import either.fold
 import kotlin.reflect.KClass
 
 
-class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
-    @PublishedApi internal val resource: ResourceDSL<AuthContext, IdType, ResourceType>
-): DslPart<IdentifiedResourceOperations<AuthContext, IdType, ResourceType>>() {
+class OperationsDSL<Auth : Any, Id : Any, Model : Any>(
+    @PublishedApi internal val resource: ResourceDSL<Auth, Id, Model>
+) : DslPart<IdentifiedResourceOperations<Auth, Id, Model>>() {
 
     @PublishedApi
-    internal var createInit: CreateDSL<AuthContext, IdType, *>? by setOnce()
+    internal var createInit: CreateDSL<Auth, Id, *>? by setOnce()
 
-    inline fun <reified CreateModel : Any> create(init: CreateDSL<AuthContext, IdType, CreateModel>.() -> Unit) {
-        val createInit = CreateDSL<AuthContext, IdType, CreateModel>(
+    inline fun <reified CreateModel : Any> create(init: CreateDSL<Auth, Id, CreateModel>.() -> Unit) {
+        val createInit = CreateDSL<Auth, Id, CreateModel>(
             CreateModel::class
         )
         createInit.init()
@@ -29,10 +30,10 @@ class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
     }
 
     @PublishedApi
-    internal var updateInit: UpdateDSL<AuthContext, IdType, ResourceType, *>? by setOnce()
+    internal var updateInit: UpdateDSL<Auth, Id, Model, *>? by setOnce()
 
-    inline fun <reified UpdateModel : Any> update(init: UpdateDSL<AuthContext, IdType, ResourceType, UpdateModel>.() -> Unit) {
-        val obj = UpdateDSL<AuthContext, IdType, ResourceType, UpdateModel>(
+    inline fun <reified UpdateModel : Any> update(init: UpdateDSL<Auth, Id, Model, UpdateModel>.() -> Unit) {
+        val obj = UpdateDSL<Auth, Id, Model, UpdateModel>(
             UpdateModel::class
         )
         obj.init()
@@ -40,10 +41,10 @@ class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
     }
 
     @PublishedApi
-    internal var createOrUpdateInit: CreateOrUpdateDSL<AuthContext, IdType, ResourceType, *>? by setOnce()
+    internal var createOrUpdateInit: CreateOrUpdateDSL<Auth, Id, Model, *>? by setOnce()
 
-    inline fun <reified InputModel : Any> createOrUpdate(init: CreateOrUpdateDSL<AuthContext, IdType, ResourceType, InputModel>.() -> Unit) {
-        val obj = CreateOrUpdateDSL<AuthContext, IdType, ResourceType, InputModel>(
+    inline fun <reified InputModel : Any> createOrUpdate(init: CreateOrUpdateDSL<Auth, Id, Model, InputModel>.() -> Unit) {
+        val obj = CreateOrUpdateDSL<Auth, Id, Model, InputModel>(
             InputModel::class
         )
         obj.init()
@@ -51,19 +52,19 @@ class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
     }
 
     @PublishedApi
-    internal var deleteInit: DeleteDSL<AuthContext, IdType, ResourceType>? by setOnce()
+    internal var deleteInit: DeleteDSL<Auth, Id, Model>? by setOnce()
 
-    inline fun delete(init: DeleteDSL<AuthContext, IdType, ResourceType>.() -> Unit) {
+    inline fun delete(init: DeleteDSL<Auth, Id, Model>.() -> Unit) {
         //TODO: Error if already set
-        val obj = DeleteDSL<AuthContext, IdType, ResourceType>()
+        val obj = DeleteDSL<Auth, Id, Model>()
         obj.init()
         this.deleteInit = obj
     }
 
     @PublishedApi
-    internal var readInit: ReadDSL<AuthContext, IdType, ResourceType> by setOnce()
+    internal var readInit: ReadDSL<Auth, Id, Model> by setOnce()
 
-    inline fun read(init: ReadDSL<AuthContext, IdType, ResourceType>.() -> Unit) {
+    inline fun read(init: ReadDSL<Auth, Id, Model>.() -> Unit) {
         //TODO: Error if already set
         val obj = ReadDSL(this.resource)
         obj.init()
@@ -71,29 +72,29 @@ class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
     }
 
     @PublishedApi
-    internal var listInit: Either<SimpleListDSL<AuthContext, IdType, ResourceType, Any>, PagedCollectionDSL<AuthContext, IdType, ResourceType, Any>>? by setOnce()
+    internal var listInit: Either<SimpleListDSL<Auth, Id, Model, Any>, PagedCollectionDSL<Auth, Id, Model, Any>>? by setOnce()
 
-    inline fun <reified FilterType : Any> listSimple(init: SimpleListDSL<AuthContext, IdType, ResourceType, FilterType>.() -> Unit) {
-        val obj = SimpleListDSL<AuthContext, IdType, ResourceType, FilterType>(
+    inline fun <reified FilterType : Any> listSimple(init: SimpleListDSL<Auth, Id, Model, FilterType>.() -> Unit) {
+        val obj = SimpleListDSL<Auth, Id, Model, FilterType>(
             FilterType::class
         )
         obj.init()
         @Suppress("UNCHECKED_CAST")
-        this.listInit = Left(obj) as Either<SimpleListDSL<AuthContext, IdType, ResourceType, Any>, PagedCollectionDSL<AuthContext, IdType, ResourceType, Any>>
+        this.listInit = Left(obj) as Either<SimpleListDSL<Auth, Id, Model, Any>, PagedCollectionDSL<Auth, Id, Model, Any>>
     }
 
     inline fun <reified FilterType : Any> listPaged(
-        init: PagedCollectionDSL<AuthContext, IdType, ResourceType, FilterType>.() -> Unit
+        init: PagedCollectionDSL<Auth, Id, Model, FilterType>.() -> Unit
     ) {
-        val obj = PagedCollectionDSL<AuthContext, IdType, ResourceType, FilterType>(
+        val obj = PagedCollectionDSL<Auth, Id, Model, FilterType>(
             FilterType::class
         )
         obj.init()
         @Suppress("UNCHECKED_CAST")
-        this.listInit = Right(obj) as Either<SimpleListDSL<AuthContext, IdType, ResourceType, Any>, PagedCollectionDSL<AuthContext, IdType, ResourceType, Any>>
+        this.listInit = Right(obj) as Either<SimpleListDSL<Auth, Id, Model, Any>, PagedCollectionDSL<Auth, Id, Model, Any>>
     }
 
-    override fun toModel(context: ModelingContext): IdentifiedResourceOperations<AuthContext, IdType, ResourceType> {
+    override fun toModel(context: ModelingContext): IdentifiedResourceOperations<Auth, Id, Model> {
         return IdentifiedResourceOperations(
             read = this.readInit.toModel(context),
             create = this.createInit?.toModel(context),
@@ -105,19 +106,19 @@ class OperationsDSL<AuthContext: Any, IdType: Any, ResourceType: Any>(
     }
 }
 
-class ReadDSL<Auth: Any, Id: Any, Model: Any>(
+class ReadDSL<Auth : Any, Id : Any, Model : Any>(
     private val resource: ResourceDSL<Auth, Id, Model>
 ) : DslPart<ReadOperation<Auth, Id, Model>>() {
 
     private var authorizer: Authorizer<IdentifiedReadContext<Auth, Id, Model>> by setOnce()
 
-    fun authorized(auth: Authorizer<IdentifiedReadContext<Auth, Id, Model>>) {
+    fun canUserView(auth: Authorizer<IdentifiedReadContext<Auth, Id, Model>>) {
         this.authorizer = auth
     }
 
     private var handler: Loader<IdentifiedLoadContext<Auth, Id>, Model> by setOnce()
 
-    fun handle(handler: Loader<IdentifiedLoadContext<Auth, Id>, Model>) {
+    fun loadModel(handler: Loader<IdentifiedLoadContext<Auth, Id>, Model>) {
         this.handler = handler
     }
 
@@ -203,11 +204,11 @@ class CreateDSL<AuthContext, IdType, CreateModel : Any>(
     private var handler: CreateHandler<AuthContext, IdType, CreateModel> by setOnce()
     private var validator: Validator<CreateValidationContext<AuthContext, CreateModel>> by setOnce()
 
-    fun authorized(auth: CreateAuthorizer<AuthContext, CreateModel>) {
+    fun canUserCreate(auth: CreateAuthorizer<AuthContext, CreateModel>) {
         authorizationHandler = auth
     }
 
-    fun handle(handler: CreateHandler<AuthContext, IdType, CreateModel>) {
+    fun handleCreate(handler: CreateHandler<AuthContext, IdType, CreateModel>) {
         this.handler = handler
     }
 
@@ -227,7 +228,11 @@ class CreateDSL<AuthContext, IdType, CreateModel : Any>(
     )
 }
 
-class UpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
+interface UpdatePossibleContext<Id : Any, Model : Any> {
+    val resource: IdentifiedResourceModelContext<Id, Model>
+}
+
+class UpdateDSL<Auth : Any, Id : Any, Model : Any, Input : Any>(
     private val input: KClass<Input>
 ) : DslPart<SimpleUpdateOperation<Auth, Id, Model, Input>>() {
 
@@ -235,17 +240,19 @@ class UpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
     private var handler: Handler<IdentifiedUpdateContext<Auth, Id, Model, Input>> by setOnce()
     private var validate: Validator<IdentifiedUpdateValidationContext<Auth, Id, Model, Input>> by setOnce()
 
-    fun authorized(auth: Authorizer<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
+    fun canUserUpdate(auth: Authorizer<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
         this.authorization = auth
     }
 
-    fun handle(handler: Handler<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
+    fun handleUpdate(handler: Handler<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
         this.handler = handler
     }
 
     fun validateInput(validator: Validator<IdentifiedUpdateValidationContext<Auth, Id, Model, Input>>) {
         this.validate = validator
     }
+
+    fun canBeUpdated(func: MutationPossibleChecker<UpdatePossibleContext<Id, Model>>) {}
 
     override fun toModel(context: ModelingContext): SimpleUpdateOperation<Auth, Id, Model, Input> {
         return SimpleUpdateOperation(
@@ -261,7 +268,7 @@ class UpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
     }
 }
 
-class CreateOrUpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
+class CreateOrUpdateDSL<Auth : Any, Id : Any, Model : Any, Input : Any>(
     private val input: KClass<Input>
 ) : DslPart<CreateOrUpdateOperation<Auth, Id, Model, Input>>() {
 
@@ -269,12 +276,9 @@ class CreateOrUpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
     private var handler: Handler<IdentifiedCreateOrUpdateContext<Auth, Id, Model, Input>> by setOnce()
     private var validator: Validator<IdentifiedCreateOrUpdateValidationContext<Auth, Id, Model, Input>> by setOnce()
 
-    fun authorized(auth: Authorizer<IdentifiedCreateOrUpdateContext<Auth, Id, Model, Input>>) {
-        this.authorization = auth
+    fun create(block: CreateDSL<Auth, Id, Input>.() -> Unit) {
     }
-
-    fun handle(handler: Handler<IdentifiedCreateOrUpdateContext<Auth, Id, Model, Input>>) {
-        this.handler = handler
+    fun update(block: UpdateDSL<Auth, Id, Model, Input>.() -> Unit) {
     }
 
     fun validateInput(validator: Validator<IdentifiedCreateOrUpdateValidationContext<Auth, Id, Model, Input>>) {
@@ -293,20 +297,48 @@ class CreateOrUpdateDSL<Auth: Any, Id: Any, Model: Any, Input : Any>(
             validate = validator
         )
     }
+
+    @UApiMarker
+    class CreateDSL<Auth : Any, Id : Any, Input : Any> {
+        fun canUserCreate(auth: Authorizer<CreateWithIdContext<Auth, Id, Input>>) {
+
+        }
+
+        fun handleCreate(block: Handler<CreateWithIdContext<Auth, Id, Input>>) {
+
+        }
+    }
+
+    @UApiMarker
+    class UpdateDSL<Auth : Any, Id : Any, Model : Any, Input : Any> {
+
+        fun canUserUpdate(auth: Authorizer<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
+        }
+
+        fun handleUpdate(handler: Handler<IdentifiedUpdateContext<Auth, Id, Model, Input>>) {
+        }
+
+        fun canBeUpdated(func: MutationPossibleChecker<UpdatePossibleContext<Id, Model>>) {}
+
+    }
 }
 
-class DeleteDSL<Auth: Any, Id: Any, Model: Any>(
+class DeleteDSL<Auth : Any, Id : Any, Model : Any>(
 ) : DslPart<DeleteOperation<Auth, Id, Model>>() {
 
     private var authorization: Authorizer<DeleteContext<Auth, Id, Model>> by setOnce()
     private var handler: Handler<DeleteContext<Auth, Id, Model>> by setOnce()
 
-    fun authorized(auth: Authorizer<DeleteContext<Auth, Id, Model>>) {
+    fun canUserDelete(auth: Authorizer<DeleteContext<Auth, Id, Model>>) {
         this.authorization = auth
     }
 
-    fun handle(handler: Handler<DeleteContext<Auth, Id, Model>>) {
+    fun handleDelete(handler: Handler<DeleteContext<Auth, Id, Model>>) {
         this.handler = handler
+    }
+
+    fun canBeDeleted(auth: MutationPossibleChecker<DeleteContext<Auth, Id, Model>>) {
+
     }
 
     override fun toModel(context: ModelingContext): DeleteOperation<Auth, Id, Model> {

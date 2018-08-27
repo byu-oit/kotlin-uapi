@@ -38,7 +38,7 @@ private fun <AuthContext : Any> pathsFor(apiModel: UApiModel<AuthContext>, resou
 
     val basePath: List<PathPart> = listOf(StaticPathPart(resource.name))
 
-    // TODO("Actually, you know, handle other types of IDs")
+    // TODO("Actually, you know, handleCreate other types of IDs")
     val idParamSchema = resource.idModel.schema
 
     val resourcePath = basePath + idParamSchema.asPathPart()

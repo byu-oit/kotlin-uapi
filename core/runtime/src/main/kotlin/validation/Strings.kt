@@ -1,4 +1,4 @@
-package edu.byu.uapidsl.model.validation
+package edu.byu.uapi.server.validation
 
 import kotlin.reflect.KProperty0
 

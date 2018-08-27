@@ -142,6 +142,7 @@ interface ResourceCreateOrUpdateContext<
     OptionalResource : ResourceOptionalModelContext<Model>> : AuthorizedContext<Auth> {
     val resource: OptionalResource
     val input: Input
+    val mode: CreateOrUpdateMode
 
     data class Default<
         Auth : Any,
@@ -151,7 +152,13 @@ interface ResourceCreateOrUpdateContext<
         override val authContext: Auth,
         override val resource: Resource,
         override val input: Input
-    ) : ResourceCreateOrUpdateContext<Auth, Model, Input, Resource>
+    ) : ResourceCreateOrUpdateContext<Auth, Model, Input, Resource> {
+        override val mode = if (resource.model != null) {
+            CreateOrUpdateMode.UPDATE
+        } else {
+            CreateOrUpdateMode.CREATE
+        }
+    }
 }
 
 
@@ -204,8 +211,18 @@ interface ResourceCreateOrUpdateValidationContext<
         override val resource: Resource,
         override val input: Input,
         private val validator: Validating
-    ) : ResourceCreateOrUpdateValidationContext<Auth, Model, Input, Resource>, Validating by validator
+    ) : ResourceCreateOrUpdateValidationContext<Auth, Model, Input, Resource>, Validating by validator {
+        override val mode = if (resource.model != null) {
+            CreateOrUpdateMode.UPDATE
+        } else {
+            CreateOrUpdateMode.CREATE
+        }
+    }
 
+}
+
+enum class CreateOrUpdateMode {
+    CREATE, UPDATE
 }
 
 interface ResourceDeleteContext<

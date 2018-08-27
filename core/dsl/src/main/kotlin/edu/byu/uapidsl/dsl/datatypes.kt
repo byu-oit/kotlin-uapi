@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 //
 //data class ApiResource<AuthContext, IdType, IdentifiedResource>(
 //  val name: String,
-//  val authorized: ResourceAuthorization<AuthContext, IdType, IdentifiedResource>,
+//  val canUserCreate: ResourceAuthorization<AuthContext, IdType, IdentifiedResource>,
 //  val loader: ResourceLoader<IdType, IdentifiedResource>,
 //  val collection: CollectionDefinition<IdType, *>,
 //  val fieldCustomizer: FieldCustomizer<AuthContext, IdentifiedResource>

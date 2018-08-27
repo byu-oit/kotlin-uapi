@@ -24,25 +24,27 @@ data class ErrorResponse(
     override val links: UAPILinks = emptyMap()
 
     companion object {
-        fun notAuthorized() = ErrorResponse(
-            metadata = UAPIErrorMetadata(
-                validationResponse = ValidationResponse(
-                    403,
-                    "Not Authorized"
-                ),
-                validationInformation = listOf(
-                    "The caller is not authorized to perform the requested action"
-                )
-            )
-        )
+        fun notAuthorized() = UAPINotAuthorized
 
-        fun notFound() = ErrorResponse(
-            UAPIErrorMetadata(
-                ValidationResponse(404, "Not Found"),
-                emptyList()
-            )
-        )
+        fun notFound() = NotFoundResponse
+
     }
+}
+
+object UAPINotAuthorized: UAPIResponse<UAPIErrorMetadata> {
+    override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
+        ValidationResponse(403, "Not Authorized"),
+        listOf("The caller is not authorized to perform the requested action")
+    )
+    override val links: UAPILinks = emptyMap()
+}
+
+object NotFoundResponse: UAPIResponse<UAPIErrorMetadata> {
+    override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
+        ValidationResponse(404, "Not Found"),
+        listOf("Not Found")
+    )
+    override val links: UAPILinks = emptyMap()
 }
 
 data class SimpleResourceResponse(
@@ -76,5 +78,6 @@ object UAPIEmptyResponse : UAPIResponse<UAPIResourceMeta> {
 }
 
 class UAPINotFoundException(): RuntimeException("Object not found")
+
 
 

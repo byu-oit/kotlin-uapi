@@ -19,6 +19,7 @@
         <module>uapi-types</module>
         <!--<module>core/model</module>-->
         <module>core/dsl</module>
+        <module>core/runtime</module>
         <module>old/http-runtime</module>
 
         <module>old/adapters</module>

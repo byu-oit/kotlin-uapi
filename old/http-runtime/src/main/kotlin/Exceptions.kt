@@ -36,4 +36,4 @@ class NotFoundException(
     val identifier: Any
 ): HttpError(404, "$type with ID of $identifier does not exist.")
 
-class NotAuthorizedToViewException: HttpError(403, "You are not authorized to view this resources")
+class NotAuthorizedToViewException: HttpError(403, "You are not canUserCreate to view this resources")

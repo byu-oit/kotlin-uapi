@@ -6,7 +6,11 @@ import edu.byu.uapidsl.examples.students.authorization.Authorizer
 import edu.byu.uapidsl.examples.students.dto.*
 import edu.byu.uapidsl.examples.students.dto.EmailType
 import edu.byu.uapidsl.examples.students.dto.EmployeeSummary
+import edu.byu.uapidsl.model.validation.Validating
+import edu.byu.uapidsl.model.validation.expectMatches
 import edu.byu.uapidsl.model.validation.expectNotBlank
+import edu.byu.uapidsl.model.validation.expectNotEmpty
+import kotlin.reflect.KProperty0
 
 val personsModel = apiModel<Authorizer> {
 
@@ -33,15 +37,19 @@ val personsModel = apiModel<Authorizer> {
 
         idFromModel { it.byuId.value }
 
-        isRestricted { resource.restricted.value }
+//        isRestricted { resource.restricted.value }
 
         operations {
             read {
-                authorized { authContext.canSeePerson(resource.id) }
-                handle {
+                canUserView { authContext.canSeePerson(resource.id) }
+                loadModel {
                     println("Loading person for id $id")
                     Database.findPerson(id)?.toDTO(authContext)
                 }
+
+                idFromModelField(PersonDTO::byuId)
+
+                idFromModel { it.byuId.value }
             }
 
             listPaged<PersonFilters> {
@@ -59,51 +67,104 @@ val personsModel = apiModel<Authorizer> {
 //            }
 
             create<CreatePerson> {
-                authorized { authContext.canCreatePerson() }
+                canUserCreate { authContext.canCreatePerson() }
 
-//                possible {
-//
-//                }
-//
-//                validateInput {
-//                    validateInput.isNotEmpty(input::name)
-//                    validateInput.matches("""""".toRegex(), input::name)
-//                }
+                validateInput {
+                    expectNotBlank(input::firstName)
+                    expectMatches(input::surname, """^\w+$""".toRegex(), "contain only alphanumeric characters")
+                }
 
-                handle {
+                handleCreate {
                     createPerson(input, authContext.byuId)
                 }
             }
 
             update<UpdatePerson> {
-                authorized {
+                canUserUpdate {
                     authContext.canModifyPerson(resource.id)
                 }
+
+                canBeUpdated { canPersonBeUpdated(resource.id) }
 
                 validateInput {
                     if (input.firstName != null) {
                         expectNotBlank(input::firstName)
                     }
+                    if (expectNotEmpty(input::highSchoolCode)) {
+                        expectValidHighSchool(input::highSchoolCode)
+                    }
                 }
 
-                handle {
-                    val p = Database.findPerson(resource.id)!!
-                    val surname = input.surname
-                    if (surname != null) {
-                        p.name.surname = surname
-                    }
+                handleUpdate {
+                    updatePerson(resource.id, resource.model, input)
                 }
 
             }
 
-            delete {
-                authorized { authContext.canDeletePerson(resource.model.personId.value) }
+            createOrUpdate<UpdatePerson> {
+                validateInput {
 
-//                possible {
+                }
+
+                create {
+                    canUserCreate {
+                        true
+                    }
+
+                    handleCreate {
+
+                    }
+                }
+
+                update {
+                    canUserUpdate {
+                        true
+                    }
+
+                    canBeUpdated {
+                        true
+                    }
+
+                    handleUpdate {
+
+                    }
+                }
+            }
+
+//            createOrUpdate<UpdatePerson> {
+//                canUserCreate {
 //
 //                }
+//
+//                canUserUpdate {
+//
+//                }
+//
+//                canBeUpdated {
+//
+//                }
+//
+//                validateInput {
+//
+//                }
+//
+//                handleCreate {
+//
+//                }
+//
+//                handleUpdate {
+//
+//                }
+//            }
 
-                handle {
+            delete {
+                canUserDelete { authContext.canDeletePerson(resource.model.personId.value) }
+
+                canBeDeleted {
+                    true
+                }
+
+                handleDelete {
                     Database.deletePerson(resource.id)
                 }
             }
@@ -189,12 +250,12 @@ val personsModel = apiModel<Authorizer> {
     singletonResource<PersonAPISettings>("settings") {
         operations {
             read {
-                authorized {}
-                handle {}
+                canUserCreate {}
+                handleCreate {}
             }
             update {
-                authorized {}
-                handle {}
+                canUserCreate {}
+                handleCreate {}
             }
         }
 
@@ -218,4 +279,20 @@ val personsModel = apiModel<Authorizer> {
 //    }
 //  }
 
+}
+
+private val highSchools = setOf("PHS", "THS")
+
+fun Validating.expectValidHighSchool(field: KProperty0<String?>): Boolean {
+    return expect(field.name, "be a valid High School Code") {
+        highSchools.contains(field.get())
+    }
+}
+
+fun canPersonBeUpdated(byuId: String): Boolean {
+    TODO()
+}
+
+fun updatePerson(byuId: String, person: PersonDTO, input: UpdatePerson) {
+    TODO()
 }

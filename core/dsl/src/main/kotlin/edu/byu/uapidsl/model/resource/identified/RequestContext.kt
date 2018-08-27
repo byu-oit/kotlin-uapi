@@ -38,6 +38,14 @@ interface CreateValidationContext<Auth, Input> : CreateContext<Auth, Input>, Val
     ) : CreateValidationContext<Auth, Input>, Validating by validator
 }
 
+interface CreateWithIdContext<Auth: Any, Id: Any, Input: Any>: IdentifiedContext<Auth, Id>, InputContext<Input> {
+    data class Default<Auth: Any, Id: Any, Input: Any>(
+        override val authContext: Auth,
+        override val id: Id,
+        override val input: Input
+    ): CreateWithIdContext<Auth, Id, Input>
+}
+
 interface ReadLoadContext<Auth, Id> : IdentifiedContext<Auth, Id>
 interface ReadContext<Auth, Id, Model> : IdentifiedResourceContext<Auth, Id, Model>
 interface InputContext<Input> {
@@ -50,3 +58,4 @@ interface CreateOrUpdateContext<Auth, Id, Model, Input> : IdentifiedContext<Auth
 }
 
 interface DeleteContext<Auth, Id, Model> : IdentifiedResourceContext<Auth, Id, Model>
+

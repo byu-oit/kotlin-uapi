@@ -8,6 +8,7 @@ import edu.byu.uapidsl.model.resource.identified.IdentifiedResource
 import edu.byu.uapidsl.model.ResponseModel
 import edu.byu.uapidsl.model.resource.identified.IdExtractor
 import edu.byu.uapidsl.model.resource.identified.IsRestrictedFunc
+import edu.byu.uapidsl.types.UAPIField
 import kotlin.reflect.KClass
 
 class ResourceDSL<AuthContext: Any, IdType : Any, DomainType : Any>(
@@ -38,6 +39,10 @@ class ResourceDSL<AuthContext: Any, IdType : Any, DomainType : Any>(
 
 
     internal var idFromModel: IdExtractor<IdType, DomainType> by setOnce()
+
+    fun idFromModelField(func: IdExtractor<UAPIField<IdType>, DomainType>) {
+        idFromModel = {func(it).value}
+    }
 
     fun idFromModel(func: IdExtractor<IdType, DomainType>) {
         idFromModel = func

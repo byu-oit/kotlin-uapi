@@ -30,7 +30,7 @@ package edu.byu.uapidsl.dsl.subresource.list
 //
 //    }
 //
-//    fun handle(handler: SubRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId>) {
+//    fun handleCreate(handler: SubRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel, RelatedId>) {
 //
 //    }
 //}
@@ -42,7 +42,7 @@ package edu.byu.uapidsl.dsl.subresource.list
 //
 //    }
 //
-//    fun handle(handler: SubExternalRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
+//    fun handleCreate(handler: SubExternalRelationHandler<AuthContext, ParentId, ParentModel, SubId, SubModel>) {
 //
 //    }
 //}

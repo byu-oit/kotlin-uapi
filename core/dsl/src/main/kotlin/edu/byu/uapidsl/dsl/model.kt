@@ -78,7 +78,7 @@ fun <Type> uapiKey(
 ////        return OutputModel(
 ////            type = this.type,
 ////            example = this.example,
-////            handle = this.transformModel
+////            handleCreate = this.transformModel
 ////        )
 ////    }
 //
@@ -91,7 +91,7 @@ fun <Type> uapiKey(
 //
 //    }
 //
-//    fun handle(handler: RelationHandler<AuthContext, IdType, IdentifiedResource, RelatedId>) {
+//    fun handleCreate(handler: RelationHandler<AuthContext, IdType, IdentifiedResource, RelatedId>) {
 //
 //    }
 //}
@@ -103,7 +103,7 @@ fun <Type> uapiKey(
 //
 //    }
 //
-//    fun handle(handler: ExternalRelationHandler<AuthContext, IdType, IdentifiedResource>) {
+//    fun handleCreate(handler: ExternalRelationHandler<AuthContext, IdType, IdentifiedResource>) {
 //
 //    }
 //}

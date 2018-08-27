@@ -17,18 +17,18 @@ package edu.byu.uapidsl.dsl
 //        resource<String, PersonDTO>("persons") {
 //            operations {
 //                create<CreatePerson> {
-//                    authorized {
+//                    canUserCreate {
 //                        it.authContext.canCreatePerson("")
 //                    }
 //
-//                    handle {
+//                    handleCreate {
 //                        "newId"
 //                    }
 //                }
 //                read {
-//                    authorized { true }
+//                    canUserCreate { true }
 //
-//                    handle {
+//                    handleCreate {
 ////                        loadPerson(it.id)
 //                        null
 //                    }
@@ -40,7 +40,7 @@ package edu.byu.uapidsl.dsl
 //                    pagedCollection<PersonFilters> {
 //                        defaultSize = 100
 //                        maxSize = 200
-//                        handle { ctx ->
+//                        handleCreate { ctx ->
 //                            CollectionWithTotal(
 //                                    0, emptyCollection()
 //                            )
@@ -49,23 +49,23 @@ package edu.byu.uapidsl.dsl
 //                }
 //
 //                update<UpdatePerson> {
-//                    authorized { true }
+//                    canUserCreate { true }
 //
-//                    handle {
+//                    handleCreate {
 //
 //                    }
 //                }
 //
 //                createOrUpdate<CreateOrUpdatePerson> {
-//                    authorized { true }
-//                    handle {
+//                    canUserCreate { true }
+//                    handleCreate {
 //
 //                    }
 //                }
 //
 //                delete {
-//                    authorized { true }
-//                    handle {
+//                    canUserCreate { true }
+//                    handleCreate {
 //
 //                    }
 //                }
@@ -78,30 +78,30 @@ package edu.byu.uapidsl.dsl
 //                }
 //
 //                relation<String, RelatedDTO>("my_rel") {
-//                    authorized { it: RelationAuthorizationContext<Authz, String, PersonDTO, String, RelatedDTO> ->
+//                    canUserCreate { it: RelationAuthorizationContext<Authz, String, PersonDTO, String, RelatedDTO> ->
 //                        true
 //                    }
-//                    handle { it ->
+//                    handleCreate { it ->
 //                        "relationId" + it.resource.byuId
 //                    }
 //                }
 //                externalRelation("student_info") {
-//                    authorized { true }
-//                    handle { "https://api.byu.edu/uapi/student/${it.resource.byuId}" }
+//                    canUserCreate { true }
+//                    handleCreate { "https://api.byu.edu/uapi/student/${it.resource.byuId}" }
 //                }
 //
 //                subresource<AddressType, PersonAddressDTO>("addresses") {
 //
 //                    operations {
 //                        createOrUpdate<PutAddress> {
-//                            authorized { true }
-//                            handle {
+//                            canUserCreate { true }
+//                            handleCreate {
 //                            }
 //                        }
 //
 //                        read {
-//                            authorized { true }
-//                            handle {
+//                            canUserCreate { true }
+//                            handleCreate {
 //                                PersonAddressDTO()
 //                            }
 //
@@ -111,8 +111,8 @@ package edu.byu.uapidsl.dsl
 //                        }
 //
 //                        delete {
-//                            authorized { true }
-//                            handle {
+//                            canUserCreate { true }
+//                            handleCreate {
 //
 //                            }
 //                        }
