@@ -5,7 +5,6 @@ import edu.byu.jwt.ByuJwt
 class UAPIRuntime<UserContext : Any>(
     val userContextFactory: UserContextFactory<UserContext>
 ) {
-
     constructor(fn: (UserContextAuthnInfo) -> UserContext) : this(UserContextFactory.from(fn))
 
     private val resources: MutableMap<String, IdentifiedResourceRuntime<UserContext, *, *>> = mutableMapOf()
