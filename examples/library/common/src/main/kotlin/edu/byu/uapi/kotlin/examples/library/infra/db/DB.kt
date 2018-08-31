@@ -19,8 +19,7 @@ object DB {
 
     private fun ensureInitialized(connection: Connection) {
         if (initialized) return
-        val hasSchema =connection.prepareStatement("select count(*) from information_schema.schemata where schema_name = ?")
-            .use { ps ->
+        val hasSchema = connection.prepareStatement("select count(*) from information_schema.schemata where schema_name = ?").use { ps ->
                 ps.setString(1, schema)
                 ps.executeQuery().use { rs ->
                     rs.first()
