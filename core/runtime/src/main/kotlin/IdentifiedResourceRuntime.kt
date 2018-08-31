@@ -190,7 +190,7 @@ class IdentifiedResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, 
             return UAPINotAuthorizedError
         }
 
-        //TODO create.validateCreateInput(user, input, validation)
+        //TODO create.validateCreateWithIdInput(user, input, validation)
 
         val id = create.handleCreate(user, input)
 
@@ -210,7 +210,7 @@ private fun introspect(runtime: IdentifiedResourceRuntime<*, *, *>): IdentifiedR
         listViewModel = introspectListView(resource.listView, resource.pagedListView),
         mutations = IdentifiedResourceMutations(
             introspect(resource.createOperation),
-            introspect(resource.updateOperation, resource.createWithIdOperation),
+            introspect(resource.updateOperation),
             introspect(resource.deleteOperation)
         )
     )
@@ -221,8 +221,7 @@ fun introspect(deleteOperation: IdentifiedResource.Deletable<*, *, *>?): DeleteO
 }
 
 fun introspect(
-    updateOperation: IdentifiedResource.Updatable<*, *, *, *>?,
-    createWithIdOperation: IdentifiedResource.CreatableWithId<*, *, *, *>?
+    updateOperation: IdentifiedResource.Updatable<*, *, *, *>?
 ): UpdateOperationModel? {
     TODO()
 }

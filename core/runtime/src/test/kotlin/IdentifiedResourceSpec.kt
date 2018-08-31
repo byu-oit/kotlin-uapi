@@ -12,7 +12,6 @@ class IdentifiedResourceSpec : DescribeSpec({
         val specializedInterfaces = arrayOf(
             row(IdentifiedResource<String, String, String>::createOperation, ::WithCreate),
             row(IdentifiedResource<String, String, String>::updateOperation, ::WithUpdate),
-            row(IdentifiedResource<String, String, String>::createWithIdOperation, ::WithCreateWithId),
             row(IdentifiedResource<String, String, String>::deleteOperation, ::WithDelete),
             row(IdentifiedResource<String, String, String>::listView, ::WithListable),
             row(IdentifiedResource<String, String, String>::pagedListView, ::WithPagedListable)
@@ -74,7 +73,7 @@ class IdentifiedResourceSpec : DescribeSpec({
             get() = TODO("not implemented")
     }
 
-    private class WithUpdate : Base(), IdentifiedResource.Updatable<String, String, String, String> {
+    private open class WithUpdate : Base(), IdentifiedResource.Updatable<String, String, String, String> {
         override fun canUserUpdate(userContext: String, id: String, model: String): Boolean {
             TODO("not implemented")
         }
@@ -96,21 +95,19 @@ class IdentifiedResourceSpec : DescribeSpec({
 
     }
 
-    private class WithCreateWithId : Base(), IdentifiedResource.CreatableWithId<String, String, String, String> {
-        override fun canUserCreate(userContext: String, id: String): Boolean {
+    private class WithCreateWithId : WithUpdate(), IdentifiedResource.UpdatableOrCreatable<String, String, String, String> {
+        override fun canUserCreateWithId(userContext: String, id: String): Boolean {
             TODO("not implemented")
         }
 
-        override fun validateCreateInput(userContext: String, id: String, input: String, validation: Validating) {
+        override fun validateCreateWithIdInput(userContext: String, id: String, input: String, validation: Validating) {
             TODO("not implemented")
         }
 
-        override fun handleCreate(userContext: String, input: String, id: String) {
+        override fun handleCreateWithId(userContext: String, input: String, id: String) {
             TODO("not implemented")
         }
 
-        override val createWithIdInput: KClass<String>
-            get() = TODO("not implemented")
 
     }
 

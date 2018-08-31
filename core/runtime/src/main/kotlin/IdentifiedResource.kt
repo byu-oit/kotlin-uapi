@@ -29,8 +29,6 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
     val createOperation: Creatable<UserContext, Id, Model, *>?
         get() = this.takeIfType()
-    val createWithIdOperation: CreatableWithId<UserContext, Id, Model, *>?
-        get() = this.takeIfType()
     val updateOperation: Updatable<UserContext, Id, Model, *>?
         get() = this.takeIfType()
     val deleteOperation: Deletable<UserContext, Id, Model>?
@@ -102,12 +100,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         val updateInput: KClass<Input>
     }
 
-    interface CreatableWithId<UserContext : Any, Id : Any, Model : Any, Input : Any> {
-        fun canUserCreate(userContext: UserContext, id: Id): Boolean
-        fun validateCreateInput(userContext: UserContext, id: Id, input: Input, validation: Validating)
-        fun handleCreate(userContext: UserContext, input: Input, id: Id)
-
-        val createWithIdInput: KClass<Input>
+    interface UpdatableOrCreatable<UserContext : Any, Id : Any, Model : Any, Input : Any>: Updatable<UserContext, Id, Model, Input> {
+        fun canUserCreateWithId(userContext: UserContext, id: Id): Boolean
+        fun validateCreateWithIdInput(userContext: UserContext, id: Id, input: Input, validation: Validating)
+        fun handleCreateWithId(userContext: UserContext, input: Input, id: Id)
     }
 }
 

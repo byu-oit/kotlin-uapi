@@ -1,20 +1,13 @@
 package edu.byu.uapi.server
 
-import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
 import edu.byu.uapi.server.IdentifiedResourceRuntime.Operation
-import edu.byu.uapi.server.types.UAPINotAuthorizedError
-import edu.byu.uapi.server.types.UAPINotFoundError
-import edu.byu.uapi.server.types.UAPIPropertiesResponse
 import io.kotlintest.Description
 import io.kotlintest.data.forall
-import io.kotlintest.matchers.beInstanceOf
 import io.kotlintest.matchers.collections.containExactly
 import io.kotlintest.matchers.collections.containExactlyInAnyOrder
 import io.kotlintest.should
-import io.kotlintest.shouldBe
 import io.kotlintest.specs.DescribeSpec
 import io.kotlintest.tables.row
 import kotlin.reflect.KClass
@@ -135,8 +128,8 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
 //                val foo = Foo("value")
 //
 //                whenever(resource.loadModel(any(), any())).thenReturn(foo)
-//                whenever(create.canUserCreate(any())).thenReturn(true)
-//                whenever(create.handleCreate(any(), any())).thenReturn("foo")
+//                whenever(create.canUserCreateWithId(any())).thenReturn(true)
+//                whenever(create.handleCreateWithId(any(), any())).thenReturn("foo")
 //
 //                fixture.handleCreateRequest(CreateResourceRequest(
 //                    User(), new
@@ -171,7 +164,6 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     private class SettableOpsResource(
         val base: IdentifiedResource<User, String, Foo> = FooResource(),
         override val createOperation: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
-        override val createWithIdOperation: IdentifiedResource.CreatableWithId<User, String, Foo, *>? = null,
         override val updateOperation: IdentifiedResource.Updatable<User, String, Foo, *>? = null,
         override val deleteOperation: IdentifiedResource.Deletable<User, String, Foo>? = null,
         override val listView: IdentifiedResource.Listable<User, String, Foo, *>? = null,
@@ -180,10 +172,9 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
 
     private fun settable(
         create: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
-        createWithId: IdentifiedResource.CreatableWithId<User, String, Foo, *>? = null,
         update: IdentifiedResource.Updatable<User, String, Foo, *>? = null,
         delete: IdentifiedResource.Deletable<User, String, Foo>? = null,
         list: IdentifiedResource.Listable<User, String, Foo, *>? = null,
         pagedList: IdentifiedResource.PagedListable<User, String, Foo, *>? = null
-    ) = SettableOpsResource(FooResource(), create, createWithId, update, delete, list, pagedList)
+    ) = SettableOpsResource(FooResource(), create, update, delete, list, pagedList)
 }
