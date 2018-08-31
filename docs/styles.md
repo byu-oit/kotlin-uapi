@@ -15,7 +15,7 @@ With this style, you must implement a series of interfaces, then register them w
 fun main(args: Array<String>) {
   val runtime = UAPIRuntime()
   
-  runtime.register(FooResource())
+  runtime.register("foos", FooResource())
   
   runtime.startSparkServer(port = 8080) // Requires uapi-spark-server modules
 }
@@ -37,6 +37,8 @@ class FooResource: IdentifiedResource<
     
     override fun loadModel(userContext: MyUserContext, id: String): FooDTO? {
       TODO("Load a Foo from ID. If there isn't one matching the provided ID, return null.")
+      
+      return myRepo.getFoo(id)
     }
     
     override fun canUserViewModel(userContext: MyUserContext, id: String, model: FooDTO): Boolean {
@@ -45,6 +47,16 @@ class FooResource: IdentifiedResource<
     
     override fun idFromModel(model: FooDTO): String {
         return model.fooId
+    }
+    
+    override val responseModel = uapiResponse {
+        prop<String>("byu_id") {
+          
+        }
+    }
+    
+    override val subresources = {
+      "addresses" to AddressSubresource()
     }
     
 }

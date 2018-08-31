@@ -1,7 +1,9 @@
+package edu.byu.uapi.server
+
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import edu.byu.uapi.server.FetchResourceRequest
-import edu.byu.uapi.server.IdentifiedResource
-import edu.byu.uapi.server.IdentifiedResourceRuntime
+import com.nhaarman.mockitokotlin2.whenever
 import edu.byu.uapi.server.IdentifiedResourceRuntime.Operation
 import edu.byu.uapi.server.types.UAPINotAuthorizedError
 import edu.byu.uapi.server.types.UAPINotFoundError
@@ -19,111 +21,138 @@ import kotlin.reflect.KClass
 
 class IdentifiedResourceRuntimeSpec : DescribeSpec() {
 
-    private lateinit var create: IdentifiedResource.Creatable<User, String, Foo, Foo>
+    private lateinit var resource: IdentifiedResource<User, String, Foo>
+    private lateinit var create: IdentifiedResource.Creatable<User, String, Foo, NewFoo>
     private lateinit var update: IdentifiedResource.Updatable<User, String, Foo, Foo>
     private lateinit var delete: IdentifiedResource.Deletable<User, String, Foo>
     private lateinit var list: IdentifiedResource.Listable<User, String, Foo, Foo>
     private lateinit var pagedList: IdentifiedResource.PagedListable<User, String, Foo, Foo>
 
+    private lateinit var fixture: IdentifiedResourceRuntime<User, String, Foo>
+
     override fun beforeTest(description: Description) {
         super.beforeTest(description)
 
-        create = mock()
+        create = mock {
+            on { createInput } doReturn NewFoo::class
+        }
         update = mock()
         delete = mock()
         list = mock()
         pagedList = mock()
+
+        resource = mock {
+            on { it.createOperation } doReturn create
+            on { it.updateOperation } doReturn update
+            on { it.deleteOperation } doReturn delete
+            on { it.listView } doReturn list
+            on { it.idType } doReturn String::class
+        }
+
+        fixture = IdentifiedResourceRuntime("foo", resource)
     }
 
     init {
-        describe("handleFetchRequest") {
-            it("returns a response when record is found") {
-                val res = FooResource(
-                    model = Foo("hi")
-                )
+        describe("introspection") {
+            context("availableOperations") {
+                it("always includes 'FETCH'") {
+                    val foo = FooResource()
+                    val runtime = IdentifiedResourceRuntime("foo", foo)
+                    runtime.availableOperations should containExactly(Operation.FETCH)
+                }
+                it("should find all provided operations") {
+                    forall(
+                        row(setOf(Operation.CREATE), settable(create = create)),
+                        row(setOf(Operation.UPDATE), settable(update = update)),
+                        row(setOf(Operation.DELETE), settable(delete = delete)),
+                        row(setOf(Operation.LIST), settable(list = list)),
+                        row(setOf(Operation.LIST), settable(pagedList = pagedList)),
 
-                val runtime = IdentifiedResourceRuntime(res)
-                val resp = runtime.handleFetchRequest(FetchResourceRequest(
-                    User(), "1"
-                ))
-
-                resp.metadata.validationResponse.code shouldBe 200
-
-                resp should beInstanceOf(UAPIPropertiesResponse::class)
-                (resp as UAPIPropertiesResponse<*>).properties shouldBe Foo("hi")
-            }
-            it("should return an error response if a record is not found") {
-                val res = FooResource(
-                    model = null
-                )
-
-                val runtime = IdentifiedResourceRuntime(res)
-
-                val resp = runtime.handleFetchRequest(FetchResourceRequest(User(), "1"))
-
-                resp shouldBe UAPINotFoundError
-            }
-            it("should return an error response if the user is not authorized") {
-                val res = FooResource(
-                    canUserView = false
-                )
-
-                val runtime = IdentifiedResourceRuntime(res)
-
-                val resp = runtime.handleFetchRequest(FetchResourceRequest(User(), "1"))
-
-                resp shouldBe UAPINotAuthorizedError
-            }
-        }
-
-        describe("availableOperations") {
-            it("always includes 'FETCH'") {
-                val foo = FooResource()
-                val runtime = IdentifiedResourceRuntime(foo)
-                runtime.availableOperations should containExactly(Operation.FETCH)
-            }
-            it("should find all provided operations") {
-                forall(
-                    row(setOf(Operation.CREATE), settable(create = create)),
-                    row(setOf(Operation.UPDATE), settable(update = update)),
-                    row(setOf(Operation.DELETE), settable(delete = delete)),
-                    row(setOf(Operation.LIST), settable(list = list)),
-                    row(setOf(Operation.LIST), settable(pagedList = pagedList)),
-
-                    row(
-                        setOf(
-                            Operation.CREATE, Operation.UPDATE, Operation.DELETE
+                        row(
+                            setOf(
+                                Operation.CREATE, Operation.UPDATE, Operation.DELETE
+                            ),
+                            settable(
+                                create = create, update = update, delete = delete
+                            )
                         ),
-                        settable(
-                            create = create, update = update, delete = delete
+                        row(
+                            setOf(
+                                Operation.CREATE, Operation.UPDATE, Operation.DELETE, Operation.LIST
+                            ),
+                            settable(
+                                create = create, update = update, delete = delete, list = list
+                            )
                         )
-                    ),
-                    row(
-                        setOf(
-                            Operation.CREATE, Operation.UPDATE, Operation.DELETE, Operation.LIST
-                        ),
-                        settable(
-                            create = create, update = update, delete = delete, list = list
-                        )
-                    )
-                ) { ops, resource ->
-                    val runtime = IdentifiedResourceRuntime(resource)
-                    val expected = (ops + Operation.FETCH).toTypedArray()
+                    ) { ops, resource ->
+                        val runtime = IdentifiedResourceRuntime("foo", resource)
+                        val expected = (ops + Operation.FETCH).toTypedArray()
 
-                    runtime.availableOperations should containExactlyInAnyOrder(*expected)
+                        runtime.availableOperations should containExactlyInAnyOrder(*expected)
+                    }
                 }
             }
         }
 
+//        describe("handleFetchRequest") {
+//            it("returns a response when record is found") {
+//                val record = Foo("hi")
+//
+//                whenever(resource.loadModel(any(), any())).thenReturn(record)
+//                whenever(resource.canUserViewModel(any(), any(), any())).thenReturn(true)
+//
+//                val resp = fixture.handleFetchRequest(FetchResourceRequest(
+//                    User(), "1"
+//                ))
+//
+//                resp.metadata.validationResponse.code shouldBe 200
+//
+//                resp should beInstanceOf(UAPIPropertiesResponse::class)
+//                (resp as UAPIPropertiesResponse<*>).properties shouldBe Foo("hi")
+//            }
+//            it("should return an error response if a record is not found") {
+//                whenever(resource.loadModel(any(), any())).thenReturn(null)
+//                whenever(resource.canUserViewModel(any(), any(), any())).thenReturn(true)
+//
+//                val resp = fixture.handleFetchRequest(FetchResourceRequest(User(), "1"))
+//
+//                resp shouldBe UAPINotFoundError
+//            }
+//            it("should return an error response if the user is not authorized") {
+//                whenever(resource.loadModel(any(), any())).thenReturn(Foo("1"))
+//
+//                whenever(resource.canUserViewModel(any(), any(), any())).thenReturn(false)
+//
+//                val resp = fixture.handleFetchRequest(FetchResourceRequest(User(), "1"))
+//
+//                resp shouldBe UAPINotAuthorizedError
+//            }
+//        }
+//
+//        describe("handleCreateRequest") {
+//            it("handles a simple create") {
+//                val new = NewFoo("value")
+//                val foo = Foo("value")
+//
+//                whenever(resource.loadModel(any(), any())).thenReturn(foo)
+//                whenever(create.canUserCreate(any())).thenReturn(true)
+//                whenever(create.handleCreate(any(), any())).thenReturn("foo")
+//
+//                fixture.handleCreateRequest(CreateResourceRequest(
+//                    User(), new
+//                ))
+//            }
+//        }
     }
-
 
     private class User
     private data class Foo(val value: String)
+    private data class NewFoo(val value: String)
 
     private open class FooResource(val model: Foo? = Foo("bar"), val canUserView: Boolean = true) : IdentifiedResource<User, String, Foo> {
+        override val responseFields: List<ResponseField<User, Foo, *>>
+            get() = TODO("not implemented")
         override val idType: KClass<String> = String::class
-        override val modelType: KClass<Foo> = Foo::class
 
         override fun loadModel(userContext: User, id: String): Foo? {
             return model
@@ -140,13 +169,14 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     }
 
     private class SettableOpsResource(
+        val base: IdentifiedResource<User, String, Foo> = FooResource(),
         override val createOperation: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
         override val createWithIdOperation: IdentifiedResource.CreatableWithId<User, String, Foo, *>? = null,
         override val updateOperation: IdentifiedResource.Updatable<User, String, Foo, *>? = null,
         override val deleteOperation: IdentifiedResource.Deletable<User, String, Foo>? = null,
         override val listView: IdentifiedResource.Listable<User, String, Foo, *>? = null,
         override val pagedListView: IdentifiedResource.PagedListable<User, String, Foo, *>? = null
-    ) : FooResource()
+    ) : IdentifiedResource<User, String, Foo> by base
 
     private fun settable(
         create: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
@@ -155,5 +185,5 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
         delete: IdentifiedResource.Deletable<User, String, Foo>? = null,
         list: IdentifiedResource.Listable<User, String, Foo, *>? = null,
         pagedList: IdentifiedResource.PagedListable<User, String, Foo, *>? = null
-    ) = SettableOpsResource(create, createWithId, update, delete, list, pagedList)
+    ) = SettableOpsResource(FooResource(), create, createWithId, update, delete, list, pagedList)
 }

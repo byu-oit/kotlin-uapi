@@ -29,3 +29,11 @@ object UAPINotFoundError: UAPIResponse<UAPIErrorMetadata> {
     )
     override val links: UAPILinks = emptyMap()
 }
+
+object UAPIOperationNotImplementedError: UAPIResponse<UAPIErrorMetadata> {
+    override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
+        ValidationResponse(404, "Not Found"),
+        listOf("Not Found")
+    )
+    override val links: UAPILinks = emptyMap()
+}

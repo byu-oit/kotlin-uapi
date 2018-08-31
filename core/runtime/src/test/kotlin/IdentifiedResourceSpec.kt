@@ -1,9 +1,6 @@
-import edu.byu.uapi.server.CollectionWithTotal
-import edu.byu.uapi.server.IdentifiedResource
-import edu.byu.uapi.server.PagingParams
+package edu.byu.uapi.server
+
 import edu.byu.uapi.server.validation.Validating
-import either.Left
-import either.Right
 import io.kotlintest.data.forall
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.DescribeSpec
@@ -29,7 +26,7 @@ class IdentifiedResourceSpec : DescribeSpec({
                 op.get(baseInstance).shouldBe(null)
             }
         }
-        it("should be the resource instance if the interface has been implemented") {
+        it("should be the runtime instance if the interface has been implemented") {
             forall(
                 *specializedInterfaces
             ) { op, constructor ->
@@ -42,9 +39,9 @@ class IdentifiedResourceSpec : DescribeSpec({
 }) {
 
     private open class Base : IdentifiedResource<String, String, String> {
-        override val idType: KClass<String>
+        override val responseFields: List<ResponseField<String, String, *>>
             get() = TODO("not implemented")
-        override val modelType: KClass<String>
+        override val idType: KClass<String>
             get() = TODO("not implemented")
 
         override fun loadModel(userContext: String, id: String): String? {

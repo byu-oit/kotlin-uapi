@@ -1,19 +1,31 @@
 package edu.byu.uapi.server
 
 import edu.byu.uapi.server.validation.Validating
-import either.Either
-import either.Left
-import either.Right
 import kotlin.reflect.KClass
+
+typealias Describer<Model, Value> = (Model, Value) -> String?
+
+class ResponseField<UserContext: Any, Model: Any, Type>(
+    val name: String,
+    val getValue: (Model) -> Type,
+    val key: Boolean,
+    val description: Describer<Model, Type>?,
+    val longDescription: Describer<Model, Type>?,
+    val modifiable: ((UserContext, Model) -> Boolean)?,
+    val doc: String?
+) {
+
+}
 
 interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
     val idType: KClass<Id>
-    val modelType: KClass<Model>
 
     fun loadModel(userContext: UserContext, id: Id): Model?
     fun canUserViewModel(userContext: UserContext, id: Id, model: Model): Boolean
     fun idFromModel(model: Model): Id
+
+    val responseFields: List<ResponseField<UserContext, Model, *>>
 
     val createOperation: Creatable<UserContext, Id, Model, *>?
         get() = this.takeIfType()
@@ -52,12 +64,12 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
 //    interface ListableById<UserContext : Any, Id : Any, Model : Any, Filters : Any>: Listable<UserContext, Id, Model, Filters>{
 //
-//        val resource: IdentifiedResource<UserContext, Id, Model>
+//        val runtime: IdentifiedResource<UserContext, Id, Model>
 //
 //        fun listIds(userContext: UserContext, filters: Filters): Collection<Id>
 //
 //        override fun list(userContext: UserContext, filters: Filters): Collection<Model> {
-//            return listIds(userContext, filters).map { resource.loadModel(userContext, it)!! }
+//            return listIds(userContext, filters).map { runtime.loadModel(userContext, it)!! }
 //        }
 //    }
 
@@ -71,13 +83,13 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
 //    interface PagedListableById<UserContext : Any, Id : Any, Model : Any, Filters : Any>: PagedListable<UserContext, Id, Model, Filters> {
 //
-//        val resource: IdentifiedResource<UserContext, Id, Model>
+//        val runtime: IdentifiedResource<UserContext, Id, Model>
 //
 //        fun listIds(userContext: UserContext, filters: Filters, paging: PagingParams): CollectionWithTotal<Id>
 //
 //        override fun list(userContext: UserContext, filters: Filters, paging: PagingParams): CollectionWithTotal<Model> {
 //            val ids = listIds(userContext, filters, paging)
-//            return CollectionWithTotal(ids.totalItems, ids.map { resource.loadModel(userContext, it)!! })
+//            return CollectionWithTotal(ids.totalItems, ids.map { runtime.loadModel(userContext, it)!! })
 //        }
 //    }
 

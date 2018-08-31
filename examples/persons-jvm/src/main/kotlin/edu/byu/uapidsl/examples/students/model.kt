@@ -35,6 +35,13 @@ val personsModel = apiModel<Authorizer> {
 //            }
 //        }
 
+        response {
+            prop(standardByuId)
+          prop<String>("byu_id") {
+
+          }
+        }
+
         idFromModel { it.byuId.value }
 
 //        isRestricted { resource.restricted.value }
