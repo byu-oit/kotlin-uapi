@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <name>UAPI Kotlin BOM</name>
-    <description>UAPI Kotlin Bill of Materials</description>
+    <name>Kotlin UAPI Bill of Materials</name>
+    <description>Kotlin UAPI Bill of Materials</description>
 
     <groupId>edu.byu.uapi.kotlin</groupId>
     <artifactId>uapi-bom</artifactId>
@@ -23,6 +23,11 @@
             <dependency>
                 <groupId>edu.byu.uapi.kotlin</groupId>
                 <artifactId>uapi-runtime</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.kotlin.http</groupId>
+                <artifactId>spark-http-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Kotlin UAPI Library Example Parent POM</name>
+    <name>Kotlin UAPI Examples - Library - Parent POM</name>
 
     <modules>
         <module>common</module>
