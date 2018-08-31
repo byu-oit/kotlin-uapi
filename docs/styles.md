@@ -13,7 +13,7 @@ With this style, you must implement a series of interfaces, then register them w
 ```kotlin
 
 fun main(args: Array<String>) {
-  val runtime = UAPIRuntime()
+  val runtime = UAPIRuntime(MyUserContextFactory())
   
   runtime.register("foos", FooResource())
   
