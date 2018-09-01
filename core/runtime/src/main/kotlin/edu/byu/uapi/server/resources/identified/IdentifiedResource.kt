@@ -1,4 +1,4 @@
-package edu.byu.uapi.server
+package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.validation.Validating
 import kotlin.reflect.KClass

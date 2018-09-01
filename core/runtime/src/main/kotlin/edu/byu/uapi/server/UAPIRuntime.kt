@@ -1,6 +1,8 @@
 package edu.byu.uapi.server
 
 import edu.byu.jwt.ByuJwt
+import edu.byu.uapi.server.resources.identified.IdentifiedResource
+import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
 
 class UAPIRuntime<UserContext : Any>(
     val userContextFactory: UserContextFactory<UserContext>

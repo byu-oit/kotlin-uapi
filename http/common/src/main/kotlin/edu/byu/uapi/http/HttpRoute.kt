@@ -1,6 +1,4 @@
-package edu.byu.uapi.server.http
-
-import http.*
+package edu.byu.uapi.http
 
 
 data class HttpRoute(

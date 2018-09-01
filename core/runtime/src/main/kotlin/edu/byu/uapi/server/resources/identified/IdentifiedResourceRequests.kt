@@ -1,4 +1,4 @@
-package edu.byu.uapi.server
+package edu.byu.uapi.server.resources.identified
 
 sealed class ResourceRequest<AuthContext> {
     abstract val userContext: AuthContext

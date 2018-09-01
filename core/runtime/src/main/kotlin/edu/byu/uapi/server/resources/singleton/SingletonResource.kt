@@ -1,4 +1,4 @@
-package edu.byu.uapi.server
+package edu.byu.uapi.server.resources.singleton
 
 
 interface SingletonResource<UserContext: Any, Model: Any> {

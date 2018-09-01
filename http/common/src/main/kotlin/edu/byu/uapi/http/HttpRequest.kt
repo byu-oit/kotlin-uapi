@@ -1,4 +1,4 @@
-package http
+package edu.byu.uapi.http
 
 interface HttpRequest {
 
