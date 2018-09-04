@@ -1,11 +1,12 @@
 package edu.byu.uapi.server
 
 import edu.byu.jwt.ByuJwt
+import edu.byu.uapi.server.resources.identified.IdentifiedResource
+import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
 
 class UAPIRuntime<UserContext : Any>(
     val userContextFactory: UserContextFactory<UserContext>
 ) {
-
     constructor(fn: (UserContextAuthnInfo) -> UserContext) : this(UserContextFactory.from(fn))
 
     private val resources: MutableMap<String, IdentifiedResourceRuntime<UserContext, *, *>> = mutableMapOf()

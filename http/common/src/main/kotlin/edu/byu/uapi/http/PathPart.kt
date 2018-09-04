@@ -1,4 +1,4 @@
-package http
+package edu.byu.uapi.http
 
 sealed class PathPart
 data class StaticPathPart(

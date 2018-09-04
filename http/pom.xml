@@ -4,15 +4,16 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>edu.byu.uapi.kotlin.examples</groupId>
-    <artifactId>kotlin-uapi-examples-pom</artifactId>
+    <groupId>edu.byu.uapi.kotlin.http</groupId>
+    <artifactId>kotlin-uapi-http-pom</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Kotlin UAPI Examples - Parent POM</name>
+    <name>Kotlin UAPI HTTP Bindings Parent POM</name>
 
     <modules>
-        <module>library</module>
+	    <module>common</module>
+	    <module>spark</module>
     </modules>
 
     <parent>
@@ -23,6 +24,11 @@
 
     <dependencyManagement>
         <dependencies>
+        	<dependency>
+			<groupId>edu.byu.uapi.kotlin</groupId>
+			<artifactId>uapi-runtime</artifactId>
+			<version>${project.version}</version>
+		</dependency>
         </dependencies>
     </dependencyManagement>
 

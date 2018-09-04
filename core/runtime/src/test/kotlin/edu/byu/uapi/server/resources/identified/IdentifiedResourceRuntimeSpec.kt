@@ -1,8 +1,8 @@
-package edu.byu.uapi.server
+package edu.byu.uapi.server.resources.identified
 
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import edu.byu.uapi.server.IdentifiedResourceRuntime.Operation
+import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime.Operation
 import io.kotlintest.Description
 import io.kotlintest.data.forall
 import io.kotlintest.matchers.collections.containExactly

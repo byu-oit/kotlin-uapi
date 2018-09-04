@@ -12,11 +12,12 @@
     <artifactId>library-example-interface-style</artifactId>
     <packaging>jar</packaging>
 
-    <name>edu.byu.uapi.kotlin.examples library-example-interface-style</name>
+    <name>Kotlin UAPI Examples - Library - Interface Style</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.2.61</kotlin.version>
+        <dependencies.checkUnused>false</dependencies.checkUnused>
     </properties>
 
     <dependencyManagement>
@@ -120,12 +121,6 @@
                         <include>**/*Test*</include>
                         <include>**/*Spec*</include>
                     </includes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
         </plugins>

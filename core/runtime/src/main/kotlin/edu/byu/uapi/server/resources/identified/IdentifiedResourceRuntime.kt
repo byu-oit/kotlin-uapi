@@ -1,6 +1,5 @@
-package edu.byu.uapi.server
+package edu.byu.uapi.server.resources.identified
 
-import edu.byu.uapi.server.resources.identified.*
 import edu.byu.uapi.server.schemas.*
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor

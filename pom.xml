@@ -26,6 +26,7 @@
         <!--<module>core/model</module>-->
         <!--<module>core/dsl</module>-->
         <module>core/runtime</module>
+	<module>http</module>
         <!--<module>old/http-runtime</module>-->
 
         <!--<module>old/adapters</module>-->
@@ -42,6 +43,8 @@
         <junit.version>5.2.0</junit.version>
         <jackson.version>2.9.6</jackson.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+
+        <dependencies.checkUnused>true</dependencies.checkUnused>
     </properties>
 
     <dependencyManagement>
@@ -143,7 +146,7 @@
                             <goal>analyze-only</goal>
                         </goals>
                         <configuration>
-                            <failOnWarning>true</failOnWarning>
+                            <failOnWarning>${dependencies.checkUnused}</failOnWarning>
                             <ignoreNonCompile>true</ignoreNonCompile>
                             <ignoredDependencies>
                                 <ignoredDependency>org.jetbrains:annotations</ignoredDependency>

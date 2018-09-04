@@ -1,4 +1,4 @@
-package http
+package edu.byu.uapi.http
 
 interface HttpHandler<RequestType : HttpRequest> {
     fun handle(request: RequestType): HttpResponse
