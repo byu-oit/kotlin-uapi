@@ -3,18 +3,9 @@ package edu.byu.uapi.http
 
 data class HttpRoute(
     val pathParts: List<PathPart>,
-    val handlers: MethodHandlers
+    val method: HttpMethod,
+    val handler: HttpHandler
 )
-
-data class MethodHandlers(
-//    val options: OptionsHandler,
-    val get: GetHandler? = null,
-    val post: PostHandler? = null,
-    val put: PutHandler? = null,
-    val patch: PatchHandler? = null,
-    val delete: DeleteHandler? = null
-)
-
 
 //class ErrorHttpResponse(val error: HttpError, jsonWriter: ObjectWriter)
 //    : UAPIHttpResponse(error.toResponse(), jsonWriter) {

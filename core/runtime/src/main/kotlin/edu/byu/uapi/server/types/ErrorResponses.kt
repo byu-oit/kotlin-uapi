@@ -14,6 +14,21 @@ data class ErrorResponse(
     }
 }
 
+class UAPINotAuthenticatedError(
+    messages: List<String>
+): UAPIResponse<UAPIErrorMetadata> {
+
+    override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
+        ValidationResponse(
+            403,
+            "Unauthorized"
+        ),
+        validationInformation = messages
+    )
+    override val links: UAPILinks = emptyMap()
+
+}
+
 object UAPINotAuthorizedError: UAPIResponse<UAPIErrorMetadata> {
     override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
         ValidationResponse(403, "Not Authorized"),
