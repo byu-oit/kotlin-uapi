@@ -1,21 +1,8 @@
 package edu.byu.uapi.server.resources.identified
 
+import edu.byu.uapi.server.response.ResponseFieldDefinition
 import edu.byu.uapi.server.validation.Validating
 import kotlin.reflect.KClass
-
-typealias Describer<Model, Value> = (Model, Value) -> String?
-
-class ResponseField<UserContext: Any, Model: Any, Type>(
-    val name: String,
-    val getValue: (Model) -> Type,
-    val key: Boolean,
-    val description: Describer<Model, Type>?,
-    val longDescription: Describer<Model, Type>?,
-    val modifiable: ((UserContext, Model) -> Boolean)?,
-    val doc: String?
-) {
-
-}
 
 interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
@@ -25,7 +12,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
     fun canUserViewModel(userContext: UserContext, id: Id, model: Model): Boolean
     fun idFromModel(model: Model): Id
 
-    val responseFields: List<ResponseField<UserContext, Model, *>>
+    val responseFields: List<ResponseFieldDefinition<UserContext, Model, *, *>>
 
     val createOperation: Creatable<UserContext, Id, Model, *>?
         get() = this.takeIfType()
@@ -54,10 +41,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         fun handleDelete(userContext: UserContext, id: Id, model: Model)
     }
 
-    interface Listable<UserContext : Any, Id : Any, Model : Any, Filters : Any> {
-        fun list(userContext: UserContext, filters: Filters): Collection<Model>
+    interface Listable<UserContext : Any, Id : Any, Model : Any, CollectionParams : Any> {
+        fun list(userContext: UserContext, params: CollectionParams): Collection<Model>
 
-        val filterType: KClass<Filters>
+        val paramsType: KClass<CollectionParams>
     }
 
 //    interface ListableById<UserContext : Any, Id : Any, Model : Any, Filters : Any>: Listable<UserContext, Id, Model, Filters>{
@@ -71,10 +58,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 //        }
 //    }
 
-    interface PagedListable<UserContext : Any, Id : Any, Model : Any, Filters : Any> {
-        fun list(userContext: UserContext, filters: Filters, paging: PagingParams): CollectionWithTotal<Model>
+    interface PagedListable<UserContext : Any, Id : Any, Model : Any, CollectionParams : Any> {
+        fun list(userContext: UserContext, filters: CollectionParams, paging: PagingParams): CollectionWithTotal<Model>
 
-        val filterType: KClass<Filters>
+        val paramsType: KClass<CollectionParams>
         val defaultPageSize: Int
         val maxPageSize: Int
     }

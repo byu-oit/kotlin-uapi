@@ -2,7 +2,7 @@ package edu.byu.uapi.server.resources.identified
 
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime.Operation
+import edu.byu.uapi.server.response.ResponseFieldDefinition
 import io.kotlintest.Description
 import io.kotlintest.data.forall
 import io.kotlintest.matchers.collections.containExactly
@@ -51,19 +51,19 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
                 it("always includes 'FETCH'") {
                     val foo = FooResource()
                     val runtime = IdentifiedResourceRuntime("foo", foo)
-                    runtime.availableOperations should containExactly(Operation.FETCH)
+                    runtime.availableOperations should containExactly(IdentifiedResourceOperation.FETCH)
                 }
                 it("should find all provided operations") {
                     forall(
-                        row(setOf(Operation.CREATE), settable(create = create)),
-                        row(setOf(Operation.UPDATE), settable(update = update)),
-                        row(setOf(Operation.DELETE), settable(delete = delete)),
-                        row(setOf(Operation.LIST), settable(list = list)),
-                        row(setOf(Operation.LIST), settable(pagedList = pagedList)),
+                        row(setOf(IdentifiedResourceOperation.CREATE), settable(create = create)),
+                        row(setOf(IdentifiedResourceOperation.UPDATE), settable(update = update)),
+                        row(setOf(IdentifiedResourceOperation.DELETE), settable(delete = delete)),
+                        row(setOf(IdentifiedResourceOperation.LIST), settable(list = list)),
+                        row(setOf(IdentifiedResourceOperation.LIST), settable(pagedList = pagedList)),
 
                         row(
                             setOf(
-                                Operation.CREATE, Operation.UPDATE, Operation.DELETE
+                                IdentifiedResourceOperation.CREATE, IdentifiedResourceOperation.UPDATE, IdentifiedResourceOperation.DELETE
                             ),
                             settable(
                                 create = create, update = update, delete = delete
@@ -71,7 +71,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
                         ),
                         row(
                             setOf(
-                                Operation.CREATE, Operation.UPDATE, Operation.DELETE, Operation.LIST
+                                IdentifiedResourceOperation.CREATE, IdentifiedResourceOperation.UPDATE, IdentifiedResourceOperation.DELETE, IdentifiedResourceOperation.LIST
                             ),
                             settable(
                                 create = create, update = update, delete = delete, list = list
@@ -79,7 +79,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
                         )
                     ) { ops, resource ->
                         val runtime = IdentifiedResourceRuntime("foo", resource)
-                        val expected = (ops + Operation.FETCH).toTypedArray()
+                        val expected = (ops + IdentifiedResourceOperation.FETCH).toTypedArray()
 
                         runtime.availableOperations should containExactlyInAnyOrder(*expected)
                     }
@@ -143,7 +143,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     private data class NewFoo(val value: String)
 
     private open class FooResource(val model: Foo? = Foo("bar"), val canUserView: Boolean = true) : IdentifiedResource<User, String, Foo> {
-        override val responseFields: List<ResponseField<User, Foo, *>>
+        override val responseFields: List<ResponseFieldDefinition<User, Foo, *, *>>
             get() = TODO("not implemented")
         override val idType: KClass<String> = String::class
 

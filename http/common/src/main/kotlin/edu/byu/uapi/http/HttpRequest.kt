@@ -1,29 +1,13 @@
 package edu.byu.uapi.http
 
 interface HttpRequest {
-
+    val method: HttpMethod
     val path: PathParams
     val headers: Headers
-
-}
-
-interface HttpBodyRequest : HttpRequest {
-
-    val body: RequestBody
-
-}
-
-interface GetRequest : HttpRequest {
-
     val query: QueryParams
-
+    val rawPath: String
+    val body: RequestBody?
 }
-
-interface PostRequest : HttpBodyRequest
-interface PutRequest : HttpBodyRequest
-interface PatchRequest : HttpBodyRequest
-interface DeleteRequest : HttpRequest
-interface OptionsRequest : HttpRequest
 
 interface RequestBody // TODO: Handle cases of streamed or string'ed bodies. Maybe with sealed class? How does that work in Multiplatform projects?
 

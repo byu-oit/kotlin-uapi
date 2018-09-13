@@ -42,11 +42,11 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
         </dependency>
-        <dependency>
-            <groupId>edu.byu.jwt</groupId>
-            <artifactId>byu-jwt</artifactId>
-            <version>${byu-jwt.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>edu.byu.jwt</groupId>-->
+            <!--<artifactId>byu-jwt</artifactId>-->
+            <!--<version>${byu-jwt.version}</version>-->
+        <!--</dependency>-->
 
         <!--<dependency>-->
             <!--<groupId>com.github.adelnizamutdinov</groupId>-->
