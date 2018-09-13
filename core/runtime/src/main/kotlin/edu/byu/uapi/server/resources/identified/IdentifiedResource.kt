@@ -41,10 +41,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         fun handleDelete(userContext: UserContext, id: Id, model: Model)
     }
 
-    interface Listable<UserContext : Any, Id : Any, Model : Any, Filters : Any> {
-        fun list(userContext: UserContext, filters: Filters): Collection<Model>
+    interface Listable<UserContext : Any, Id : Any, Model : Any, CollectionParams : Any> {
+        fun list(userContext: UserContext, params: CollectionParams): Collection<Model>
 
-        val filterType: KClass<Filters>
+        val paramsType: KClass<CollectionParams>
     }
 
 //    interface ListableById<UserContext : Any, Id : Any, Model : Any, Filters : Any>: Listable<UserContext, Id, Model, Filters>{
@@ -58,10 +58,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 //        }
 //    }
 
-    interface PagedListable<UserContext : Any, Id : Any, Model : Any, Filters : Any> {
-        fun list(userContext: UserContext, filters: Filters, paging: PagingParams): CollectionWithTotal<Model>
+    interface PagedListable<UserContext : Any, Id : Any, Model : Any, CollectionParams : Any> {
+        fun list(userContext: UserContext, filters: CollectionParams, paging: PagingParams): CollectionWithTotal<Model>
 
-        val filterType: KClass<Filters>
+        val paramsType: KClass<CollectionParams>
         val defaultPageSize: Int
         val maxPageSize: Int
     }

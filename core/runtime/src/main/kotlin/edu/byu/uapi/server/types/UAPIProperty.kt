@@ -16,6 +16,10 @@ sealed class UAPIProperty<Value : Any> {
     abstract val relatedResource: OrMissing<String>
 }
 
+enum class UAPIScalarTypes {
+    STRING, INTEGER, DECIMAL, BOOLEAN, DATE, DATE_TIME
+}
+
 sealed class OrMissing<out Type : Any> {
     data class Present<out Type : Any>(
         val value: Type?

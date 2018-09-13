@@ -189,12 +189,12 @@ class IdentifiedResourceSpec : DescribeSpec() {
                                  IdentifiedResource.Listable<String, String, String, String> {
         override fun list(
             userContext: String,
-            filters: String
+            params: String
         ): Collection<String> {
             TODO("not implemented")
         }
 
-        override val filterType: KClass<String>
+        override val paramsType: KClass<String>
             get() = TODO("not implemented")
 
     }
@@ -209,7 +209,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
             TODO("not implemented")
         }
 
-        override val filterType: KClass<String>
+        override val paramsType: KClass<String>
             get() = TODO("not implemented")
         override val defaultPageSize: Int
             get() = TODO("not implemented")

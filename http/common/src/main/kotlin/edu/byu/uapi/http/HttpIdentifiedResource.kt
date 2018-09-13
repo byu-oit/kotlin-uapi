@@ -1,5 +1,6 @@
 package edu.byu.uapi.http
 
+import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
@@ -26,9 +27,12 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
         idPath: List<PathPart>
     ): HttpRoute {
         return when (op) {
-            FETCH -> HttpRoute(
-                idPath, HttpMethod.GET, IdentifiedResourceFetchHandler<UserContext, Id, Model>()
-            )
+//            FETCH -> HttpRoute(
+//                idPath, HttpMethod.GET, IdentifiedResourceFetchHandler<UserContext, Id, Model>(
+//                this
+//            )
+//            )
+            FETCH -> TODO()
             CREATE -> TODO()
             UPDATE -> TODO()
             DELETE -> TODO()
@@ -83,9 +87,16 @@ class HttpUserContextAuthnInfo(
 
 }
 
-class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>
-    : HttpHandler {
-    override fun handle(request: HttpRequest): HttpResponse {
-        TODO("not implemented")
+class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>(
+    val runtime: UAPIRuntime<UserContext>,
+    val resource: IdentifiedResourceRuntime<UserContext, Id, Model>
+)
+    : AuthenticatedHandler<UserContext>(runtime.userContextFactory) {
+    override fun handleAuthenticated(
+        request: HttpRequest,
+        userContext: UserContext
+    ): HttpResponse {
+        val resp = resource.handleFetch(userContext, resource.constructId(request.path, runtime.deserializationContext))
+        TODO()
     }
 }

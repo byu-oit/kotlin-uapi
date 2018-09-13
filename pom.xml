@@ -26,7 +26,7 @@
         <!--<module>core/model</module>-->
         <!--<module>core/dsl</module>-->
         <module>core/runtime</module>
-	<module>http</module>
+        <module>http</module>
         <!--<module>old/http-runtime</module>-->
 
         <!--<module>old/adapters</module>-->
@@ -38,6 +38,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.2.61</kotlin.version>
+        <kotlintest.version>3.1.9</kotlintest.version>
 
         <junit.platform.version>1.2.0</junit.platform.version>
         <junit.version>5.2.0</junit.version>
@@ -88,6 +89,25 @@
                 <groupId>org.junit.platform</groupId>
                 <artifactId>junit-platform-surefire-provider</artifactId>
                 <version>${junit.platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.kotlintest</groupId>
+                <artifactId>kotlintest-core</artifactId>
+                <version>${kotlintest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.kotlintest</groupId>
+                <artifactId>kotlintest-assertions</artifactId>
+                <version>${kotlintest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.kotlintest</groupId>
+                <artifactId>kotlintest-runner-junit5</artifactId>
+                <version>${kotlintest.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

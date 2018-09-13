@@ -1,10 +1,14 @@
 package edu.byu.uapi.server
 
+import edu.byu.uapi.server.resources.identified.DeserializationContext
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
+import edu.byu.uapi.server.resources.identified.PathParamDeserializer
+import kotlin.reflect.KClass
 
 class UAPIRuntime<UserContext : Any>(
-    val userContextFactory: UserContextFactory<UserContext>
+    val userContextFactory: UserContextFactory<UserContext>,
+    val deserializationContext: DeserializationContext = DefaultDeserializationContext()
 ) {
     constructor(fn: UserContextFactoryFunc<UserContext>) : this(UserContextFactory.from(fn))
 
@@ -17,6 +21,12 @@ class UAPIRuntime<UserContext : Any>(
         val runtime = IdentifiedResourceRuntime(name, resource)
         resources[name] = runtime
         //TODO: Validate resource
+    }
+}
+
+class DefaultDeserializationContext: DeserializationContext {
+    override fun <Type : Any> pathDeserializer(type: KClass<Type>): PathParamDeserializer<Type> {
+        TODO("not implemented")
     }
 }
 

@@ -13,6 +13,22 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.primaryConstructor
 
+interface DeserializationContext {
+    @Throws(DeserializationError::class)
+    fun <Type : Any> pathDeserializer(type: KClass<Type>): PathParamDeserializer<Type>
+}
+
+interface PathParamDeserializer<T> {
+    @Throws(DeserializationError::class)
+    fun deserialize(values: Map<String, String>): T
+}
+
+class DeserializationError(
+    val type: KClass<*>,
+    message: String,
+    cause: Throwable? = null
+): Exception("Error deserializing type $type: $message", cause)
+
 class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     val name: String,
     internal val resource: IdentifiedResource<UserContext, Id, Model>
@@ -22,6 +38,12 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
 
     companion object {
         private val LOG = loggerFor<IdentifiedResourceRuntime<*, *, *>>()
+    }
+
+    @Throws(DeserializationError::class)
+    fun constructId(params: Map<String, String>, context: DeserializationContext): Id {
+        val deserializer = context.pathDeserializer(resource.idType)
+        return deserializer.deserialize(params)
     }
 
     init {
