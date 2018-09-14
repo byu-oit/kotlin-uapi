@@ -1,27 +1,48 @@
 package edu.byu.uapi.server.types
 
-sealed class UAPIResponse<MetaType : ResponseMetadata> {
+sealed class UAPIResponse<MetaType : ResponseMetadata>: UAPISerializable {
     abstract val metadata: MetaType
     abstract val links: UAPILinks
+
+    final override fun serialize(ser: SerializationStrategy) {
+        ser.obj("metadata", metadata)
+        ser.obj("links", links)
+        serializeExtras(ser)
+    }
+
+    protected open fun serializeExtras(ser: SerializationStrategy) {
+    }
 }
 
 data class UAPIFieldsetsCollectionResponse(
     val values: List<UAPIFieldsetsResponse>,
     override val metadata: CollectionMetadata,
     override val links: UAPILinks
-): UAPIResponse<CollectionMetadata>()
+): UAPIResponse<CollectionMetadata>() {
+    override fun serializeExtras(ser: SerializationStrategy) {
+        ser.objects("values", values)
+    }
+}
 
 data class UAPIPropertiesResponse(
     val properties: Map<String, UAPIProperty<*>>,
     override val metadata: UAPIResourceMeta,
     override val links: UAPILinks
-) : UAPIResponse<UAPIResourceMeta>()
+) : UAPIResponse<UAPIResourceMeta>() {
+    override fun serializeExtras(ser: SerializationStrategy) {
+        ser.merge(this.properties)
+    }
+}
 
 data class UAPIFieldsetsResponse(
     val fieldsets: Map<String, UAPIResponse<*>>,
     override val metadata: FieldsetsMetadata,
     override val links: UAPILinks = emptyMap()
-) : UAPIResponse<FieldsetsMetadata>()
+) : UAPIResponse<FieldsetsMetadata>() {
+    override fun serializeExtras(ser: SerializationStrategy) {
+        ser.merge(this.fieldsets)
+    }
+}
 
 sealed class UAPIErrorResponse : UAPIResponse<UAPIErrorMetadata>() {
     companion object {

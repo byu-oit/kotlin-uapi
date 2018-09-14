@@ -1,12 +1,15 @@
-package edu.byu.uapi.http
+package edu.byu.uapi.http.json
 
 import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotlintest.matchers.collections.shouldHaveSize
 import io.kotlintest.matchers.maps.shouldContainKey
 import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
+import javax.json.JsonNumber
 import javax.json.JsonObject
 import javax.json.JsonString
 import javax.json.JsonValue
+import kotlin.math.exp
 
 fun JsonObject.mustHave(
     key: String,
@@ -29,9 +32,24 @@ fun JsonObject.shouldHave(
     key: String,
     value: Int
 ) {
-    mustHave(key, value, JsonObject::getInt)
+    shouldHave(key, value, JsonObject::getInt)
 }
 
+fun JsonObject.shouldHave(
+    key: String,
+    value: Double
+) {
+    shouldHave(key, value) {
+        this.getJsonNumber(it).doubleValue()
+    }
+}
+
+fun JsonObject.shouldHave(
+    key: String,
+    value: Boolean
+) {
+    shouldHave(key, value, JsonObject::getBoolean)
+}
 
 fun JsonObject.shouldHave(
     key: String,
@@ -40,6 +58,13 @@ fun JsonObject.shouldHave(
 //  this.mustHave(key) && validation(this.getJsonObject(key))
     this.shouldHave(key)
     validation(this.getJsonObject(key))
+}
+
+fun JsonObject.shouldHaveNull(
+    key: String
+) {
+    this.shouldContainKey(key)
+    this[key] shouldBe JsonValue.NULL
 }
 
 
@@ -66,6 +91,27 @@ fun JsonObject.shouldHaveAllStrings(
     key: String,
     value: Collection<String>
 ) = shouldHaveAll<String, JsonString>(key, value, JsonString::getString)
+
+fun JsonObject.shouldHaveAllInts(
+    key: String,
+    value: Collection<Int>
+) = shouldHaveAll(key, value, JsonNumber::intValue)
+
+fun JsonObject.shouldHaveAllDoubles(
+    key: String,
+    value: Collection<Double>
+) = shouldHaveAll(key, value, JsonNumber::doubleValue)
+
+fun JsonObject.shouldHaveAllBooleans(
+    key: String,
+    value: List<Boolean>
+) = shouldHaveAll<Boolean, JsonValue>(key, value) {
+    when(this) {
+        JsonValue.TRUE -> true
+        JsonValue.FALSE -> false
+        else -> throw AssertionError("Expected value of TRUE or FALSE, was \"$this\"")
+    }
+}
 
 fun <T : Any, J : JsonValue> JsonObject.shouldHaveAll(
     key: String,
@@ -100,6 +146,21 @@ fun JsonObject.shouldHave(key: String) {
     this.shouldContainKey(key)
     this.get(key) shouldNotBe JsonValue.NULL
     this.get(key)?.valueType shouldNotBe JsonValue.NULL
+}
+
+fun JsonObject.shouldHaveArray(key: String) {
+    this.shouldHave(key)
+    this[key]!!.valueType shouldBe JsonValue.ValueType.ARRAY
+}
+
+inline fun <T: Any> JsonObject.shouldHaveObjectArrayMatching(key: String, expected: List<T>, crossinline matcher: (JsonObject, T) -> Unit) {
+    this.shouldHaveArray(key)
+    val array = this.getJsonArray(key)
+    array.shouldHaveSize(expected.size)
+    array.forEach { it.valueType shouldBe JsonValue.ValueType.OBJECT }
+    array.map { it.asJsonObject()!! }
+        .zip(expected)
+        .forEach { matcher(it.first, it.second) }
 }
 
 inline fun <T : Any> JsonObject.shouldHave(
