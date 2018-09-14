@@ -1,3 +1,8 @@
+---
+title: Implementation Styles
+order: 3
+---
+
 # Implementation Styles
 
 **Note**: Make sure you're familiar with the [Key Concepts](./key-concepts.md) before proceeding!

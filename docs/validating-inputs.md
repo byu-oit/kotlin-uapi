@@ -1,3 +1,8 @@
+---
+title: Input Validation
+order: 5
+---
+
 # Input Validation
 
 To help implement robust input validation, the `Validating` class is used.  `Validating` allows you to build complex
