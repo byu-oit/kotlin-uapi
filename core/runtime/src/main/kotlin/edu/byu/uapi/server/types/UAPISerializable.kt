@@ -13,12 +13,7 @@ interface SerializationStrategy {
 
     fun add(
         key: String,
-        v: Int?
-    )
-
-    fun add(
-        key: String,
-        v: Double?
+        v: Number?
     )
 
     fun add(
@@ -56,22 +51,27 @@ interface SerializationStrategy {
         v: Array<String>
     )
 
-    fun ints(
+    fun numbers(
         key: String,
-        v: Collection<Int>
+        v: Collection<Number>
     )
 
-    fun ints(
+    fun numbers(
         key: String,
         v: IntArray
     )
 
-    fun doubles(
+    fun numbers(
         key: String,
-        v: Collection<Double>
+        v: LongArray
     )
 
-    fun doubles(
+    fun numbers(
+        key: String,
+        v: FloatArray
+    )
+
+    fun numbers(
         key: String,
         v: DoubleArray
     )
@@ -158,6 +158,91 @@ abstract class SerializationStrategyBase<Self : SerializationStrategyBase<Self>>
     }
 }
 
+abstract class NullsAreSpecialSerializationStrategy<Self : NullsAreSpecialSerializationStrategy<Self>> : SerializationStrategyBase<Self>() {
+
+    abstract fun addNull(key: String)
+
+    override fun add(
+        key: String,
+        v: String?
+    ) {
+        if (v == null) {
+            addNull(key)
+        } else {
+            safeAdd(key, v)
+        }
+    }
+
+    protected abstract fun safeAdd(
+        key: String,
+        v: String
+    )
+
+    override fun add(
+        key: String,
+        v: Number?
+    ) {
+        if (v == null) {
+            addNull(key)
+        } else {
+            safeAdd(key, v)
+        }
+    }
+
+    protected abstract fun safeAdd(
+        key: String,
+        v: Number
+    )
+
+    override fun add(
+        key: String,
+        v: Boolean?
+    ) {
+        if (v == null) {
+            addNull(key)
+        } else {
+            safeAdd(key, v)
+        }
+    }
+
+    protected abstract fun safeAdd(
+        key: String,
+        v: Boolean
+    )
+
+    override fun add(
+        key: String,
+        v: Enum<*>?
+    ) {
+        if (v == null) {
+            addNull(key)
+        } else {
+            safeAdd(key, v)
+        }
+    }
+
+    protected abstract fun safeAdd(
+        key: String,
+        v: Enum<*>
+    )
+
+    override fun addFromSerializer(
+        key: String,
+        ser: Self?
+    ) {
+        if (ser == null) {
+            addNull(key)
+        } else {
+            safeAddFromSerializer(key, ser)
+        }
+    }
+
+    abstract fun safeAddFromSerializer(
+        key: String,
+        ser: Self
+    )
+}
+
 class MapAndListSerializationStrategy : SerializationStrategyBase<MapAndListSerializationStrategy>() {
 
     override fun createSerializer(): MapAndListSerializationStrategy = MapAndListSerializationStrategy()
@@ -192,14 +277,7 @@ class MapAndListSerializationStrategy : SerializationStrategyBase<MapAndListSeri
 
     override fun add(
         key: String,
-        v: Int?
-    ) {
-        map[key] = v
-    }
-
-    override fun add(
-        key: String,
-        v: Double?
+        v: Number?
     ) {
         map[key] = v
     }
@@ -225,34 +303,6 @@ class MapAndListSerializationStrategy : SerializationStrategyBase<MapAndListSeri
         map[key] = v.toList()
     }
 
-    override fun ints(
-        key: String,
-        v: Collection<Int>
-    ) {
-        map[key] = v.toList()
-    }
-
-    override fun ints(
-        key: String,
-        v: IntArray
-    ) {
-        map[key] = v.toList()
-    }
-
-    override fun doubles(
-        key: String,
-        v: Collection<Double>
-    ) {
-        map[key] = v.toList()
-    }
-
-    override fun doubles(
-        key: String,
-        v: DoubleArray
-    ) {
-        map[key] = v.toList()
-    }
-
     override fun booleans(
         key: String,
         v: Collection<Boolean>
@@ -263,6 +313,41 @@ class MapAndListSerializationStrategy : SerializationStrategyBase<MapAndListSeri
     override fun booleans(
         key: String,
         v: BooleanArray
+    ) {
+        map[key] = v.toList()
+    }
+
+    override fun numbers(
+        key: String,
+        v: Collection<Number>
+    ) {
+        map[key] = v.toList()
+    }
+
+    override fun numbers(
+        key: String,
+        v: IntArray
+    ) {
+        map[key] = v.toList()
+    }
+
+    override fun numbers(
+        key: String,
+        v: LongArray
+    ) {
+        map[key] = v.toList()
+    }
+
+    override fun numbers(
+        key: String,
+        v: FloatArray
+    ) {
+        map[key] = v.toList()
+    }
+
+    override fun numbers(
+        key: String,
+        v: DoubleArray
     ) {
         map[key] = v.toList()
     }

@@ -19,6 +19,11 @@ class JsonSerializationStrategySpec : DescribeSpec() {
         TestUAPISerializable(m)
     }
 
+    fun bytes() = Gen.choose(Byte.MIN_VALUE.toInt(), Byte.MAX_VALUE.toInt()).map { it.toByte() }
+    fun shorts() = Gen.choose(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).map { it.toShort() }
+
+    fun finiteFloats(): Gen<Float> = Gen.float().filter { it.isFinite() }
+
     fun finiteDoubles(): Gen<Double> = Gen.double().filter { it.isFinite() }
 
     data class TestUAPISerializable(val map: Map<String, String>) : UAPISerializable {
@@ -40,7 +45,27 @@ class JsonSerializationStrategySpec : DescribeSpec() {
                 JsonObject::shouldHave
             )
             scalarSerialization(
-                Gen.double().filter { it.isFinite() },
+                bytes(),
+                JsonSerializationStrategy::add,
+                JsonObject::shouldHave
+            )
+            scalarSerialization(
+                shorts(),
+                JsonSerializationStrategy::add,
+                JsonObject::shouldHave
+            )
+            scalarSerialization(
+                Gen.long(),
+                JsonSerializationStrategy::add,
+                JsonObject::shouldHave
+            )
+            scalarSerialization(
+                finiteFloats(),
+                JsonSerializationStrategy::add,
+                JsonObject::shouldHave
+            )
+            scalarSerialization(
+                finiteDoubles(),
                 JsonSerializationStrategy::add,
                 JsonObject::shouldHave
             )
@@ -122,17 +147,41 @@ class JsonSerializationStrategySpec : DescribeSpec() {
                 JsonObject::shouldHaveAllStrings
             )
             scalarArraySerialization(
+                shorts(),
+                JsonSerializationStrategy::numbers,
+                JsonObject::shouldHaveAllShorts
+            )
+//            scalarArraySerialization(
+//                bytes(),
+//                JsonSerializationStrategy::numbers,
+//                JsonObject::shouldHaveAllBytes
+//            )
+            scalarArraySerialization(
                 Gen.int(),
                 List<Int>::toIntArray,
-                JsonSerializationStrategy::ints,
-                JsonSerializationStrategy::ints,
+                JsonSerializationStrategy::numbers,
+                JsonSerializationStrategy::numbers,
                 JsonObject::shouldHaveAllInts
+            )
+            scalarArraySerialization(
+                Gen.long(),
+                List<Long>::toLongArray,
+                JsonSerializationStrategy::numbers,
+                JsonSerializationStrategy::numbers,
+                JsonObject::shouldHaveAllLongs
+            )
+            scalarArraySerialization(
+                finiteFloats(),
+                List<Float>::toFloatArray,
+                JsonSerializationStrategy::numbers,
+                JsonSerializationStrategy::numbers,
+                JsonObject::shouldHaveAllFloats
             )
             scalarArraySerialization(
                 finiteDoubles(),
                 List<Double>::toDoubleArray,
-                JsonSerializationStrategy::doubles,
-                JsonSerializationStrategy::doubles,
+                JsonSerializationStrategy::numbers,
+                JsonSerializationStrategy::numbers,
                 JsonObject::shouldHaveAllDoubles
             )
             scalarArraySerialization(
@@ -170,9 +219,11 @@ class JsonSerializationStrategySpec : DescribeSpec() {
                     }
 
                     json.shouldHave("already_there", "foo")
-                    toMerge.forEach { k, v -> json.shouldHaveObject(k) {
-                        it.shouldMatch(v.map)
-                    } }
+                    toMerge.forEach { k, v ->
+                        json.shouldHaveObject(k) {
+                            it.shouldMatch(v.map)
+                        }
+                    }
 
                     true
                 }
@@ -233,6 +284,31 @@ class JsonSerializationStrategySpec : DescribeSpec() {
         }
     }
 
+    private inline fun <reified T> DescribeScope.scalarArraySerialization(
+        gen: Gen<T>,
+        crossinline addCollection: JsonSerializationStrategy.(String, Collection<T>) -> Unit,
+        crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
+    ) {
+        context("array of " + nameOf(T::class)) {
+            itShouldSerializeACollection(gen, addCollection, shouldHaveAll)
+        }
+    }
+
+    private inline fun <reified T> DescribeScope.itShouldSerializeACollection(
+        gen: Gen<T>,
+        crossinline addCollection: JsonSerializationStrategy.(String, Collection<T>) -> Unit,
+        crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
+    ) {
+        it("serializes a collection") {
+            forAll(100, jsonKey(), Gen.list(gen)) { key, list ->
+                val json = setup { it.addCollection(key, list) }
+
+                json.shouldHaveAll(key, list)
+                true
+            }
+        }
+    }
+
     private inline fun <reified T, Array> DescribeScope.scalarArraySerialization(
         gen: Gen<T>,
         crossinline toArray: (List<T>) -> Array,
@@ -241,14 +317,7 @@ class JsonSerializationStrategySpec : DescribeSpec() {
         crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
     ) {
         context("array of " + nameOf(T::class)) {
-            it("serializes a collection") {
-                forAll(100, jsonKey(), Gen.list(gen)) { key, list ->
-                    val json = setup { it.addCollection(key, list) }
-
-                    json.shouldHaveAll(key, list)
-                    true
-                }
-            }
+            itShouldSerializeACollection(gen, addCollection, shouldHaveAll)
             it("serializes an array") {
                 forAll(100, jsonKey(), Gen.list(gen)) { key, list ->
                     val array = toArray(list)

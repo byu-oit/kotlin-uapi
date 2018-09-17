@@ -30,9 +30,46 @@ fun JsonObject.mustHave(
 
 fun JsonObject.shouldHave(
     key: String,
+    value: Byte
+) {
+    shouldHave(key, value) {
+        this.getInt(it).toByte()
+    }
+}
+
+fun JsonObject.shouldHave(
+    key: String,
+    value: Short
+) {
+    shouldHave(key, value) {
+        this.getInt(it).toShort()
+    }
+}
+
+fun JsonObject.shouldHave(
+    key: String,
     value: Int
 ) {
     shouldHave(key, value, JsonObject::getInt)
+}
+
+fun JsonObject.shouldHave(
+    key: String,
+    value: Long
+) {
+    shouldHave(key, value) {
+        this.getJsonNumber(it).longValue()
+    }
+}
+
+
+fun JsonObject.shouldHave(
+    key: String,
+    value: Float
+) {
+    shouldHave(key, value) {
+        this.getJsonNumber(it).doubleValue().toFloat()
+    }
 }
 
 fun JsonObject.shouldHave(
@@ -92,6 +129,18 @@ fun JsonObject.shouldHaveAllStrings(
     value: Collection<String>
 ) = shouldHaveAll<String, JsonString>(key, value, JsonString::getString)
 
+fun JsonObject.shouldHaveAllBytes(
+    key: String,
+    value: Collection<Byte>
+) = shouldHaveAll(key, value, JsonNumber::intValue)
+
+fun JsonObject.shouldHaveAllShorts(
+    key: String,
+    value: Collection<Short>
+) = shouldHaveAll<Short, JsonNumber>(key, value) {
+    this.intValue().toShort()
+}
+
 fun JsonObject.shouldHaveAllInts(
     key: String,
     value: Collection<Int>
@@ -101,6 +150,16 @@ fun JsonObject.shouldHaveAllDoubles(
     key: String,
     value: Collection<Double>
 ) = shouldHaveAll(key, value, JsonNumber::doubleValue)
+
+fun JsonObject.shouldHaveAllFloats(
+    key: String,
+    value: Collection<Float>
+) = shouldHaveAll<Float, JsonNumber>(key, value) { this.bigDecimalValue().toFloat() }
+
+fun JsonObject.shouldHaveAllLongs(
+    key: String,
+    value: Collection<Long>
+) = shouldHaveAll(key, value, JsonNumber::longValue)
 
 fun JsonObject.shouldHaveAllBooleans(
     key: String,
@@ -153,7 +212,7 @@ fun JsonObject.shouldHaveArray(key: String) {
     this[key]!!.valueType shouldBe JsonValue.ValueType.ARRAY
 }
 
-inline fun <T: Any> JsonObject.shouldHaveObjectArrayMatching(key: String, expected: List<T>, crossinline matcher: (JsonObject, T) -> Unit) {
+fun <T: Any> JsonObject.shouldHaveObjectArrayMatching(key: String, expected: List<T>, matcher: (JsonObject, T) -> Unit) {
     this.shouldHaveArray(key)
     val array = this.getJsonArray(key)
     array.shouldHaveSize(expected.size)
@@ -163,7 +222,7 @@ inline fun <T: Any> JsonObject.shouldHaveObjectArrayMatching(key: String, expect
         .forEach { matcher(it.first, it.second) }
 }
 
-inline fun <T : Any> JsonObject.shouldHave(
+fun <T : Any> JsonObject.shouldHave(
     key: String,
     value: T,
     extract: JsonObject.(String) -> T

@@ -1,6 +1,8 @@
 package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.FIELDSET_BASIC
+import edu.byu.uapi.server.inputs.DeserializationContext
+import edu.byu.uapi.server.inputs.DeserializationError
 import edu.byu.uapi.server.response.ResponseFieldDefinition
 import edu.byu.uapi.server.schemas.*
 import edu.byu.uapi.server.types.*
@@ -12,22 +14,6 @@ import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.primaryConstructor
-
-interface DeserializationContext {
-    @Throws(DeserializationError::class)
-    fun <Type : Any> pathDeserializer(type: KClass<Type>): PathParamDeserializer<Type>
-}
-
-interface PathParamDeserializer<T> {
-    @Throws(DeserializationError::class)
-    fun deserialize(values: Map<String, String>): T
-}
-
-class DeserializationError(
-    val type: KClass<*>,
-    message: String,
-    cause: Throwable? = null
-): Exception("Error deserializing type $type: $message", cause)
 
 class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     val name: String,
@@ -42,8 +28,12 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
 
     @Throws(DeserializationError::class)
     fun constructId(params: Map<String, String>, context: DeserializationContext): Id {
-        val deserializer = context.pathDeserializer(resource.idType)
-        return deserializer.deserialize(params)
+        val result = context.pathDeserializer(resource.idType)
+        val deserializer = when (result) {
+            is Success -> result.value
+            is Failure -> throw result.value.asError()
+        }
+        return deserializer.deserializePathParams(params).map({it}, {throw it.asError()})
     }
 
     init {
