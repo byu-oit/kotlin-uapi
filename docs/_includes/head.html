@@ -1,0 +1,37 @@
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href='{{ "/assets/main.css" | relative_url }}'>
+    <link rel="stylesheet" href="https://cdn.byu.edu/byu-theme-components/experimental/ringside-switch/byu-theme-components.min.css" />
+    <script async src="https://cdn.byu.edu/byu-theme-components/experimental/ringside-switch/byu-theme-components.min.js"></script>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/solid.css" integrity="sha384-VGP9aw4WtGH/uPAOseYxZ+Vz/vaTb1ehm1bwx92Fm8dTrE+3boLfF1SpAtB1z7HW" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/brands.css" integrity="sha384-rf1bqOAj3+pw6NqYrtaE1/4Se2NBwkIfeYbsFdtiR6TQz0acWiwJbv1IM/Nt/ite" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/fontawesome.css" integrity="sha384-1rquJLNOM3ijoueaaeS5m+McXPJCGdr5HcA03/VHXxcp2kX2sUrQDmFc3jR5i/C7" crossorigin="anonymous">
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            min-height: 100vh;
+        }
+        .page-content {
+            flex-grow: 1;
+        }
+        .wrapper {
+            margin: 0 auto;
+            max-width: 1200px;
+            width: 100%;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        [slot=site-title].subtitle {
+            font-size: 0.75em !important;
+        }
+        byu-header img {
+            vertical-align: unset;
+        }
+    </style>
+</head>

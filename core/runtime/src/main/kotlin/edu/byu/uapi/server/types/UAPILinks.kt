@@ -1,19 +1,18 @@
 package edu.byu.uapi.server.types
 
-
 typealias UAPILinks = Map<String, UAPILink>
 
 data class UAPILink(
     val rel: String,
     val href: String,
     val method: LinkMethod = LinkMethod.GET
-) {
-//    fun toMap(): Map<String, Any?> {
-//
-//    }
+): UAPISerializable {
+    override fun serialize(ser: SerializationStrategy) {
+        ser.add("rel", rel)
+        ser.add("href", href)
+        ser.add("method", method)
+    }
 }
-
-//fun UAPILinks.toMap() = this.mapValues { it.value.toMap() }
 
 enum class LinkMethod{
     GET,

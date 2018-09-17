@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BYU - University API Kotlin Runtime</title>
+    <link rel="stylesheet" href="https://cdn.byu.edu/byu-theme-components/experimental/ringside-switch/byu-theme-components.min.css" />
+    <script async src="https://cdn.byu.edu/byu-theme-components/experimental/ringside-switch/byu-theme-components.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            min-height: 100vh;
+        }
+        .main-content {
+            flex-grow: 1;
+            margin: 0 auto;
+            max-width: 1200px;
+            width: 100%;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        [slot=site-title].subtitle {
+            font-size: 0.75em !important;
+        }
+    </style>
+    <link rel="stylesheet" href="assets/highlighting.css">
+</head>
+<body>
+<byu-header>
+    <header slot="site-title">University API - Kotlin</header>
+    <!--<span slot="site-title" class="subtitle">Office of Information Technology</span>-->
+    <byu-menu slot="nav">
+        {% for page in site.pages %}
+        <a href="{{page.url}}">{{ page.title }}</a>
+        {% endfor %}
+    </byu-menu>
+</byu-header>
+
+<main class="main-content">
+    {{ content }}
+</main>
+
+<byu-footer></byu-footer>
+
+</body>
+</html>

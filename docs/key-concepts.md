@@ -1,3 +1,8 @@
+---
+title: Key Concepts
+order: 2
+---
+
 # Key Concepts and Terms
 
 There are several concepts and terms that are used in this documentation that you should be sure to understand.

@@ -1,0 +1,10 @@
+defaults:
+- scope:
+    path: "" # an empty string here means all files in the project
+  values:
+    layout: "default"
+theme: minima
+title: University API - Kotlin
+
+plugins:
+- jekyll-relative-links

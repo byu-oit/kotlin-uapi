@@ -3,10 +3,14 @@ package edu.byu.uapi.server.types
 import edu.byu.uapi.server.FIELDSET_BASIC
 import java.time.Instant
 
-sealed class ResponseMetadata {
+sealed class ResponseMetadata: UAPISerializable {
     abstract val validationResponse: ValidationResponse
     abstract val validationInformation: List<String>
     abstract val cache: CacheMeta?
+
+    override fun serialize(strategy: SerializationStrategy) {
+        TODO("not implemented")
+    }
 }
 
 data class UAPIErrorMetadata(

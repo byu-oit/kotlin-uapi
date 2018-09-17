@@ -1,9 +1,11 @@
 package edu.byu.uapi.server
 
-import edu.byu.uapi.server.resources.identified.DeserializationContext
+import edu.byu.uapi.server.inputs.DeserializationContext
+import edu.byu.uapi.server.inputs.DeserializationFailure
+import edu.byu.uapi.server.inputs.PathParamDeserializer
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
-import edu.byu.uapi.server.resources.identified.PathParamDeserializer
+import edu.byu.uapi.server.types.SuccessOrFailure
 import kotlin.reflect.KClass
 
 class UAPIRuntime<UserContext : Any>(
@@ -24,8 +26,8 @@ class UAPIRuntime<UserContext : Any>(
     }
 }
 
-class DefaultDeserializationContext: DeserializationContext {
-    override fun <Type : Any> pathDeserializer(type: KClass<Type>): PathParamDeserializer<Type> {
+class DefaultDeserializationContext : DeserializationContext {
+    override fun <Type : Any> pathDeserializer(type: KClass<Type>): SuccessOrFailure<PathParamDeserializer<Type>, DeserializationFailure<*>> {
         TODO("not implemented")
     }
 }
@@ -59,8 +61,8 @@ sealed class UserContextResult<out UserContext : Any> {
     data class Failure(
         val messages: List<String>
     ) : UserContextResult<Nothing>() {
-        constructor(message: String): this(listOf(message))
-        constructor(vararg messages: String): this(messages.toList())
+        constructor(message: String) : this(listOf(message))
+        constructor(vararg messages: String) : this(messages.toList())
     }
 }
 
