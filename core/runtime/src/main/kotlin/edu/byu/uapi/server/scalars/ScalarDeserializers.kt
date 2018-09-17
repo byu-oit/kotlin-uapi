@@ -42,7 +42,6 @@ val defaultScalarConverters = mapOf<KClass<*>, ScalarConverter<*>>(
     ZonedDateTime::class to ZonedDateTimeScalarConverter,
     OffsetDateTime::class to OffsetDateTimeScalarConverter,
     OffsetTime::class to OffsetTimeScalarConverter,
-    LocalDateTime::class to LocalDateTimeScalarConverter,
     LocalTime::class to LocalTimeScalarConverter,
     YearMonth::class to YearMonthScalarConverter,
     MonthDay::class to MonthDayScalarConverter,
@@ -51,6 +50,10 @@ val defaultScalarConverters = mapOf<KClass<*>, ScalarConverter<*>>(
     Year::class to YearScalarConverter,
     DayOfWeek::class to EnumScalarConverter(DayOfWeek::class),
     Month::class to EnumScalarConverter(Month::class),
+
+    java.util.Date::class to JavaUtilDateScalarConverter,
+    java.sql.Date::class to JavaSqlDateScalarConverter,
+    java.sql.Timestamp::class to JavaSqlTimestampScalarConverter,
 
     // Misc platform types
     UUID::class to UUIDScalarConverter,
@@ -254,6 +257,14 @@ object BigDecimalScalarConverter : ScalarConverter<BigDecimal> {
     override fun fromString(value: String): SuccessOrFailure<BigDecimal, DeserializationFailure<BigDecimal>> {
         return value.toBigDecimalOrNull()?.asSuccess() ?: fail("Invalid decimal")
     }
+
+    override fun serialize(
+        key: String,
+        value: BigDecimal?,
+        strategy: SerializationStrategy
+    ) {
+        strategy.add(key, value)
+    }
 }
 
 object InstantScalarConverter : ScalarConverter<Instant> {
@@ -264,6 +275,14 @@ object InstantScalarConverter : ScalarConverter<Instant> {
         } catch (ex: DateTimeParseException) {
             fail("Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
+    }
+
+    override fun serialize(
+        key: String,
+        value: Instant?,
+        strategy: SerializationStrategy
+    ) {
+        strategy.add(key, value?.toString())
     }
 }
 
@@ -276,6 +295,14 @@ object LocalDateScalarConverter : ScalarConverter<LocalDate> {
             fail("Invalid timestamp. Must be a valid RFC-3339 'full-date' (https://tools.ietf.org/html/rfc3339).")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: LocalDate?,
+        strategy: SerializationStrategy
+    ) {
+        strategy.add(key, value?.toString())
+    }
 }
 
 object LocalDateTimeScalarConverter : ScalarConverter<LocalDateTime> {
@@ -286,6 +313,14 @@ object LocalDateTimeScalarConverter : ScalarConverter<LocalDateTime> {
         } catch (ex: DateTimeParseException) {
             fail("Invalid date/time. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
+    }
+
+    override fun serialize(
+        key: String,
+        value: LocalDateTime?,
+        strategy: SerializationStrategy
+    ) {
+        strategy.add(key, value?.toString())
     }
 }
 
@@ -298,6 +333,14 @@ object ZonedDateTimeScalarConverter : ScalarConverter<ZonedDateTime> {
             fail("Invalid date/time with time zone. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: ZonedDateTime?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
+    }
 }
 
 object OffsetDateTimeScalarConverter : ScalarConverter<OffsetDateTime> {
@@ -308,6 +351,14 @@ object OffsetDateTimeScalarConverter : ScalarConverter<OffsetDateTime> {
         } catch (ex: DateTimeParseException) {
             fail("Invalid date/time with zone offset. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
+    }
+
+    override fun serialize(
+        key: String,
+        value: OffsetDateTime?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
     }
 }
 
@@ -320,6 +371,14 @@ object OffsetTimeScalarConverter : ScalarConverter<OffsetTime> {
             fail("Invalid time with zone offset. Must be a valid RFC-3339 'full-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: OffsetTime?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
+    }
 }
 
 object LocalTimeScalarConverter : ScalarConverter<LocalTime> {
@@ -330,6 +389,14 @@ object LocalTimeScalarConverter : ScalarConverter<LocalTime> {
         } catch (ex: DateTimeParseException) {
             fail("Invalid time value. Must be a valid RFC-3339 'partial-time' (https://tools.ietf.org/html/rfc3339).")
         }
+    }
+
+    override fun serialize(
+        key: String,
+        value: LocalTime?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
     }
 }
 
@@ -342,6 +409,14 @@ object YearMonthScalarConverter : ScalarConverter<YearMonth> {
             fail("Invalid year/month value. Must be formatted like 'yyyy-MM'.")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: YearMonth?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
+    }
 }
 
 object MonthDayScalarConverter : ScalarConverter<MonthDay> {
@@ -352,6 +427,14 @@ object MonthDayScalarConverter : ScalarConverter<MonthDay> {
         } catch (ex: DateTimeParseException) {
             fail("Invalid year/month value. Must be formatted like '--MM-dd', per ISO-8601.")
         }
+    }
+
+    override fun serialize(
+        key: String,
+        value: MonthDay?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
     }
 }
 
@@ -364,6 +447,14 @@ object DurationScalarConverter : ScalarConverter<Duration> {
             fail("Invalid duration. Must be formatted as an ISO-8601 duration (PnDTnHnMn.nS).")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: Duration?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
+    }
 }
 
 object PeriodScalarConverter : ScalarConverter<Period> {
@@ -374,6 +465,14 @@ object PeriodScalarConverter : ScalarConverter<Period> {
         } catch (ex: DateTimeParseException) {
             fail("Invalid duration. Must be formatted as an ISO-8601 period (PnYnMnD or PnW).")
         }
+    }
+
+    override fun serialize(
+        key: String,
+        value: Period?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
     }
 }
 
@@ -386,6 +485,14 @@ object YearScalarConverter : ScalarConverter<Year> {
             fail("Invalid year value.")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: Year?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
+    }
 }
 
 object UUIDScalarConverter : ScalarConverter<UUID> {
@@ -396,6 +503,14 @@ object UUIDScalarConverter : ScalarConverter<UUID> {
         } catch (ex: IllegalArgumentException) {
             fail("Invalid UUID value.")
         }
+    }
+
+    override fun serialize(
+        key: String,
+        value: UUID?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
     }
 }
 
@@ -411,6 +526,14 @@ object ByteArrayScalarConverter : ScalarConverter<ByteArray> {
             fail("Invalid base64-encoded bytes.")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: ByteArray?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
+    }
 }
 
 object ByteBufferScalarConverter : ScalarConverter<ByteBuffer> {
@@ -425,6 +548,55 @@ object ByteBufferScalarConverter : ScalarConverter<ByteBuffer> {
             fail("Invalid base64-encoded bytes.")
         }
     }
+
+    override fun serialize(
+        key: String,
+        value: ByteBuffer?,
+        strategy: SerializationStrategy
+    ) {
+        super.serialize(key, value, strategy)
+    }
+}
+
+abstract class PreJavaTimeScalarConverterBase<T: java.util.Date>
+    : ScalarConverter<T> {
+    final override fun fromString(value: String): SuccessOrFailure<T, DeserializationFailure<T>> {
+        return try {
+            val instant = Instant.parse(value)
+            fromEpochMillis(instant.toEpochMilli()).asSuccess()
+        } catch (ex: DateTimeParseException) {
+            fail(this.type, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+        }
+    }
+
+    override fun serialize(
+        key: String,
+        value: T?,
+        strategy: SerializationStrategy
+    ) {
+        val result = value?.let { Instant.ofEpochMilli(it.time).toString() }
+        strategy.add(key, result)
+    }
+
+    protected abstract fun fromEpochMillis(time: Long): T
+}
+
+object JavaUtilDateScalarConverter: PreJavaTimeScalarConverterBase<java.util.Date>() {
+    override val type = java.util.Date::class
+
+    override fun fromEpochMillis(time: Long): Date = Date(time)
+}
+
+object JavaSqlDateScalarConverter: PreJavaTimeScalarConverterBase<java.sql.Date>() {
+    override val type = java.sql.Date::class
+
+    override fun fromEpochMillis(time: Long): java.sql.Date = java.sql.Date(time)
+}
+
+object JavaSqlTimestampScalarConverter: PreJavaTimeScalarConverterBase<java.sql.Timestamp>() {
+    override val type = java.sql.Timestamp::class
+
+    override fun fromEpochMillis(time: Long): java.sql.Timestamp = java.sql.Timestamp(time)
 }
 
 private fun decoderFor(value: String): Base64.Decoder? {
