@@ -70,7 +70,7 @@ class EnumScalarConverter<E : Enum<E>>(
 
     private val map: Map<String, E> by lazy {
         type.java.enumConstants.flatMap { e ->
-            enumNameVariants(e.name).map { it to e }
+            enumNameVariants(e.toString()).map { it to e }
         }.toMap()
     }
 
@@ -88,9 +88,16 @@ class EnumScalarConverter<E : Enum<E>>(
     }
 }
 
+private fun isCamelCase(value: String) : Boolean {
+    if (value.isBlank()) return false
+    if (!value[0].isLowerCase()) return false
+    if (value.contains('_') || value.contains('-')) return false
+    return value.any { it.isUpperCase() }
+}
+
 private fun enumNameVariants(name: String): Iterable<String> {
     val set = mutableSetOf(name)
-    val unCameled = if (name[0].isLowerCase()) {//Assume camel case
+    val unCameled = if (isCamelCase(name)) {//Assume camel case
         name.fold("") { acc, c ->
             if (c.isUpperCase()) {
                 acc + '_' + c.toLowerCase()
