@@ -1,0 +1,114 @@
+---
+---
+
+//noinspection CssUnknownTarget
+@import "minima";
+
+a.header-edit-button {
+  color: white;
+
+  &:hover {
+    color: #002e5d;
+  }
+
+  .fab {
+    font-size: 16px;
+    margin-right: 6px;
+  }
+}
+
+@mixin content-part {
+  margin: 0 auto;
+  max-width: 1200px;
+  width: 100vw;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  min-height: 100vh;
+}
+
+.page-content {
+  flex-grow: 1;
+  @include content-part;
+  &.no-left-padding {
+    padding-left: 0;
+  }
+}
+
+[slot=site-title].subtitle {
+  font-size: 0.75em !important;
+}
+
+byu-header img {
+  vertical-align: unset;
+}
+
+.collection-nav {
+  @include content-part;
+}
+
+$collection-nav-horiz-padding: 16px;
+$collection-nav-vertical-padding: 0.125em;
+$collection-nav-padding: $collection-nav-vertical-padding $collection-nav-horiz-padding;
+
+.collection-links {
+  margin: 0;
+  font-size: 0.9em;
+  color: black;
+}
+
+$collection-nav-active-border-size: 4px;
+
+.collection-links>li {
+  display: block;
+  color: black;
+  &.active {
+    background-color: #f2f2f2;
+    border-left: $collection-nav-active-border-size solid #0057bb;
+  }
+}
+
+.collection-links a {
+  color: black;
+  text-decoration: none;
+  display: inline-block;
+  width: 100%;
+  padding: $collection-nav-padding;
+  height: 100%;
+}
+
+.collection-links>li.active a {
+  padding-left: $collection-nav-horiz-padding - $collection-nav-active-border-size;
+}
+
+.collection-nav-title {
+  text-transform: uppercase;
+  font-size: 0.75em;
+  padding: $collection-nav-padding;
+  color: #0057B8;
+  font-weight: bold;
+}
+
+@media (min-width: 1024px) {
+  $desktop-nav-width: 225px;
+
+  .collection-wrapper {
+      display: flex;
+      flex-direction: row;
+  }
+
+  .collection-nav {
+    width: $desktop-nav-width;
+    box-sizing: border-box;
+  }
+
+  .collection-contents {
+    flex: 1;
+  }
+}
+

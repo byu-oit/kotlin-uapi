@@ -3,8 +3,23 @@ defaults:
     path: "" # an empty string here means all files in the project
   values:
     layout: "default"
+- scope:
+    path: "content/*/*.md"
+  values:
+    layout: "collection"
+
 theme: minima
 title: University API - Kotlin
+
+collections_dir: content
+
+collections:
+  tutorial:
+    output: true
+    order: 1
+  reference:
+    output: true
+    order: 2
 
 plugins:
 - jekyll-relative-links

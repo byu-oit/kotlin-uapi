@@ -1,0 +1,32 @@
+---
+layout: default
+content_class: "no-left-padding"
+---
+<div class="collection-wrapper">
+    {%- if page.collection -%}
+    {%- assign group = site.collections | where_exp:"i","i.label == page.collection" | first -%}
+    {%- assign grIndex = group.docs | where_exp:"item","item.path contains '/index.md'" | first -%}
+    {%- assign groupPages = group.docs | sort:"order" | where_exp:"item","item.path != grIndex.path" -%}
+    <nav class="collection-nav">
+        <div class="collection-nav-title" role="heading">
+            {{grIndex.title}}
+        </div>
+        <ul class="collection-links">
+            {%- for gpage in groupPages -%}
+            {%- if page.url == gpage.url -%}
+                {%- assign linkClass = 'active' -%}
+            {%- else -%}
+                {%- assign linkClass = '' -%}
+            {%- endif %}
+            <li class="{{linkClass}}"><a href="{{gpage.url | relative_url}}">{{gpage.short_title | default: gpage.title}}</a></li>
+            {%- endfor -%}
+        </ul>
+    </nav>
+    {%- endif -%}
+    <div class="collection-contents">
+        {{content}}
+    </div>
+</div>
+<div class="collection-prev-next">
+    {%- assign prev = groupPages -%}
+</div>

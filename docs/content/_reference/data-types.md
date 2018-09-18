@@ -1,5 +1,6 @@
 ---
 title: Built-in Data Types
+short_title: Data Types
 ---
 
 # Built-in Data Types
