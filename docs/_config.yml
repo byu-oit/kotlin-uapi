@@ -6,7 +6,13 @@ defaults:
   values:
     layout: "default"
 - scope:
-    path: "content/*/*.md"
+    path: ""
+    type: "tutorial"
+  values:
+    layout: "collection"
+- scope:
+    path: ""
+    type: "reference"
   values:
     layout: "collection"
 
