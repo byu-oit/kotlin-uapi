@@ -3,6 +3,7 @@
 
 //noinspection CssUnknownTarget
 @import "minima";
+@import "syntax-base16-unikitty-light";
 
 a.header-edit-button {
   color: white;
@@ -142,7 +143,8 @@ $collection-nav-active-border-size: 4px;
     display: block;
     padding: 8px 16px;
     color: inherit;
-    transition: all 0.3s;
+    transition-property: background-color, color;
+    transition-duration: 0.3s;
     &:hover {
       color: #0057b8;
       background-color: #e6e6e6;
