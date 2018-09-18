@@ -1,6 +1,6 @@
 ---
 title: Key Concepts
-order: 2
+order: 1
 ---
 
 # Key Concepts and Terms
