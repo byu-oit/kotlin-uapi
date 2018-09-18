@@ -5,5 +5,11 @@ package edu.byu.uapi.kotlin.examples.library
  * kotlin-uapi-dsl-pom
  */
 class Copy (val copyId: Int,
-            val book: Book) {
+            val book: Book,
+            var checkedOutHistory: List<CheckedOutCopy>) {
+    val currentCheckedOutCopy: CheckedOutCopy?
+        get() = checkedOutHistory.firstOrNull { it.returnedDateTime == null }
+    val isCheckedOut: Boolean
+        get() = checkedOutHistory.isEmpty() || checkedOutHistory.any { it.returnedDateTime == null }
+
 }

@@ -6,5 +6,7 @@ package edu.byu.uapi.kotlin.examples.library
  */
 class CardHolder (val cardholderId: Int,
                   val name: String,
-                  val checkedOutCopies: Set<CheckedOutCopy>) {
+                  val checkedOutHistory: List<CheckedOutCopy>) {
+    val currentCheckedOutCopies: List<CheckedOutCopy>
+        get() = checkedOutHistory.filter { it.returnedDateTime == null }
 }

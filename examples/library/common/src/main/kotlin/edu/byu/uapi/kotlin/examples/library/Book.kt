@@ -6,8 +6,12 @@ class Book (val oclc: Long,
             val subtitles: String? = null,
             val publishedYear: Int,
             val publisher: Publisher,
-            val authors: Set<Author>,
-            val genres: Set<Genre>,
-            val copies: Set<Copy>) {
+            val authors: List<Author>,
+            val genres: List<Genre>) {
+
+    override fun toString(): String {
+        return "Book(oclc=$oclc, isbn=$isbn, title='$title', subtitles=$subtitles, publishedYear=$publishedYear, publisher=$publisher, authors=$authors, genres=$genres)"
+    }
+
 
 }

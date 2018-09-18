@@ -6,4 +6,8 @@ package edu.byu.uapi.kotlin.examples.library
  */
 
 class Genre (val genreId: Int,
-             val name: String)
+             val name: String){
+    override fun toString(): String {
+        return name
+    }
+}

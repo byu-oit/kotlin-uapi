@@ -6,4 +6,8 @@ package edu.byu.uapi.kotlin.examples.library
  */
 
 class Publisher (val publisherId: Int,
-                 val name: String)
+                 val name: String){
+    override fun toString(): String {
+        return name
+    }
+}

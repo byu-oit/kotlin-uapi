@@ -20,13 +20,13 @@ object DB {
     private fun ensureInitialized(connection: Connection) {
         if (initialized) return
         val hasSchema = connection.prepareStatement("select count(*) from information_schema.schemata where schema_name = ?").use { ps ->
-                ps.setString(1, schema)
-                ps.executeQuery().use { rs ->
-                    rs.first()
-                    val result = rs.getInt(1)
-                    result == 1
-                }
+            ps.setString(1, schema)
+            ps.executeQuery().use { rs ->
+                rs.first()
+                val result = rs.getInt(1)
+                result == 1
             }
+        }
         if (!hasSchema) {
             connection.prepareCall("runscript from 'classpath:/sql/init.sql'").use {
                 it.execute()
