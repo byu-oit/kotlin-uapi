@@ -105,7 +105,6 @@ $collection-nav-active-border-size: 4px;
       color: #002e5d;
     }
   }
-
 }
 
 @media (min-width: 1024px) {
@@ -131,7 +130,6 @@ $collection-nav-active-border-size: 4px;
   .collection-contents {
     flex: 1;
   }
-
 }
 
 .collection-prev-next {
@@ -146,7 +144,6 @@ $collection-nav-active-border-size: 4px;
     color: inherit;
     transition: all 0.3s;
     &:hover {
-      //color: #002e5d;
       color: #0057b8;
       background-color: #e6e6e6;
       text-decoration: none;
