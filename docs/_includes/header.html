@@ -10,10 +10,10 @@
     {%- assign ordered_paths = page_paths | sort:"order" -%}
     <header slot="site-title">{{ site.title | escape }}</header>
     <byu-menu slot="nav">
-        <a class="{% if isHome == true %}active{% endif %}" href="{{site.url}}">Home</a>
+        <a class="{% if isHome == true %}active{% endif %}" href="{{ '/' | relative_url }}">Home</a>
         {%- for group in groups -%}
         {%- assign grIndex = group.docs | where_exp:"item","item.path contains '/index.md'" | first -%}
-        <a href="{{grIndex.url}}" class="{% if page.collection == group.label %}active{% endif %}">{{grIndex.title}}</a>
+        <a href="{{grIndex.url | relative_url }}" class="{% if page.collection == group.label %}active{% endif %}">{{grIndex.title}}</a>
         {%- endfor -%}
     </byu-menu>
     <a class="header-edit-button" slot="actions" href="https://github.com/byu-oit/kotlin-uapi/edit/master/docs/{{page.path}}">

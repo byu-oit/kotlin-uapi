@@ -1,3 +1,5 @@
+baseurl: /kotlin-uapi/
+
 defaults:
 - scope:
     path: "" # an empty string here means all files in the project
@@ -23,3 +25,7 @@ collections:
 
 plugins:
 - jekyll-relative-links
+
+relative_links:
+  enabled:     true
+  collections: true
