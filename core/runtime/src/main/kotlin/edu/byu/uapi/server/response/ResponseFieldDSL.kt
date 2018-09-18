@@ -1,17 +1,28 @@
 package edu.byu.uapi.server.response
 
-fun <UserContext: Any, Model: Any> uapiResponse(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
-: List<ResponseFieldDefinition<UserContext, Model, *, *>> {
-    TODO()
+inline fun <UserContext : Any, Model : Any> uapiResponse(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
+    : List<ResponseFieldDefinition<UserContext, Model, *, *>> {
+    val r = UAPIResponseInit<UserContext, Model>()
+    r.fn()
+    return emptyList()
 }
 
-class UAPIResponseInit<UserContext, Model: Any>() {
-    inline fun <reified T> prop(name: String, fn: UAPIPropInit<UserContext, Model, T>.() -> Unit) {
-
+class UAPIResponseInit<UserContext, Model : Any>() {
+    inline fun <reified T> prop(
+        name: String,
+        fn: UAPIPropInit<UserContext, Model, T>.() -> Unit
+    ) {
+        val p = UAPIPropInit<UserContext, Model, T>(isNullable<T>())
+        p.fn()
     }
+
+    inline fun <reified T> isNullable(): Boolean = null is T
+
 }
 
-class UAPIPropInit<UserContext, Model, Type>() {
+class UAPIPropInit<UserContext, Model, Type>(
+    val nullable: Boolean
+) {
     fun getValue(fn: (Model) -> Type?) {
 
     }
