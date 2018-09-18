@@ -49,13 +49,13 @@ create table if not exists cardholder (
   name varchar(255) not null
 );
 
-create table if not exists borrow (
-  borrow_id bigint identity primary key not null,
+create table if not exists checked_out_copy (
+  checked_out_copy_id bigint identity primary key not null,
   copy_id bigint not null references book_copy(copy_id),
   cardholder_id bigint not null references cardholder(cardholder_id),
-  borrowed timestamp not null default current_timestamp,
+  checked_out_datetime timestamp not null default current_timestamp,
   due_date date not null,
-  actual_return timestamp,
+  returned_datetime timestamp,
   reshelved boolean
 );
 
@@ -148,7 +148,7 @@ values (1, 'Joe Student'),
        (4, 'Lucy Pevensie')
 ;
 
-insert into borrow (copy_id, CARDHOLDER_ID, borrowed, due_date, actual_return, reshelved)
+insert into checked_out_copy (copy_id, CARDHOLDER_ID, checked_out_datetime, due_date, returned_datetime, reshelved)
 values (1, 1, TIMESTAMP '2010-01-01 00:00:00', date '2010-01-15', timestamp '2010-01-14 12:13:45', true),
        (1, 2, timestamp '2013-02-02 10:52:34', date '2013-02-16', timestamp '2013-02-20 14:01:02', true),
        (1, 3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
