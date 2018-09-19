@@ -72,7 +72,7 @@ $collection-nav-active-border-size: 4px;
     border-left: $collection-nav-active-border-size solid #0057bb;
   }
   transition-property: background-color, color, border-left-color;
-  transition: 0.3s;
+  transition-duration: 0.3s;
 }
 
 .collection-links a {
