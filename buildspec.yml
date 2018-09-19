@@ -7,7 +7,7 @@ phases:
       - mvn clean install
   post_build:
     commands:
-      - mvn deploy
+      - mvn deploy -P '!build-tutorial-steps' # don't try to deploy the tutorial
 cache:
   paths:
     - '/root/.m2/repository/**/*'

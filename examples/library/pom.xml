@@ -13,7 +13,6 @@
     <modules>
         <module>common</module>
         <module>interface-style</module>
-        <module>tutorial-steps</module>
     </modules>
 
     <parent>
@@ -41,5 +40,17 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <profile>
+            <id>build-tutorial-steps</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>tutorial-steps</module>
+            </modules>
+        </profile>
+    </profiles>
 
 </project>
