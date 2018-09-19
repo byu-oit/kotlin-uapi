@@ -44,4 +44,9 @@ You can feel free to remove the `junit` and `kotlin-test` dependencies,
 as well as `src/main/kotlin/edu/byu/uapi/library/Hello.kt` and 
 `src/test/kotlin/edu/byu/uapi/library/HelloTest.kt`.
 
+At the end of this step of the tutorial, your code should look something
+[like this](https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/1-initial-setup).
+
 Now you're ready to start coding!
+
+

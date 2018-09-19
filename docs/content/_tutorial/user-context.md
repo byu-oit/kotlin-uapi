@@ -259,3 +259,7 @@ If you don't, the User Context Factory will send an error telling you to do so.
 {% endcapture %}
 {% include callouts/workaround.html content=oid_workaround %}
 
+At the end of this step of the tutorial, your code should look something
+[like this](https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/3-user-context).
+
+Now, let's implement a resource!

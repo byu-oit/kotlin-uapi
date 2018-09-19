@@ -93,5 +93,9 @@ in your main class:
 
 !['Run' icon in IntelliJ IDEA](./img/main-class-run.png)
 
+
+At the end of this step of the tutorial, your code should look something
+[like this](https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/2-main-class).
+
 Now, let's learn about that `UserContextFactory` we stubbed out!
 
