@@ -1,36 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
-        <artifactId>kotlin-uapi-library-example-pom</artifactId>
-        <groupId>edu.byu.uapi.kotlin.examples</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>library-example-interface-style</artifactId>
+    <artifactId>jwt-user-context-factory</artifactId>
+
     <packaging>jar</packaging>
 
-    <name>Kotlin UAPI Examples - Library - Interface Style</name>
+    <name>Kotlin UAPI Utilities - JWT User Context Factory</name>
+
+    <parent>
+        <groupId>edu.byu.uapi.kotlin.utilities</groupId>
+        <artifactId>kotlin-uapi-utilities-pom</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.2.70</kotlin.version>
         <dependencies.checkUnused>false</dependencies.checkUnused>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>edu.byu.uapi.kotlin</groupId>
-                <artifactId>uapi-bom</artifactId>
-                <version>1.0-SNAPSHOT</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -38,31 +34,30 @@
             <artifactId>uapi-runtime</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.http</groupId>
-            <artifactId>spark-http-adapter</artifactId>
+            <groupId>edu.byu.jwt</groupId>
+            <artifactId>byu-jwt</artifactId>
+            <version>2.1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>library-example-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
-            <version>${kotlin.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+
 
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-core</artifactId>
-            <version>3.1.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-assertions</artifactId>
-            <version>3.1.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -73,7 +68,6 @@
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-runner-junit5</artifactId>
-            <version>3.1.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -82,34 +76,17 @@
             <version>2.0.0-RC1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.25</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
-        <sourceDirectory>src/main/kotlin</sourceDirectory>
-        <testSourceDirectory>src/test/kotlin</testSourceDirectory>
-
         <plugins>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.0</version>
@@ -118,7 +95,7 @@
                         <groupId>org.junit.platform</groupId>
                         <artifactId>junit-platform-surefire-provider</artifactId>
                         <version>${junit.platform.version}</version>
-                    </dependency>
+                   </dependency>
                 </dependencies>
                 <configuration>
                     <includes>
@@ -129,5 +106,34 @@
             </plugin>
         </plugins>
     </build>
+
+    <!--<build>-->
+    <!--<sourceDirectory>src/main/kotlin</sourceDirectory>-->
+    <!--<testSourceDirectory>src/test/kotlin</testSourceDirectory>-->
+
+    <!--<plugins>-->
+    <!--<plugin>-->
+    <!--<groupId>org.jetbrains.kotlin</groupId>-->
+    <!--<artifactId>kotlin-maven-plugin</artifactId>-->
+    <!--<version>${kotlin.version}</version>-->
+    <!--<executions>-->
+    <!--<execution>-->
+    <!--<id>compile</id>-->
+    <!--<phase>compile</phase>-->
+    <!--<goals>-->
+    <!--<goal>compile</goal>-->
+    <!--</goals>-->
+    <!--</execution>-->
+    <!--<execution>-->
+    <!--<id>test-compile</id>-->
+    <!--<phase>test-compile</phase>-->
+    <!--<goals>-->
+    <!--<goal>test-compile</goal>-->
+    <!--</goals>-->
+    <!--</execution>-->
+    <!--</executions>-->
+    <!--</plugin>-->
+    <!--</plugins>-->
+    <!--</build>-->
 
 </project>

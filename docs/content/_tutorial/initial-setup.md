@@ -40,4 +40,8 @@ as the UAPI Bill of Materials POM does not include the example code.
 </dependency>
 ```
 
+You can feel free to remove the `junit` and `kotlin-test` dependencies,
+as well as `src/main/kotlin/edu/byu/uapi/library/Hello.kt` and 
+`src/test/kotlin/edu/byu/uapi/library/HelloTest.kt`.
+
 Now you're ready to start coding!

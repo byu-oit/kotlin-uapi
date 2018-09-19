@@ -2,6 +2,7 @@ package edu.byu.uapi.kotlin.examples.library
 
 import edu.byu.uapi.kotlin.examples.library.impl.BookResource
 import edu.byu.uapi.kotlin.examples.library.impl.MyUserContextFactory
+import edu.byu.uapi.http.spark.startSpark
 import edu.byu.uapi.server.UAPIRuntime
 
 /**
@@ -13,5 +14,6 @@ fun main(args: Array<String>) {
 
     runtime.register("books", BookResource())
 
+    runtime.startSpark()
 
 }

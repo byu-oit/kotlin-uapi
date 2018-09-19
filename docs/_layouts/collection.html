@@ -14,33 +14,35 @@ content_class: "has-collection"
         <ul class="collection-links">
             {%- for gpage in groupPages -%}
             {%- if page.url == gpage.url -%}
-                {%- assign linkClass = 'active' -%}
+            {%- assign linkClass = 'active' -%}
             {%- else -%}
-                {%- assign linkClass = '' -%}
+            {%- assign linkClass = '' -%}
             {%- endif %}
-            <li class="{{linkClass}}"><a href="{{gpage.url | relative_url}}">{{gpage.short_title | default: gpage.title}}</a></li>
+            <li class="{{linkClass}}"><a href="{{gpage.url | relative_url}}">{{gpage.short_title | default:
+                gpage.title}}</a></li>
             {%- endfor -%}
         </ul>
     </nav>
     {%- endif -%}
-    <div class="collection-content-wrapper">
-        <div class="collection-contents">
+    <div class="collection-contents">
         {{content}}
-        </div>
-        <div class="collection-prev-next">
-            {%- assign myOrder = page.order | default: -999999 -%}
-            {%- if page.url == grIndex.url -%}
-            {%- assign myOrder = -9999999 -%}
-            {%- else -%}
-            {%- assign maybePrev = groupPages | where_exp:"item","item.order < myOrder" | last -%}
-            {%- assign prev = maybePrev | default: grIndex -%}
-            <a href="{{prev.url | relative_url}}" class="collection-prev"><i aria-label="Previous" title="Previous" class="fas fa-arrow-circle-left"></i> {{prev.title}}</a>
-            {%- endif -%}
+    </div>
+    <div class="collection-prev-next">
+        {%- assign myOrder = page.order | default: -999999 -%}
+        {%- if page.url == grIndex.url -%}
+        {%- assign myOrder = -9999999 -%}
+        {%- else -%}
+        {%- assign maybePrev = groupPages | where_exp:"item","item.order < myOrder" | last -%}
+        {%- assign prev = maybePrev | default: grIndex -%}
+        <a href="{{prev.url | relative_url}}" class="collection-prev"><i aria-label="Previous" title="Previous"
+                                                                         class="fas fa-arrow-circle-left"></i>
+            {{prev.title}}</a>
+        {%- endif -%}
 
-            {%- assign next = groupPages | where_exp:"item","item.order > myOrder" | first -%}
-            {%- if next -%}
-            <a href="{{next.url | relative_url}}" class="collection-next">{{next.title}} <i aria-label="Next" title="Next" class="fas fa-arrow-circle-right"></i></a>
-            {%- endif -%}
-        </div>
+        {%- assign next = groupPages | where_exp:"item","item.order > myOrder" | first -%}
+        {%- if next -%}
+        <a href="{{next.url | relative_url}}" class="collection-next">{{next.title}} <i aria-label="Next" title="Next"
+                                                                                        class="fas fa-arrow-circle-right"></i></a>
+        {%- endif -%}
     </div>
 </div>

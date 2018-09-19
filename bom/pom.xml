@@ -30,6 +30,11 @@
                 <artifactId>spark-http-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.kotlin.utilities</groupId>
+                <artifactId>jwt-user-context-factory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

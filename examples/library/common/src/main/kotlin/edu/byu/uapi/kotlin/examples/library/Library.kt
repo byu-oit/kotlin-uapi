@@ -32,7 +32,7 @@ object Library {
             connection.prepareStatement(sql).use { preparedStatement ->
                 preparedStatement.setLong(1, byOclc)
                 preparedStatement.executeQuery().use { resultSet ->
-                    return if (resultSet.first()){
+                    return if (resultSet.first()) {
                         convertResultSetToBook(resultSet)
                     } else {
                         null
@@ -82,7 +82,7 @@ object Library {
                 preparedStatement.setLong(1, forOclc)
                 preparedStatement.executeQuery().use { resultSet ->
                     val authors = mutableListOf<Author>()
-                    while (resultSet.next()){
+                    while (resultSet.next()) {
                         authors.add(Author(resultSet.getInt("author_id"), resultSet.getString("name")))
                     }
                     return authors
@@ -97,7 +97,7 @@ object Library {
                 preparedStatement.setLong(1, forOclc)
                 preparedStatement.executeQuery().use { resultSet ->
                     val genres = mutableListOf<Genre>()
-                    while (resultSet.next()){
+                    while (resultSet.next()) {
                         genres.add(Genre(resultSet.getInt("genre_id"), resultSet.getString("name")))
                     }
                     return genres
@@ -105,20 +105,58 @@ object Library {
             }
         }
     }
+//
+//    fun getCardholderByNetId(netId: String): CardHolder? {
+//        return DB.openConnection().use { conn ->
+//            conn
+//                .prepareStatement("select cardholder_id, net_id, name from library.cardholder where net_id = ?")
+//                .use { ps ->
+//                    ps.setString(1, netId)
+//                    ps.executeQuery().use {
+//                        if (it.next()) {
+//                            val id = it.getInt(1)
+//                            val nid = it.getString(2)
+//                            val name = it.getString(3)
+//
+//                            val history = emptyList<CheckedOutCopy>() // There's a circular dependency here to be sorted otu
+//
+//                            CardHolder(id, nid, name, history)
+//                        } else {
+//                            null
+//                        }
+//                    }
+//                }
+//        }
+//    }
+
+    fun getCardholderIdForNetId(netId: String): Int? =
+        DB.openConnection().use { conn ->
+            conn.prepareStatement("select cardholder_id from library.CARDHOLDER where net_id = ?").use { ps ->
+                ps.setString(1, netId)
+                ps.executeQuery().use { rs ->
+                    if (rs.next()) {
+                        rs.getInt(1)
+                    } else {
+                        null
+                    }
+                }
+            }
+
+        }
 
     private fun convertResultSetToBook(rs: ResultSet): Book {
         val publisher = getPublisher(rs.getInt("publisher_id"))
         val oclc = rs.getLong("oclc")
         return Book(oclc,
-            rs.getString("isbn"),
-            rs.getString("title"),
-            rs.getString("subtitles"),
-            rs.getInt("published_year"),
+                    rs.getString("isbn"),
+                    rs.getString("title"),
+                    rs.getString("subtitles"),
+                    rs.getInt("published_year"),
 //            Publisher(rs.getInt("publisher_id"), rs.getString("name")),
-            publisher!!,
-            getAuthors(oclc),
-            getGenres(oclc)
-            )
+                    publisher!!,
+                    getAuthors(oclc),
+                    getGenres(oclc)
+        )
     }
 }
 

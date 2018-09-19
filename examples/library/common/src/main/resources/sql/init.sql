@@ -46,6 +46,7 @@ create table if not exists book_copy (
 
 create table if not exists cardholder (
   cardholder_id bigint identity primary key not null,
+  net_id varchar2(20) null unique,
   name varchar(255) not null
 );
 
@@ -141,11 +142,11 @@ values (1, 733291011),
        (17, 23033258)
 ;
 
-insert into cardholder (CARDHOLDER_ID, name)
-values (1, 'Joe Student'),
-       (2, 'Cosmo Cougar'),
-       (3, 'Shallan Davar'),
-       (4, 'Lucy Pevensie')
+insert into cardholder (CARDHOLDER_ID, net_id, name)
+values (1, 'jstudent', 'Joe Student'),
+       (2, 'cosmo', 'Cosmo Cougar'),
+       (3, 'realshallan', 'Shallan Davar'),
+       (4, 'thevaliant', 'Lucy Pevensie')
 ;
 
 insert into checked_out_copy (copy_id, CARDHOLDER_ID, checked_out_datetime, due_date, returned_datetime, reshelved)

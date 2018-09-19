@@ -12,7 +12,8 @@
 
     <modules>
         <module>common</module>
-	<module>interface-style</module>
+        <module>interface-style</module>
+        <module>tutorial-steps</module>
     </modules>
 
     <parent>

@@ -5,6 +5,7 @@ package edu.byu.uapi.kotlin.examples.library
  * kotlin-uapi-dsl-pom
  */
 class CardHolder (val cardholderId: Int,
+                  val netId: String,
                   val name: String,
                   val checkedOutHistory: List<CheckedOutCopy>) {
     val currentCheckedOutCopies: List<CheckedOutCopy>

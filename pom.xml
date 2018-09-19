@@ -31,6 +31,7 @@
 
         <!--<module>old/adapters</module>-->
 
+        <module>utilities</module>
         <module>examples</module>
         <module>bom</module>
     </modules>
