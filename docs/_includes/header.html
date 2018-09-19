@@ -27,7 +27,7 @@
 <!-- - {{group.label}}-->
 {%- assign groupPages = group.docs | sort:"order" -%}
 {%- for p in groupPages -%}
-<!--   - {{p.title}} {{p.url}}-->
+<!--   - {{p.title}} {{p.url}} {{p.path}} -->
 {%- endfor -%}
 {%- endfor -%}
 <!-- -------- END DEBUG: Group Contents ----------- -->

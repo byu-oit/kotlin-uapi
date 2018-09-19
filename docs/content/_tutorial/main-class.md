@@ -1,9 +1,8 @@
 ---
 title: Main Class
 order: 2
+tutorial_source: https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/2-main-class
 ---
-
-# Main Class
 
 Since we're building our example to run inside of an embedded microservice framework like Spark, we get to write
 something that you may not have seen in a very long time - a `main` method!
@@ -92,10 +91,6 @@ You can also set up a run configuration in your IDE. If you're using IntelliJ, l
 in your main class:
 
 !['Run' icon in IntelliJ IDEA](./img/main-class-run.png)
-
-
-At the end of this step of the tutorial, your code should look something
-[like this](https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/2-main-class).
 
 Now, let's learn about that `UserContextFactory` we stubbed out!
 

@@ -2,9 +2,8 @@
 title: Authorization with User Context
 short_title: User Context
 order: 3
+tutorial_source: https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/3-user-context
 ---
-
-# Authorization with User Context
 
 The UAPI Runtime tries to bake authorization and permissions-checking into all levels of the application.
 This allows us to make things easier both for you and those who call your API. For example, the
@@ -258,8 +257,5 @@ If you don't, the User Context Factory will send an error telling you to do so.
 
 {% endcapture %}
 {% include callouts/workaround.html content=oid_workaround %}
-
-At the end of this step of the tutorial, your code should look something
-[like this](https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/3-user-context).
 
 Now, let's implement a resource!
