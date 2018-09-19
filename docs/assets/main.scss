@@ -66,7 +66,7 @@ $collection-nav-active-border-size: 4px;
   box-sizing: border-box;
   display: block;
   color: black;
-  border-left: $collection-nav-active-border-size solid transparent;
+  border-left: $collection-nav-active-border-size solid white;
   &.active {
     background-color: #e6e6e6;
     border-left: $collection-nav-active-border-size solid #0057bb;

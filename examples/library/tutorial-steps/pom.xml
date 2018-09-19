@@ -15,6 +15,7 @@
         <module>1-initial-setup</module>
         <module>2-main-class</module>
         <module>3-user-context</module>
+        <module>4-creating-a-resource</module>
     </modules>
 
 </project>

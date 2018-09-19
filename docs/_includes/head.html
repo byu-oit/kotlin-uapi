@@ -1,10 +1,18 @@
 <head>
+    {%- assign theme_version = 'experimental/ringside-switch' -%}
+
+    <link rel="preload" as="style" href="https://use.fontawesome.com/releases/v5.3.1/css/solid.css" crossorigin="anonymous">
+    <link rel="preload" as="style" href="https://use.fontawesome.com/releases/v5.3.1/css/brands.css" crossorigin="anonymous">
+    <link rel="preload" as="style" href="https://use.fontawesome.com/releases/v5.3.1/css/fontawesome.css" crossorigin="anonymous">
+    <link rel="preload" as="style" href="https://cdn.byu.edu/byu-theme-components/{{theme_version}}/byu-theme-components.min.css" crossorigin="anonymous" />
+    <link rel="preload" as="script" href="https://cdn.byu.edu/byu-theme-components/{{theme_version}}/byu-theme-components.min.js" crossorigin="anonymous" />
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href='{{ "/assets/main.css" | relative_url }}'>
-    <link rel="stylesheet" href="https://cdn.byu.edu/byu-theme-components/experimental/ringside-switch/byu-theme-components.min.css" />
-    <script async src="https://cdn.byu.edu/byu-theme-components/experimental/ringside-switch/byu-theme-components.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.byu.edu/byu-theme-components/{{theme_version}}/byu-theme-components.min.css" crossorigin="anonymous" />
+    <script async src="https://cdn.byu.edu/byu-theme-components/{{theme_version}}/byu-theme-components.min.js" crossorigin="anonymous"></script>
 
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/solid.css" integrity="sha384-VGP9aw4WtGH/uPAOseYxZ+Vz/vaTb1ehm1bwx92Fm8dTrE+3boLfF1SpAtB1z7HW" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/brands.css" integrity="sha384-rf1bqOAj3+pw6NqYrtaE1/4Se2NBwkIfeYbsFdtiR6TQz0acWiwJbv1IM/Nt/ite" crossorigin="anonymous">

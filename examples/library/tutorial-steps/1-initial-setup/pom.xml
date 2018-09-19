@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>edu.byu.uapi.library</groupId>
-    <artifactId>library-tutorial-api-1</artifactId>
+    <artifactId>tutorial-1-initial-setup</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 

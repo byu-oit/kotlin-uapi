@@ -185,7 +185,7 @@ Now, we have a `UserContextFactory` that can actually create a user context!
 ## Local Testing
 
 If you've developed APIs that consume JWTs before, you may be thinking to yourself "But what about running this locally!
-Getting a valid JWT isn't easy!".
+Getting a valid JWT isn't easy!"
 
 In order to make this easier, we've provided a `UserContextFactory` that can wrap another and will automatically turn
 a valid, WSO2-issued OAuth Bearer Token into a JWT, ready for consumption by your `UserContextFactory`:

@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>edu.byu.uapi.library</groupId>
-    <artifactId>tutorial-2-main-class</artifactId>
+    <artifactId>tutorial-4-creating-a-resource</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>library-tutorial-api 2-main-class</name>
+    <name>library-tutorial-api 4-creating-a-resource</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.2.70</kotlin.version>
@@ -34,6 +34,10 @@
         <dependency>
             <groupId>edu.byu.uapi.kotlin.http</groupId>
             <artifactId>spark-http-adapter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.byu.uapi.kotlin.utilities</groupId>
+            <artifactId>jwt-user-context-factory</artifactId>
         </dependency>
 
         <dependency>
@@ -81,6 +85,14 @@
                 <version>1.6.0</version>
                 <configuration>
                     <mainClass>LibraryAppKt</mainClass>
+
+                    <systemProperties>
+                        <systemProperty>
+                            <key>ENV</key>
+                            <value>local</value>
+                        </systemProperty>
+                    </systemProperties>
+
                 </configuration>
             </plugin>
         </plugins>
