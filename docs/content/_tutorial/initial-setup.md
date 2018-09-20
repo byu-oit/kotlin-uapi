@@ -39,6 +39,14 @@ as the UAPI Bill of Materials POM does not include the example code.
 </dependency>
 ```
 
+We also need to tell the Kotlin compiler to target Java 8. Add the following to the Kotlin maven plugin configuration:
+
+```xml
+<configuration>
+    <jvmTarget>1.8</jvmTarget>
+</configuration>
+```
+
 You can feel free to remove the `junit` and `kotlin-test` dependencies,
 as well as `src/main/kotlin/edu/byu/uapi/library/Hello.kt` and 
 `src/test/kotlin/edu/byu/uapi/library/HelloTest.kt`.

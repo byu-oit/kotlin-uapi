@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>edu.byu.uapi.library</groupId>
-    <artifactId>tutorial-4-creating-a-resource</artifactId>
+    <artifactId>tutorial-5-response-body</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>library-tutorial-api 4-creating-a-resource</name>
+    <name>library-tutorial-api 5-response-body</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.2.70</kotlin.version>
