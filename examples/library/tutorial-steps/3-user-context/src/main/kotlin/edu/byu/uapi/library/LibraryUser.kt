@@ -9,12 +9,12 @@ import edu.byu.uapi.utilities.jwt.JwtUserContextFactory
 class LibraryUser(
   val netId: String,
   val cardholderId: Int?,
-  val isAdmin: Boolean
+  val isLibrarian: Boolean
 ) {
     val isCardholder = cardholderId != null
 }
 
-private val adminNetIds = setOf("{your NetId here}")
+private val librarianNetIds = setOf("{your NetId here}")
 
 class LibraryUserContextFactory: JwtUserContextFactory<LibraryUser>() {
     override fun createUserContext(
@@ -33,7 +33,7 @@ class LibraryUserContextFactory: JwtUserContextFactory<LibraryUser>() {
         return UserContextResult.Success(LibraryUser(
             netId = netId,
             cardholderId = cardholderId,
-            isAdmin = adminNetIds.contains(netId)
+            isLibrarian = netId in librarianNetIds
         ))
     }
 }

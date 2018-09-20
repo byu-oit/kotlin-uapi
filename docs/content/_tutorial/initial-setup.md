@@ -9,7 +9,7 @@ TODO: Create maven archetypes for UAPI projects - an empty one, and one with dem
 Create a new Kotlin-JVM project. It is easiest to use a Maven Archetype, so that you don't
 have to remember how to do so:
 
-```
+```bash
 mvn archetype:generate -DarchetypeGroupId=org.jetbrains.kotlin -DarchetypeArtifactId=kotlin-archetype-jvm
 ```
 

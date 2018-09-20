@@ -50,8 +50,8 @@ create table if not exists cardholder (
   name varchar(255) not null
 );
 
-create table if not exists checked_out_copy (
-  checked_out_copy_id bigint identity primary key not null,
+create table if not exists loans (
+  loan_id bigint identity primary key not null,
   copy_id bigint not null references book_copy(copy_id),
   cardholder_id bigint not null references cardholder(cardholder_id),
   checked_out_datetime timestamp not null default current_timestamp,

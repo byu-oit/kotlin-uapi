@@ -29,14 +29,14 @@ Let's make you Library User class contain a few simple values:
 class LibraryUser(
   val netId: String,
   val cardholderId: Int?,
-  val isAdmin: Boolean
+  val isLibrarian: Boolean
 ) {
     val isCardholder = cardholderId != null
 }
 
 ```
 
-This should be enough information to make most of our decisions - the caller can be a cardholder, they can be an admin,
+This should be enough information to make most of our decisions - the caller can be a cardholder, they can be a librarian,
 or they can be neither.
 
 As we further develop our application, we'll be returning to this class to add methods which actually make authentication
@@ -81,6 +81,8 @@ queryParams     | Map<String, Set<String>>  | HTTP Query Params
 requestUrl      | String                    | Full request URL
 relativePath    | String                    | Path within the API
 remoteIp        | String                    | Client's IP address
+
+Over time, more fields may be added as they are needed.
 
 `createUserContext` returns an instance of UserContextResult. This is a class which can be one of two types: `UserContextResult.Success`
 and `UserContextResult.Failure`. `Success` simply wraps an instance of your chose User Context class, and `Failure` wraps
@@ -143,20 +145,23 @@ the `JwtUserContextFactory`.
 {% endcapture %}
 {% include callouts/protip.html content=validator_protip %}
 
-To make things easy for you, we're going to cheat a bit and make your list of Admin users be a simple hard-coded list,
+{% capture librarian_list %}
+To make things easy for you, we're going to cheat a bit and make your list of Librarian users be a simple hard-coded list,
 so that you can access your API without having to figure out how to modify the database. This is definitely *NOT* something
 you should do in a real application.
+{% endcapture %}
+{% include callouts/demo.html content=librarian_list %}
 
-Put your NetId into a set called `adminNetIds`:
+Put your NetId into a set called `librarianNetIds`:
 
 ```kotlin
-private val adminNetIds = setOf("{your netId here}")
+private val librarianNetIds = setOf("{your netId here}")
 ```
 
 Now, let's use the `currentJwt` to get the caller's Net Id.  Note that there may not be a logged-in user - this might be a
 system calling us! In that case, we'll include the system's organization identity. If we still don't have a net ID,
 then we'll send back a failure. Then, we'll ask our Library app layer
-for the cardholder ID associated with that netId and check our `adminNetIds` set for the provided NetId:
+for the cardholder ID associated with that netId and check our `librarianNetIds` set for the provided NetId:
 
 ```kotlin
     override fun createUserContext(
@@ -175,7 +180,7 @@ for the cardholder ID associated with that netId and check our `adminNetIds` set
        return UserContextResult.Success(LibraryUser(
            netId = netId,
            cardholderId = cardholderId,
-           isAdmin = adminNetIds.contains(netId)
+           isLibrarian = librarianNetIds.contains(netId)
        )) 
     }
 ```

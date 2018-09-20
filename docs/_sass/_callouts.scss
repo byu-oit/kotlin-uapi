@@ -16,8 +16,8 @@
 }
 
 .callout-header-icon {
-    color: var(--callout-color);
-    margin-right: 0.5em;
+  color: var(--callout-color);
+  margin-right: 0.5em;
   font-size: 35px;
 }
 
@@ -38,5 +38,9 @@
 }
 
 .callout-code {
+  --callout-color: #5F7C9B;
+}
+
+.callout-demo {
   --callout-color: #5F7C9B;
 }
