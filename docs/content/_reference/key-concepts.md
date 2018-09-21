@@ -102,5 +102,6 @@ Changes very infrequently | Changes more frequently
 Effectively Static |  Can be created via the API
 Value with optional descriptions | Arbitrary data
 No relationships | Can have relationships with other resources
+Public Data | May require authorization
 
 
