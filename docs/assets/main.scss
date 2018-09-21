@@ -62,6 +62,12 @@ $collection-nav-padding: $collection-nav-vertical-padding $collection-nav-horiz-
 
 $collection-nav-active-border-size: 4px;
 
+@mixin no-transition-until-load {
+  body:not(.dom-loaded) & {
+    transition: none !important;
+  }
+}
+
 .collection-links > li {
   box-sizing: border-box;
   display: block;
@@ -72,7 +78,8 @@ $collection-nav-active-border-size: 4px;
     border-left: $collection-nav-active-border-size solid #0057bb;
   }
   transition-property: background-color, color, border-left-color;
-  transition-duration: 0.3s;
+  transition-duration: 0.15s;
+  @include no-transition-until-load;
 }
 
 .collection-links a {
