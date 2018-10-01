@@ -2,6 +2,7 @@ package edu.byu.uapi.server.resources.identified
 
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.response.ResponseFieldDefinition
 import io.kotlintest.Description
 import io.kotlintest.data.forall
@@ -42,7 +43,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
             on { it.idType } doReturn String::class
         }
 
-        fixture = IdentifiedResourceRuntime("foo", resource)
+        fixture = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary())
     }
 
     init {
@@ -50,7 +51,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
             context("availableOperations") {
                 it("always includes 'FETCH'") {
                     val foo = FooResource()
-                    val runtime = IdentifiedResourceRuntime("foo", foo)
+                    val runtime = IdentifiedResourceRuntime("foo", foo, DefaultTypeDictionary())
                     runtime.availableOperations should containExactly(IdentifiedResourceOperation.FETCH)
                 }
                 it("should find all provided operations") {
@@ -78,7 +79,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
                             )
                         )
                     ) { ops, resource ->
-                        val runtime = IdentifiedResourceRuntime("foo", resource)
+                        val runtime = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary())
                         val expected = (ops + IdentifiedResourceOperation.FETCH).toTypedArray()
 
                         runtime.availableOperations should containExactlyInAnyOrder(*expected)

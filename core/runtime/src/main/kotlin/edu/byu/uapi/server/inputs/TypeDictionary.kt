@@ -3,20 +3,19 @@ package edu.byu.uapi.server.inputs
 import edu.byu.uapi.server.scalars.EnumScalarConverterHelper
 import edu.byu.uapi.server.scalars.ScalarConverter
 import edu.byu.uapi.server.scalars.defaultScalarConverters
-import edu.byu.uapi.server.types.Failure
 import edu.byu.uapi.server.types.Success
 import edu.byu.uapi.server.types.SuccessOrFailure
 import kotlin.reflect.KClass
 import kotlin.reflect.KClassifier
 
-interface DeserializationContext {
+interface TypeDictionary {
     fun <Type : Any> pathDeserializer(type: KClass<Type>): SuccessOrFailure<PathParamDeserializer<Type>, DeserializationFailure<*>>
     fun <Type : Any> queryDeserializer(type: KClass<Type>): SuccessOrFailure<QueryParamDeserializer<Type>, DeserializationFailure<*>>
 
     fun <Type: Any> scalarConverter(type: KClass<Type>): SuccessOrFailure<ScalarConverter<Type>, DeserializationFailure<*>>
 }
 
-class DefaultDeserializationContext : DeserializationContext {
+class DefaultTypeDictionary : TypeDictionary {
 
     private val explicitScalarConverters = mapOf<KClass<*>, ScalarConverter<*>>() + defaultScalarConverters
 

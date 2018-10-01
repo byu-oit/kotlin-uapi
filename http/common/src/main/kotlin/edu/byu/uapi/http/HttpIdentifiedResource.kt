@@ -127,7 +127,7 @@ class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>(
         request: HttpRequest,
         userContext: UserContext
     ): HttpResponse {
-        val id = resource.constructId(request.path, runtime.deserializationContext)
+        val id = resource.constructId(request.path)
         val resp = resource.handleFetch(userContext, id)
         return resp.toHttpResponse()
     }

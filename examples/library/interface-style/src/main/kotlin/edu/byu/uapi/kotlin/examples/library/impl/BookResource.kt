@@ -45,9 +45,9 @@ class BookResource : IdentifiedResource<
             prop<String>("title") {
                 getValue { book -> book.title }
             }
-            prop<String?>("subtitles") {
-                getValue { book -> book.subtitles }
-            }
+//            prop<String?>("subtitles") {
+//                getValue { book -> book.subtitles }
+//            }
             prop<Int>("published_year") {
                 getValue { book -> book.publishedYear }
             }

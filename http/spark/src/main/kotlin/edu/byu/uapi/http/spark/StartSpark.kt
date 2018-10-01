@@ -2,7 +2,11 @@ package edu.byu.uapi.http.spark
 
 import edu.byu.uapi.http.*
 import edu.byu.uapi.server.UAPIRuntime
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import spark.*
+
+private val LOG: Logger = LoggerFactory.getLogger("edu.byu.uapi.http.spark.StartSpark")
 
 fun <UserContext: Any> UAPIRuntime<UserContext>.startSpark(
     port: Int = 4567
@@ -20,6 +24,8 @@ fun <UserContext: Any> UAPIRuntime<UserContext>.startSpark(
         spark.addRoute(it.method.toSpark(), it.toSpark())
     }
 
+    LOG.info("UAPI-Spark is listening on port {}", port)
+
     return UAPISparkServer(port, resources, spark)
 }
 
@@ -36,6 +42,7 @@ class SparkHttpRoute(val handler: HttpHandler): Route {
         response: Response
     ): String {
         val resp = handler.handle(SparkRequest(request))
+        response.type("application/json")
         return resp.body.asString()
     }
 }

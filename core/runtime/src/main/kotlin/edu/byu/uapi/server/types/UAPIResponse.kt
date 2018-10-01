@@ -8,8 +8,8 @@ sealed class UAPIResponse<MetaType : ResponseMetadata>: UAPISerializableTree {
     abstract val links: UAPILinks
 
     final override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.tree("links", links)
         serializeExtras(strategy)
+        strategy.tree("links", links)
         strategy.tree("metadata", metadata)
     }
 

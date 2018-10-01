@@ -1,18 +1,14 @@
 package edu.byu.uapi.server
 
-import edu.byu.uapi.server.inputs.DefaultDeserializationContext
-import edu.byu.uapi.server.inputs.DeserializationContext
-import edu.byu.uapi.server.inputs.DeserializationFailure
-import edu.byu.uapi.server.inputs.PathParamDeserializer
+import edu.byu.uapi.server.inputs.DefaultTypeDictionary
+import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
-import edu.byu.uapi.server.types.SuccessOrFailure
 import java.util.*
-import kotlin.reflect.KClass
 
 class UAPIRuntime<UserContext : Any>(
     val userContextFactory: UserContextFactory<UserContext>,
-    val deserializationContext: DeserializationContext = DefaultDeserializationContext()
+    val typeDictionary: TypeDictionary = DefaultTypeDictionary()
 ) {
     constructor(fn: UserContextFactoryFunc<UserContext>) : this(UserContextFactory.from(fn))
 
@@ -22,7 +18,7 @@ class UAPIRuntime<UserContext : Any>(
         name: String,
         resource: IdentifiedResource<UserContext, *, *>
     ) {
-        val runtime = IdentifiedResourceRuntime(name, resource)
+        val runtime = IdentifiedResourceRuntime(name, resource, typeDictionary)
         resources[name] = runtime
         //TODO: Validate resource
     }

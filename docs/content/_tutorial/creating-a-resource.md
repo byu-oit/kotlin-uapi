@@ -131,19 +131,41 @@ This should return a JSON response like:
 
 ```json
 {
-  "metadata": {},
-  "links": {},
   "basic": {
     "oclc": {
       "value": 890303755,
-      "api_type": "READ_ONLY"
+      "api_type": "read-only"
     },
     "title": {
       "value": "The Player of Games",
-      "api_type": "READ_ONLY"
+      "api_type": "read-only"
     },
-    "metadata": {},
-    "links": {}
+    "links": {},
+    "metadata": {
+      "validation_response": {
+        "code": 200,
+        "message": "OK"
+      },
+      "validation_information": []
+    }
+  },
+  "links": {},
+  "metadata": {
+    "validation_response": {
+      "code": 200,
+      "message": "OK"
+    },
+    "validation_information": [],
+    "field_sets_returned": [
+      "basic"
+    ],
+    "field_sets_available": [
+      "basic"
+    ],
+    "field_sets_default": [
+      "basic"
+    ],
+    "contexts_available": {}
   }
 }
 ```

@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.FIELDSET_BASIC
-import edu.byu.uapi.server.inputs.DeserializationContext
+import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.inputs.DeserializationError
 import edu.byu.uapi.server.response.ResponseFieldDefinition
 import edu.byu.uapi.server.schemas.*
@@ -17,7 +17,8 @@ import kotlin.reflect.full.primaryConstructor
 
 class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     val name: String,
-    internal val resource: IdentifiedResource<UserContext, Id, Model>
+    internal val resource: IdentifiedResource<UserContext, Id, Model>,
+    val typeDictionary: TypeDictionary
 ) {
 
     // TODO fun validateResource(validation: Validating)
@@ -27,8 +28,8 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     }
 
     @Throws(DeserializationError::class)
-    fun constructId(params: Map<String, String>, context: DeserializationContext): Id {
-        val deser = resource.getIdDeserializer(context)
+    fun constructId(params: Map<String, String>): Id {
+        val deser = resource.getIdDeserializer(typeDictionary)
         return deser.deserializePathParams(params).map({it}, {throw it.asError()})
     }
 
@@ -65,7 +66,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         validationResponse: ValidationResponse = ValidationResponse.OK
     ): UAPIPropertiesResponse {
         val model = resource.loadModel(userContext, id) ?: throw IllegalStateException() //TODO: Prettier error message
-        return modelToBasic(userContext, id, model)
+        return modelToBasic(userContext, id, model, validationResponse)
     }
 
     internal fun modelToBasic(
@@ -87,7 +88,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         model: Model
     ): Map<String, UAPIProperty> {
         return resource.responseFields.map { f ->
-            f.name to f.toProp(userContext, model)
+            f.name to f.toProp(userContext, model, typeDictionary)
         }.toMap()
     }
 

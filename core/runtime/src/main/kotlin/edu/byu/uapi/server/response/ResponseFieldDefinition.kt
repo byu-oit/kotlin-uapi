@@ -1,24 +1,12 @@
 package edu.byu.uapi.server.response
 
-import edu.byu.uapi.server.types.APIType
-import edu.byu.uapi.server.types.OrMissing
-import edu.byu.uapi.server.types.UAPIProperty
-import edu.byu.uapi.server.types.UAPIValueProperty
+import edu.byu.uapi.server.inputs.TypeDictionary
+import edu.byu.uapi.server.types.*
 import java.time.Instant
 import java.util.*
+import kotlin.reflect.KClass
 
 typealias Describer<Model, Value> = (Model, Value) -> String?
-
-typealias PropConstructor<Value, Prop> = (
-    value: Value,
-    apiType: APIType,
-    key: Boolean,
-    description: OrMissing<String>,
-    longDescription: OrMissing<String>,
-    displayLabel: String?,
-    domain: OrMissing<String>,
-    relatedResource: OrMissing<String>
-) -> Prop
 
 sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop : UAPIProperty>(
     val name: String,
@@ -35,7 +23,8 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop 
 
     fun toProp(
         userContext: UserContext,
-        model: Model
+        model: Model,
+        typeDictionary: TypeDictionary
     ): Prop {
         val value = this.getValue(model)
         val getDesc = this.description
@@ -54,6 +43,7 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop 
         }
 
         return construct(
+            typeDictionary,
             value,
             apiType,
             this.key,
@@ -67,6 +57,7 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop 
 
     //    protected abstract val propConstructor: PropConstructor<Type, Prop>
     protected abstract fun construct(
+        typeDictionary: TypeDictionary,
         value: Type,
         apiType: APIType,
         key: Boolean,
@@ -79,7 +70,8 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop 
 
 }
 
-class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type>(
+class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
+    val type: KClass<Type>,
     name: String,
     getValue: (Model) -> Type,
     key: Boolean = false,
@@ -103,6 +95,7 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type>(
     displayLabel = displayLabel
 ) {
     override fun construct(
+        typeDictionary: TypeDictionary,
         value: Type,
         apiType: APIType,
         key: Boolean,
@@ -111,11 +104,67 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type>(
         displayLabel: String?,
         domain: OrMissing<String>,
         relatedResource: OrMissing<String>
-    ): UAPIValueProperty<*> {
-//        return UAPIValueProperty(
-//
-//        )
-        TODO("not implemented")
+    ): UAPIValueProperty<Type> {
+        return UAPIValueProperty(
+            value,
+            typeDictionary.scalarConverter(this.type).map({ it }, { throw it.asError() }),
+            description,
+            longDescription,
+            apiType,
+            key,
+            displayLabel,
+            domain,
+            relatedResource
+        )
+    }
+}
+
+class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
+    val type: KClass<Type>,
+    name: String,
+    getValue: (Model) -> Type?,
+    key: Boolean = false,
+    description: Describer<Model, Type>? = null,
+    longDescription: Describer<Model, Type>? = null,
+    modifiable: ((UserContext, Model) -> Boolean)? = null,
+    isSystem: Boolean = false,
+    isDerived: Boolean = false,
+    doc: String? = null,
+    displayLabel: String? = null
+) : ResponseFieldDefinition<UserContext, Model, Type?, UAPIValueProperty<*>>(
+    name = name,
+    getValue = getValue,
+    key = key,
+    description = description?.before { p1, p2 -> p1 to p2!! },
+    longDescription = longDescription?.before { p1, p2 -> p1 to p2!! },
+    modifiable = modifiable,
+    isSystem = isSystem,
+    isDerived = isDerived,
+    doc = doc,
+    displayLabel = displayLabel
+) {
+    override fun construct(
+        typeDictionary: TypeDictionary,
+        value: Type?,
+        apiType: APIType,
+        key: Boolean,
+        description: OrMissing<String>,
+        longDescription: OrMissing<String>,
+        displayLabel: String?,
+        domain: OrMissing<String>,
+        relatedResource: OrMissing<String>
+    ): UAPIValueProperty<Type> {
+        return UAPIValueProperty(
+            value,
+            typeDictionary.scalarConverter(this.type).map({ it }, { throw it.asError() }),
+            description,
+            longDescription,
+            apiType,
+            key,
+            displayLabel,
+            domain,
+            relatedResource
+        )
     }
 }
 

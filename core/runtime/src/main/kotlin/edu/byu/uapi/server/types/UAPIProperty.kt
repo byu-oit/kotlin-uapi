@@ -3,6 +3,8 @@ package edu.byu.uapi.server.types
 import edu.byu.uapi.server.scalars.ScalarConverter
 import edu.byu.uapi.server.serialization.TreeSerializationStrategy
 import edu.byu.uapi.server.serialization.UAPISerializableTree
+import edu.byu.uapi.server.serialization.UAPISerializableValue
+import edu.byu.uapi.server.serialization.ValueSerializationStrategy
 
 sealed class UAPIProperty: UAPISerializableTree {
     abstract val apiType: APIType
@@ -13,7 +15,7 @@ sealed class UAPIProperty: UAPISerializableTree {
 
     final override fun serialize(strategy: TreeSerializationStrategy) {
         serializeValue(strategy)
-        strategy.enum("api_type", apiType)
+        strategy.value("api_type", apiType)
         if (key) {
             strategy.boolean("key", key)
         }
@@ -25,7 +27,7 @@ sealed class UAPIProperty: UAPISerializableTree {
     protected abstract fun serializeValue(ser: TreeSerializationStrategy)
 }
 
-sealed class UAPIValueProperty<Value: Any>(
+class UAPIValueProperty<Value: Any>(
     val value: Value?,
     val scalarConverter: ScalarConverter<Value>,
     val description: OrMissing<String>,
@@ -65,12 +67,16 @@ sealed class OrMissing<out Type : Any> {
     }
 }
 
-enum class APIType {
-    READ_ONLY,
-    MODIFIABLE,
-    SYSTEM,
-    DERIVED,
-    RELATED
+enum class APIType(private val apiValue: String) : UAPISerializableValue {
+    READ_ONLY("read-only"),
+    MODIFIABLE("modifiable"),
+    SYSTEM("system"),
+    DERIVED("derived"),
+    RELATED("related");
+
+    override fun serialize(strategy: ValueSerializationStrategy) {
+        strategy.string(this.apiValue)
+    }
 }
 
 
