@@ -14,7 +14,7 @@ create table if not exists book (
   title varchar(255) not null,
   subtitles varchar(255),
   published_year smallint not null,
-  publisher bigint not null references publisher(publisher_id),
+  publisher_id bigint not null references publisher(publisher_id),
 );
 
 create table if not exists author (
@@ -71,7 +71,7 @@ values (1, 'Simon & Schuster'),
        (7, 'HarperCollins')
        ;
 
-insert into book (oclc, isbn, title, subtitles, published_year, publisher)
+insert into book (oclc, isbn, title, subtitles, published_year, publisher_id)
 values (733291011, '978-0451530653', 'The War of the Worlds', null, 1898, 6),
        (35231812, '0-684-83339-5', 'Catch-22', null, 1961, 1),
        (799352269, '978-0-7653-2635-5', 'The Way of Kings', 'Book One of the Stormlight Archive', 2010, 3),
@@ -149,13 +149,13 @@ values (1, 'jstudent', 'Joe Student'),
        (4, 'thevaliant', 'Lucy Pevensie')
 ;
 
-insert into checked_out_copy (copy_id, CARDHOLDER_ID, checked_out_datetime, due_date, returned_datetime, reshelved)
-values (1, 1, TIMESTAMP '2010-01-01 00:00:00', date '2010-01-15', timestamp '2010-01-14 12:13:45', true),
-       (1, 2, timestamp '2013-02-02 10:52:34', date '2013-02-16', timestamp '2013-02-20 14:01:02', true),
-       (1, 3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
-       (2, 3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
-       (6, 3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
-       (8, 3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
+insert into loans (copy_id, CARDHOLDER_ID, checked_out_datetime, due_date, returned_datetime, reshelved)
+values (1,  1, TIMESTAMP '2010-01-01 00:00:00', date '2010-01-15', timestamp '2010-01-14 12:13:45', true),
+       (1,  2, timestamp '2013-02-02 10:52:34', date '2013-02-16', timestamp '2013-02-20 14:01:02', true),
+       (1,  3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
+       (2,  3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
+       (6,  3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
+       (8,  3,  timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (10, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (12, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (15, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),

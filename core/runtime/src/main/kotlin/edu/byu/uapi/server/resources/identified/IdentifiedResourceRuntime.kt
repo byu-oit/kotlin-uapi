@@ -28,12 +28,8 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
 
     @Throws(DeserializationError::class)
     fun constructId(params: Map<String, String>, context: DeserializationContext): Id {
-        val result = context.pathDeserializer(resource.idType)
-        val deserializer = when (result) {
-            is Success -> result.value
-            is Failure -> throw result.value.asError()
-        }
-        return deserializer.deserializePathParams(params).map({it}, {throw it.asError()})
+        val deser = resource.getIdDeserializer(context)
+        return deser.deserializePathParams(params).map({it}, {throw it.asError()})
     }
 
     init {
@@ -81,9 +77,18 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         return UAPIPropertiesResponse(
             metadata = UAPIResourceMeta(validationResponse = validationResponse),
             links = generateLinks(userContext, id, model),
-//            properties = model
-            properties = emptyMap()
+            properties = modelToProperties(userContext, id, model)
         )
+    }
+
+    internal fun modelToProperties(
+        userContext: UserContext,
+        id: Id,
+        model: Model
+    ): Map<String, UAPIProperty> {
+        return resource.responseFields.map { f ->
+            f.name to f.toProp(userContext, model)
+        }.toMap()
     }
 
     @Suppress("UNUSED_PARAMETER")

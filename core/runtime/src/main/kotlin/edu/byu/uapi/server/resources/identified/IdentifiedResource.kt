@@ -1,6 +1,9 @@
 package edu.byu.uapi.server.resources.identified
 
+import edu.byu.uapi.server.inputs.DeserializationContext
+import edu.byu.uapi.server.inputs.PathParamDeserializer
 import edu.byu.uapi.server.response.ResponseFieldDefinition
+import edu.byu.uapi.server.types.map
 import edu.byu.uapi.server.validation.Validating
 import kotlin.reflect.KClass
 
@@ -11,6 +14,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
     fun loadModel(userContext: UserContext, id: Id): Model?
     fun canUserViewModel(userContext: UserContext, id: Id, model: Model): Boolean
     fun idFromModel(model: Model): Id
+
+    fun getIdDeserializer(context: DeserializationContext): PathParamDeserializer<Id> {
+        return context.pathDeserializer(idType).map({it}, { throw it.asError() })
+    }
 
     val responseFields: List<ResponseFieldDefinition<UserContext, Model, *, *>>
 

@@ -2,6 +2,8 @@ package edu.byu.uapi.server.scalars
 
 import edu.byu.uapi.server.inputs.DeserializationFailure
 import edu.byu.uapi.server.inputs.fail
+import edu.byu.uapi.server.serialization.TreeSerializationStrategy
+import edu.byu.uapi.server.serialization.ValueSerializationStrategy
 import edu.byu.uapi.server.types.*
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -10,15 +12,15 @@ import java.time.*
 import java.time.format.DateTimeParseException
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KClassifier
 
-interface ScalarConverter<T : Any> {
+interface ScalarConverter<T: Any> {
     val type: KClass<T>
     fun fromString(value: String): SuccessOrFailure<T, DeserializationFailure<T>>
     fun serialize(
-        key: String,
         value: T?,
-        strategy: SerializationStrategy
-    ) = strategy.add(key, value?.toString())
+        strategy: ValueSerializationStrategy
+    )
 }
 
 val defaultScalarConverters = mapOf<KClass<*>, ScalarConverter<*>>(
@@ -68,6 +70,9 @@ class EnumScalarConverter<E : Enum<E>>(
     override val type: KClass<E>
 ) : ScalarConverter<E> {
 
+    @Suppress("UNCHECKED_CAST")
+    constructor(constants: Array<E>): this(constants.first()::class as KClass<E>)
+
     private val map: Map<String, E> by lazy {
         type.java.enumConstants.flatMap { e ->
             enumNameVariants(e.toString()).map { it to e }
@@ -76,15 +81,14 @@ class EnumScalarConverter<E : Enum<E>>(
 
     override fun fromString(value: String): SuccessOrFailure<E, DeserializationFailure<E>> {
         return map[value]?.asSuccess()
-            ?: DeserializationFailure(type, "Invalid " + type.simpleName + " value").asFailure()
+            ?: DeserializationFailure<E>(type, "Invalid " + type.simpleName + " value").asFailure()
     }
 
     override fun serialize(
-        key: String,
         value: E?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value?.name)
+        strategy.string(value?.name)
     }
 }
 
@@ -123,6 +127,12 @@ private fun enumNameVariants(name: String): Iterable<String> {
 object StringScalarConverter : ScalarConverter<String> {
     override val type = String::class
     override fun fromString(value: String) = value.asSuccess()
+    override fun serialize(
+        value: String?,
+        strategy: ValueSerializationStrategy
+    ) {
+        strategy.string(value)
+    }
 }
 
 object BooleanScalarConverter : ScalarConverter<Boolean> {
@@ -136,11 +146,10 @@ object BooleanScalarConverter : ScalarConverter<Boolean> {
     }
 
     override fun serialize(
-        key: String,
         value: Boolean?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value)
+        strategy.boolean(value)
     }
 }
 
@@ -152,6 +161,13 @@ object CharScalarConverter : ScalarConverter<Char> {
         }
         return value[0].asSuccess()
     }
+
+    override fun serialize(
+        value: Char?,
+        strategy: ValueSerializationStrategy
+    ) {
+        strategy.string(value?.toString())
+    }
 }
 
 object ByteScalarConverter : ScalarConverter<Byte> {
@@ -161,11 +177,10 @@ object ByteScalarConverter : ScalarConverter<Byte> {
     }
 
     override fun serialize(
-        key: String,
         value: Byte?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value?.toInt())
+        strategy.number(value?.toInt())
     }
 }
 
@@ -176,11 +191,10 @@ object ShortScalarConverter : ScalarConverter<Short> {
     }
 
     override fun serialize(
-        key: String,
         value: Short?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value?.toInt())
+        strategy.number(value?.toInt())
     }
 }
 
@@ -191,11 +205,10 @@ object IntScalarConverter : ScalarConverter<Int> {
     }
 
     override fun serialize(
-        key: String,
         value: Int?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value)
+        strategy.number(value)
     }
 }
 
@@ -206,11 +219,10 @@ object FloatScalarConverter : ScalarConverter<Float> {
     }
 
     override fun serialize(
-        key: String,
         value: Float?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value)
+        strategy.number(value)
     }
 }
 
@@ -221,11 +233,10 @@ object LongScalarConverter : ScalarConverter<Long> {
     }
 
     override fun serialize(
-        key: String,
         value: Long?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value)
+        strategy.number(value)
     }
 }
 
@@ -236,11 +247,10 @@ object DoubleScalarConverter : ScalarConverter<Double> {
     }
 
     override fun serialize(
-        key: String,
         value: Double?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value)
+        strategy.number(value)
     }
 }
 
@@ -251,11 +261,10 @@ object BigIntegerScalarConverter : ScalarConverter<BigInteger> {
     }
 
     override fun serialize(
-        key: String,
         value: BigInteger?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value)
+        strategy.number(value)
     }
 }
 
@@ -266,11 +275,10 @@ object BigDecimalScalarConverter : ScalarConverter<BigDecimal> {
     }
 
     override fun serialize(
-        key: String,
         value: BigDecimal?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value)
+        strategy.number(value)
     }
 }
 
@@ -285,11 +293,10 @@ object InstantScalarConverter : ScalarConverter<Instant> {
     }
 
     override fun serialize(
-        key: String,
         value: Instant?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value?.toString())
+        strategy.string(value?.toString())
     }
 }
 
@@ -304,11 +311,10 @@ object LocalDateScalarConverter : ScalarConverter<LocalDate> {
     }
 
     override fun serialize(
-        key: String,
         value: LocalDate?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value?.toString())
+        strategy.string(value?.toString())
     }
 }
 
@@ -323,11 +329,10 @@ object LocalDateTimeScalarConverter : ScalarConverter<LocalDateTime> {
     }
 
     override fun serialize(
-        key: String,
         value: LocalDateTime?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        strategy.add(key, value?.toString())
+        strategy.string(value?.toString())
     }
 }
 
@@ -342,11 +347,10 @@ object ZonedDateTimeScalarConverter : ScalarConverter<ZonedDateTime> {
     }
 
     override fun serialize(
-        key: String,
         value: ZonedDateTime?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -361,11 +365,10 @@ object OffsetDateTimeScalarConverter : ScalarConverter<OffsetDateTime> {
     }
 
     override fun serialize(
-        key: String,
         value: OffsetDateTime?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -380,11 +383,10 @@ object OffsetTimeScalarConverter : ScalarConverter<OffsetTime> {
     }
 
     override fun serialize(
-        key: String,
         value: OffsetTime?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -399,11 +401,10 @@ object LocalTimeScalarConverter : ScalarConverter<LocalTime> {
     }
 
     override fun serialize(
-        key: String,
         value: LocalTime?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+       strategy.string(value?.toString())
     }
 }
 
@@ -418,11 +419,10 @@ object YearMonthScalarConverter : ScalarConverter<YearMonth> {
     }
 
     override fun serialize(
-        key: String,
         value: YearMonth?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -437,11 +437,10 @@ object MonthDayScalarConverter : ScalarConverter<MonthDay> {
     }
 
     override fun serialize(
-        key: String,
         value: MonthDay?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -456,11 +455,10 @@ object DurationScalarConverter : ScalarConverter<Duration> {
     }
 
     override fun serialize(
-        key: String,
         value: Duration?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -475,11 +473,10 @@ object PeriodScalarConverter : ScalarConverter<Period> {
     }
 
     override fun serialize(
-        key: String,
         value: Period?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -494,11 +491,10 @@ object YearScalarConverter : ScalarConverter<Year> {
     }
 
     override fun serialize(
-        key: String,
         value: Year?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.number(value?.value)
     }
 }
 
@@ -513,11 +509,10 @@ object UUIDScalarConverter : ScalarConverter<UUID> {
     }
 
     override fun serialize(
-        key: String,
         value: UUID?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        strategy.string(value?.toString())
     }
 }
 
@@ -535,11 +530,10 @@ object ByteArrayScalarConverter : ScalarConverter<ByteArray> {
     }
 
     override fun serialize(
-        key: String,
         value: ByteArray?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        TODO("We ought to provide for binary serialization in the SerializationStrategy")
     }
 }
 
@@ -557,16 +551,16 @@ object ByteBufferScalarConverter : ScalarConverter<ByteBuffer> {
     }
 
     override fun serialize(
-        key: String,
         value: ByteBuffer?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
-        super.serialize(key, value, strategy)
+        TODO("We ought to provide for binary serialization in the SerializationStrategy")
     }
 }
 
 abstract class PreJavaTimeScalarConverterBase<T: java.util.Date>
     : ScalarConverter<T> {
+    abstract override val type: KClass<T>
     final override fun fromString(value: String): SuccessOrFailure<T, DeserializationFailure<T>> {
         return try {
             val instant = Instant.parse(value)
@@ -577,12 +571,11 @@ abstract class PreJavaTimeScalarConverterBase<T: java.util.Date>
     }
 
     override fun serialize(
-        key: String,
         value: T?,
-        strategy: SerializationStrategy
+        strategy: ValueSerializationStrategy
     ) {
         val result = value?.let { Instant.ofEpochMilli(it.time).toString() }
-        strategy.add(key, result)
+        strategy.string(result)
     }
 
     protected abstract fun fromEpochMillis(time: Long): T

@@ -39,5 +39,5 @@ class ReflectivePathParamDeserializer<T : Any>(
 }
 
 internal inline fun <reified T : Any> fail(message: String) = fail(T::class, message)
-internal fun <T : Any> fail(type: KClass<T>, message: String): Failure<DeserializationFailure<T>> = DeserializationFailure(type, message).asFailure()
+internal fun <T : Any> fail(type: KClass<T>, message: String): Failure<DeserializationFailure<T>> = DeserializationFailure<T>(type, message).asFailure()
 

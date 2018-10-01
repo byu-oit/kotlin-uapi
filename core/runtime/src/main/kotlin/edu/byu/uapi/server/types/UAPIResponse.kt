@@ -1,16 +1,19 @@
 package edu.byu.uapi.server.types
 
-sealed class UAPIResponse<MetaType : ResponseMetadata>: UAPISerializable {
+import edu.byu.uapi.server.serialization.TreeSerializationStrategy
+import edu.byu.uapi.server.serialization.UAPISerializableTree
+
+sealed class UAPIResponse<MetaType : ResponseMetadata>: UAPISerializableTree {
     abstract val metadata: MetaType
     abstract val links: UAPILinks
 
-    final override fun serialize(ser: SerializationStrategy) {
-        ser.obj("metadata", metadata)
-        ser.obj("links", links)
-        serializeExtras(ser)
+    final override fun serialize(strategy: TreeSerializationStrategy) {
+        strategy.tree("links", links)
+        serializeExtras(strategy)
+        strategy.tree("metadata", metadata)
     }
 
-    protected open fun serializeExtras(ser: SerializationStrategy) {
+    protected open fun serializeExtras(ser: TreeSerializationStrategy) {
     }
 }
 
@@ -19,18 +22,18 @@ data class UAPIFieldsetsCollectionResponse(
     override val metadata: CollectionMetadata,
     override val links: UAPILinks
 ): UAPIResponse<CollectionMetadata>() {
-    override fun serializeExtras(ser: SerializationStrategy) {
-        ser.objects("values", values)
+    override fun serializeExtras(ser: TreeSerializationStrategy) {
+        ser.trees("values", values)
     }
 }
 
 data class UAPIPropertiesResponse(
-    val properties: Map<String, UAPIProperty<*>>,
+    val properties: Map<String, UAPIProperty>,
     override val metadata: UAPIResourceMeta,
     override val links: UAPILinks
 ) : UAPIResponse<UAPIResourceMeta>() {
-    override fun serializeExtras(ser: SerializationStrategy) {
-        ser.merge(this.properties)
+    override fun serializeExtras(ser: TreeSerializationStrategy) {
+        ser.mergeTree(this.properties)
     }
 }
 
@@ -39,8 +42,8 @@ data class UAPIFieldsetsResponse(
     override val metadata: FieldsetsMetadata,
     override val links: UAPILinks = emptyMap()
 ) : UAPIResponse<FieldsetsMetadata>() {
-    override fun serializeExtras(ser: SerializationStrategy) {
-        ser.merge(this.fieldsets)
+    override fun serializeExtras(ser: TreeSerializationStrategy) {
+        ser.mergeTree(this.fieldsets)
     }
 }
 

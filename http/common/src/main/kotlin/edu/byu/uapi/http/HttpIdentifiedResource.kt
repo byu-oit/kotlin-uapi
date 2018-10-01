@@ -1,5 +1,6 @@
 package edu.byu.uapi.http
 
+import edu.byu.uapi.http.json.JsonSerialization
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
@@ -8,10 +9,14 @@ import edu.byu.uapi.server.resources.identified.IdentifiedResourceOperation
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceOperation.*
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
 import edu.byu.uapi.server.types.UAPINotAuthenticatedError
-import edu.byu.uapi.server.types.UAPINotAuthorizedError
 import edu.byu.uapi.server.types.UAPIResponse
+import edu.byu.uapi.server.serialization.UAPISerializableTree
+import java.io.StringWriter
+import java.io.Writer
+import javax.json.Json
 
 class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
+    val runtime: UAPIRuntime<UserContext>,
     val resource: IdentifiedResourceRuntime<UserContext, Id, Model>
 ) {
     val routes: List<HttpRoute> by lazy {
@@ -27,12 +32,10 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
         idPath: List<PathPart>
     ): HttpRoute {
         return when (op) {
-//            FETCH -> HttpRoute(
-//                idPath, HttpMethod.GET, IdentifiedResourceFetchHandler<UserContext, Id, Model>(
-//                this
-//            )
-//            )
-            FETCH -> TODO()
+            FETCH -> HttpRoute(
+                idPath, HttpMethod.GET, IdentifiedResourceFetchHandler(
+                runtime, resource
+            ))
             CREATE -> TODO()
             UPDATE -> TODO()
             DELETE -> TODO()
@@ -50,13 +53,16 @@ abstract class AuthenticatedHandler<UserContext : Any>(
 ) : HttpHandler {
     override fun handle(request: HttpRequest): HttpResponse {
         val authResult = factory.createUserContext(HttpUserContextAuthnInfo(request))
-        return when(authResult) {
+        return when (authResult) {
             is UserContextResult.Success -> handleAuthenticated(request, authResult.result)
             is UserContextResult.Failure -> UAPINotAuthenticatedError(authResult.messages).toHttpResponse()
         }
     }
 
-    abstract fun handleAuthenticated(request: HttpRequest, userContext: UserContext): HttpResponse
+    abstract fun handleAuthenticated(
+        request: HttpRequest,
+        userContext: UserContext
+    ): HttpResponse
 }
 
 fun UAPIResponse<*>.toHttpResponse(): HttpResponse {
@@ -64,12 +70,38 @@ fun UAPIResponse<*>.toHttpResponse(): HttpResponse {
 }
 
 class UAPIHttpResponse(
-    val response: UAPIResponse<*>
-): HttpResponse {
+    response: UAPIResponse<*>
+) : HttpResponse {
     override val status: Int = response.metadata.validationResponse.code
     override val headers: Headers = emptyMap()
-    override val body: ResponseBody
-        get() = TODO("not implemented")
+    override val body: ResponseBody = if (this.status == 404) EmptyResponseBody else UAPISerializableResponseBody(response)
+}
+
+class UAPISerializableResponseBody(
+    val wrapped: UAPISerializableTree
+) : ResponseBody {
+    override fun asString(): String {
+        return StringWriter().use {
+            toWriter(it)
+            it.toString()
+        }
+    }
+
+    override fun toWriter(writer: Writer) {
+        val json = JsonSerialization.Trees()
+        wrapped.serialize(json)
+        val obj = json.finish()
+        Json.createWriter(writer).use {
+            it.write(obj)
+        }
+    }
+}
+
+class EmptyResponse(
+    override val status: Int,
+    override val headers: Headers = emptyMap()
+) : HttpResponse {
+    override val body: ResponseBody = EmptyResponseBody
 }
 
 class HttpUserContextAuthnInfo(
@@ -90,13 +122,13 @@ class HttpUserContextAuthnInfo(
 class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
     val resource: IdentifiedResourceRuntime<UserContext, Id, Model>
-)
-    : AuthenticatedHandler<UserContext>(runtime.userContextFactory) {
+) : AuthenticatedHandler<UserContext>(runtime.userContextFactory) {
     override fun handleAuthenticated(
         request: HttpRequest,
         userContext: UserContext
     ): HttpResponse {
-        val resp = resource.handleFetch(userContext, resource.constructId(request.path, runtime.deserializationContext))
-        TODO()
+        val id = resource.constructId(request.path, runtime.deserializationContext)
+        val resp = resource.handleFetch(userContext, id)
+        return resp.toHttpResponse()
     }
 }

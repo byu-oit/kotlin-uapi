@@ -1,7 +1,7 @@
 package edu.byu.uapi.http.json
 
-import edu.byu.uapi.server.types.SerializationStrategy
-import edu.byu.uapi.server.types.UAPISerializable
+import edu.byu.uapi.server.serialization.TreeSerializationStrategy
+import edu.byu.uapi.server.serialization.UAPISerializableTree
 import io.kotlintest.matchers.collections.shouldContainExactly
 import io.kotlintest.properties.Gen
 import io.kotlintest.properties.forAll
@@ -9,7 +9,7 @@ import io.kotlintest.specs.DescribeSpec
 import javax.json.JsonObject
 import kotlin.reflect.KClass
 
-class JsonSerializationStrategySpec : DescribeSpec() {
+class JsonSerializationTreesSpec : DescribeSpec() {
 
     fun jsonKey(): Gen<String> = Gen.string().filter { it.isNotBlank() }
 
@@ -26,9 +26,9 @@ class JsonSerializationStrategySpec : DescribeSpec() {
 
     fun finiteDoubles(): Gen<Double> = Gen.double().filter { it.isFinite() }
 
-    data class TestUAPISerializable(val map: Map<String, String>) : UAPISerializable {
-        override fun serialize(ser: SerializationStrategy) {
-            map.forEach { k, v -> ser.add(k, v) }
+    data class TestUAPISerializable(val map: Map<String, String>) : UAPISerializableTree {
+        override fun serialize(strategy: TreeSerializationStrategy) {
+            map.forEach { k, v -> strategy.string(k, v) }
         }
     }
 
@@ -36,62 +36,62 @@ class JsonSerializationStrategySpec : DescribeSpec() {
         describe("scalars") {
             scalarSerialization(
                 Gen.string(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::string,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 Gen.int(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::number,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 bytes(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::number,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 shorts(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::number,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 Gen.long(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::number,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 finiteFloats(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::number,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 finiteDoubles(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::number,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 Gen.bool(),
-                JsonSerializationStrategy::add,
+                JsonSerialization.Trees::boolean,
                 JsonObject::shouldHave
             )
             scalarSerialization(
                 Gen.enum<TestEnum>(),
-                JsonSerializationStrategy::add
+                JsonSerialization.Trees::enum
             ) { key, value ->
                 this.shouldHave(key, value.toString())
             }
             scalarSerialization(
                 Gen.enum<TestEnumWithToString>(),
-                JsonSerializationStrategy::add
+                JsonSerialization.Trees::enum
             ) { key, value ->
                 this.shouldHave(key, value.toString())
             }
         }
-        describe("objects") {
-            context("obj(key, UAPISerializable?)") {
-                it("serializes a UAPISerializable") {
+        describe("trees") {
+            context("tree(key, UAPISerializableTree?)") {
+                it("serializes a UAPISerializableTree") {
                     forAll(100, Gen.string(), serializables()) { key, value ->
-                        val json = setup { it.obj(key, value) }
+                        val json = setup { it.tree(key, value) }
                         json.shouldHaveObject(key) { obj ->
                             obj.shouldMatch(value)
                         }
@@ -99,7 +99,7 @@ class JsonSerializationStrategySpec : DescribeSpec() {
                     }
                 }
                 it("serializes nulls") {
-                    val json = setup { it.obj("key", null as UAPISerializable?) }
+                    val json = setup { it.tree("key", null as UAPISerializableTree?) }
 
                     json.shouldHaveNull("key")
                 }
@@ -108,8 +108,8 @@ class JsonSerializationStrategySpec : DescribeSpec() {
                 it("serializes from a receiver function") {
                     forAll(100, Gen.string(), stringMap()) { key, value ->
                         val json = setup {
-                            it.obj(key) {
-                                value.forEach { k, v -> add(k, v) }
+                            it.tree(key) {
+                                value.forEach { k, v -> string(k, v) }
                             }
                         }
                         json.shouldHaveObject(key) { obj ->
@@ -119,11 +119,11 @@ class JsonSerializationStrategySpec : DescribeSpec() {
                     }
                 }
             }
-            context("Map of String -> UAPISerializable?") {
+            context("Map of String -> UAPISerializableTree?") {
                 it("serializes a map") {
                     forAll(100,
                            Gen.string(), serializableMap()) { key, value ->
-                        val json = setup { it.obj(key, value) }
+                        val json = setup { it.tree(key, value) }
                         // 🤮 we have to recurse a LOT to check this structure. But worth it to have this convenient method!
                         json.shouldHaveObject(key) { shallow ->
                             shallow.keys.shouldContainExactly(value.keys)
@@ -142,60 +142,60 @@ class JsonSerializationStrategySpec : DescribeSpec() {
             scalarArraySerialization(
                 Gen.string(),
                 List<String>::toTypedArray,
-                JsonSerializationStrategy::strings,
-                JsonSerializationStrategy::strings,
+                JsonSerialization.Trees::strings,
+                JsonSerialization.Trees::strings,
                 JsonObject::shouldHaveAllStrings
             )
             scalarArraySerialization(
                 shorts(),
-                JsonSerializationStrategy::numbers,
+                JsonSerialization.Trees::numbers,
                 JsonObject::shouldHaveAllShorts
             )
 //            scalarArraySerialization(
 //                bytes(),
-//                JsonSerializationStrategy::numbers,
+//                JsonSerialization.Trees::numbers,
 //                JsonObject::shouldHaveAllBytes
 //            )
             scalarArraySerialization(
                 Gen.int(),
                 List<Int>::toIntArray,
-                JsonSerializationStrategy::numbers,
-                JsonSerializationStrategy::numbers,
+                JsonSerialization.Trees::numbers,
+                JsonSerialization.Trees::numbers,
                 JsonObject::shouldHaveAllInts
             )
             scalarArraySerialization(
                 Gen.long(),
                 List<Long>::toLongArray,
-                JsonSerializationStrategy::numbers,
-                JsonSerializationStrategy::numbers,
+                JsonSerialization.Trees::numbers,
+                JsonSerialization.Trees::numbers,
                 JsonObject::shouldHaveAllLongs
             )
             scalarArraySerialization(
                 finiteFloats(),
                 List<Float>::toFloatArray,
-                JsonSerializationStrategy::numbers,
-                JsonSerializationStrategy::numbers,
+                JsonSerialization.Trees::numbers,
+                JsonSerialization.Trees::numbers,
                 JsonObject::shouldHaveAllFloats
             )
             scalarArraySerialization(
                 finiteDoubles(),
                 List<Double>::toDoubleArray,
-                JsonSerializationStrategy::numbers,
-                JsonSerializationStrategy::numbers,
+                JsonSerialization.Trees::numbers,
+                JsonSerialization.Trees::numbers,
                 JsonObject::shouldHaveAllDoubles
             )
             scalarArraySerialization(
                 Gen.bool(),
                 List<Boolean>::toBooleanArray,
-                JsonSerializationStrategy::booleans,
-                JsonSerializationStrategy::booleans,
+                JsonSerialization.Trees::booleans,
+                JsonSerialization.Trees::booleans,
                 JsonObject::shouldHaveAllBooleans
             )
             context("object array") {
                 it("serializes a collection") {
                     forAll(100, jsonKey(), Gen.list(serializables())) { key, value ->
                         val json = setup {
-                            it.objects(key, value)
+                            it.trees(key, value)
                         }
 
                         json.shouldHaveArray(key)
@@ -208,14 +208,14 @@ class JsonSerializationStrategySpec : DescribeSpec() {
             }
         }
 
-        describe("merge") {
-            it("serializes a map of UAPISerializable") {
+        describe("mergeTree") {
+            it("serializes a map of UAPISerializableTree") {
                 forAll(100,
                        serializableMap()
                 ) { toMerge ->
                     val json = setup {
-                        it.add("already_there", "foo")
-                        it.merge(toMerge)
+                        it.string("already_there", "foo")
+                        it.mergeTree(toMerge)
                     }
 
                     json.shouldHave("already_there", "foo")
@@ -234,8 +234,8 @@ class JsonSerializationStrategySpec : DescribeSpec() {
 
     private fun serializableMap() = Gen.map(jsonKey(), serializables())
 
-    private inline fun setup(fn: (JsonSerializationStrategy) -> Unit): JsonObject {
-        val ser = JsonSerializationStrategy()
+    private inline fun setup(fn: (JsonSerialization.Trees) -> Unit): JsonObject {
+        val ser = JsonSerialization.Trees()
         fn(ser)
         return ser.finish()
     }
@@ -265,7 +265,7 @@ class JsonSerializationStrategySpec : DescribeSpec() {
 
     private inline fun <reified T> DescribeScope.scalarSerialization(
         gen: Gen<T>,
-        crossinline add: JsonSerializationStrategy.(String, T?) -> Unit,
+        crossinline add: JsonSerialization.Trees.(String, T?) -> Unit,
         crossinline shouldHave: JsonObject.(String, T) -> Unit
     ) {
         context(nameOf(T::class)) {
@@ -286,7 +286,7 @@ class JsonSerializationStrategySpec : DescribeSpec() {
 
     private inline fun <reified T> DescribeScope.scalarArraySerialization(
         gen: Gen<T>,
-        crossinline addCollection: JsonSerializationStrategy.(String, Collection<T>) -> Unit,
+        crossinline addCollection: JsonSerialization.Trees.(String, Collection<T>) -> Unit,
         crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
     ) {
         context("array of " + nameOf(T::class)) {
@@ -296,7 +296,7 @@ class JsonSerializationStrategySpec : DescribeSpec() {
 
     private inline fun <reified T> DescribeScope.itShouldSerializeACollection(
         gen: Gen<T>,
-        crossinline addCollection: JsonSerializationStrategy.(String, Collection<T>) -> Unit,
+        crossinline addCollection: JsonSerialization.Trees.(String, Collection<T>) -> Unit,
         crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
     ) {
         it("serializes a collection") {
@@ -312,8 +312,8 @@ class JsonSerializationStrategySpec : DescribeSpec() {
     private inline fun <reified T, Array> DescribeScope.scalarArraySerialization(
         gen: Gen<T>,
         crossinline toArray: (List<T>) -> Array,
-        crossinline addCollection: JsonSerializationStrategy.(String, Collection<T>) -> Unit,
-        crossinline addArray: JsonSerializationStrategy.(String, Array) -> Unit,
+        crossinline addCollection: JsonSerialization.Trees.(String, Collection<T>) -> Unit,
+        crossinline addArray: JsonSerialization.Trees.(String, Array) -> Unit,
         crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
     ) {
         context("array of " + nameOf(T::class)) {
