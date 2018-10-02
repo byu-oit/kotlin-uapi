@@ -12,7 +12,7 @@
     <name>Kotlin UAPI Utilities Parent POM</name>
 
     <modules>
-        <module>jwt-user-context-factory</module>
+        <module>jwt-extensions</module>
     </modules>
 
     <parent>

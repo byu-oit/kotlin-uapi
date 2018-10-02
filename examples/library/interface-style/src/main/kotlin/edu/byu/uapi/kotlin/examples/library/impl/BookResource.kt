@@ -48,16 +48,14 @@ class BookResource : IdentifiedResource<
                 displayLabel = "International Standard Book Number"
             }
             value(Book::title) {
-                getValue { model.title }
             }
             nullableValue(Book::subtitles) {
-                getValue { model.subtitles }
             }
             value(Book::publishedYear) {
             }
-            nullableValue<Int>("publisher") {
-                getValue { model.publisher.publisherId }
-                description { model.publisher.name }
+            value<Int>("publisher") {
+                getValue { book -> book.publisher.publisherId }
+                description { book, publisherId -> book.publisher.name }
             }
         }
 }

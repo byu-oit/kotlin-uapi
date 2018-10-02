@@ -30,9 +30,7 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
     ) {
         //TODO normalize name
         val p = UAPIValueInit<UserContext, Model, T>(prop.name, T::class)
-        p.getValue {
-            prop(model)
-        }
+        p.getValue(prop) //TODO: We might want to make a separate type for property-driven values
         p.fn()
         fieldList.add(p.toDefinition())
     }
@@ -52,9 +50,7 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
     ) {
         //TODO normalize name
         val p = NullableUAPIValueInit<UserContext, Model, T>(prop.name, T::class)
-        p.getValue {
-            prop(model)
-        }
+        p.getValue(prop) //TODO: We might want to make a separate type for property-driven values
         p.fn()
         fieldList.add(p.toDefinition())
     }
@@ -63,51 +59,32 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
 
 }
 
-typealias PropGetValue<Model, Type> = GetValueContext<Model>.() -> Type
-typealias PropModifiable<UserContext, Model, Value> = ModifiableContext<UserContext, Model, Value>.() -> Boolean
-
-data class GetValueContext<Model : Any>(
-    val model: Model
-)
-
-data class DescriptionContext<Model : Any, Value>(
-    val model: Model,
-    val value: Value
-)
-
-data class ModifiableContext<UserContext : Any, Model : Any, Value>(
-    val userContext: UserContext,
-    val model: Model,
-    val value: Value
-)
-
-
 sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any> {
-    protected lateinit var valueGetter: PropGetValue<Model, Type>
+    protected lateinit var valueGetter: ValuePropGetter<Model, Type>
 
     val nullable: Boolean = false
 
-    fun getValue(fn: PropGetValue<Model, Type>) {
+    fun getValue(fn: ValuePropGetter<Model, Type>) {
         valueGetter = fn
     }
 
     var key: Boolean = false
 
-    protected var descriptionFn: Describer<Model, NotNullType>? = null
+    protected var descriptionFn: ValuePropDescriber<Model, NotNullType>? = null
 
-    fun description(fn: Describer<Model, NotNullType>) {
+    fun description(fn: ValuePropDescriber<Model, NotNullType>) {
         this.descriptionFn = fn
     }
 
-    protected var longDescriptionFn: Describer<Model, NotNullType>? = null
+    protected var longDescriptionFn: ValuePropDescriber<Model, NotNullType>? = null
 
-    fun longDescription(fn: Describer<Model, NotNullType>) {
+    fun longDescription(fn: ValuePropDescriber<Model, NotNullType>) {
         longDescriptionFn = fn
     }
 
-    protected var modifiableFn: PropModifiable<UserContext, Model, Type>? = null
+    protected var modifiableFn: ValuePropModifiable<UserContext, Model, Type>? = null
 
-    fun modifiable(fn: PropModifiable<UserContext, Model, Type>) {
+    fun modifiable(fn: ValuePropModifiable<UserContext, Model, Type>) {
         this.modifiableFn = fn
     }
 

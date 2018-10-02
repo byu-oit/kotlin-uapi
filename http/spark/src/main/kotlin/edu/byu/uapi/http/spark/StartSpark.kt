@@ -20,6 +20,16 @@ fun <UserContext: Any> UAPIRuntime<UserContext>.startSpark(
 
     spark.port(port)
 
+    spark.before { request, response ->
+        println("context path: " + request.contextPath())
+        println("host: " + request.host())
+        println("path info: " + request.pathInfo())
+        println("uri: " + request.uri())
+        println("url: " + request.url())
+        println("servlet path: " + request.servletPath())
+        println("headers: " + request.headers().map { it to request.headers(it) }.joinToString(", "))
+    }
+
     routes.forEach {
         spark.addRoute(it.method.toSpark(), it.toSpark())
     }

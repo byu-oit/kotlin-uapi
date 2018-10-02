@@ -2,11 +2,11 @@ package edu.byu.uapi.server.response
 
 import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.types.*
-import java.time.Instant
-import java.util.*
 import kotlin.reflect.KClass
 
-typealias Describer<Model, Value> = DescriptionContext<Model, Value>.() -> String?
+typealias ValuePropDescriber<Model, Value> = (Model, Value) -> String?
+typealias ValuePropGetter<Model, Value> = (Model) -> Value
+typealias ValuePropModifiable<UserContext, Model, Value> = (UserContext, Model, Value) -> Boolean
 
 sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Prop : UAPIProperty> {
     abstract val name: String
@@ -21,7 +21,7 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Prop : UAPI
         userContext: UserContext,
         model: Model,
         typeDictionary: TypeDictionary
-    ): UAPIProperty
+    ): Prop
 
 }
 
@@ -29,11 +29,11 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
     : ResponseFieldDefinition<UserContext, Model, UAPIValueProperty<NonNullType>>() {
 
     abstract override val name: String
-    abstract val getValue: PropGetValue<Model, Type>
+    abstract val getValue: ValuePropGetter<Model, Type>
     abstract override val key: Boolean
-    abstract val description: Describer<Model, NonNullType>?
-    abstract val longDescription: Describer<Model, NonNullType>?
-    abstract val modifiable: PropModifiable<UserContext, Model, Type>?
+    abstract val description: ValuePropDescriber<Model, NonNullType>?
+    abstract val longDescription: ValuePropDescriber<Model, NonNullType>?
+    abstract val modifiable: ValuePropModifiable<UserContext, Model, Type>?
     abstract override val isSystem: Boolean
     abstract override val isDerived: Boolean
     abstract override val doc: String?
@@ -50,9 +50,9 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
         return if (value == null) {
             desc.map { null } to longDesc.map { null }
         } else {
-            val context = DescriptionContext(model, asNonNull(value))
-            val d = desc.map { fn -> fn?.invoke(context) }
-            val ld = longDesc.map { fn -> fn?.invoke(context) }
+            val nonNull = asNonNull(value)
+            val d = desc.map { fn -> fn?.invoke(model,  nonNull) }
+            val ld = longDesc.map { fn -> fn?.invoke(model, nonNull) }
             d to ld
         }
     }
@@ -64,13 +64,13 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
         model: Model,
         typeDictionary: TypeDictionary
     ): UAPIValueProperty<NonNullType> {
-        val value: Type = this.getValue(GetValueContext(model))
+        val value: Type = this.getValue(model)
         val (description, longDescription) = getDescriptions(model, value)
 
         val getModifiable = this.modifiable
 
         val apiType = when {
-            getModifiable != null -> if (getModifiable(ModifiableContext(userContext, model, value))) {
+            getModifiable != null -> if (getModifiable(userContext, model, value)) {
                 APIType.MODIFIABLE
             } else {
                 APIType.READ_ONLY
@@ -111,11 +111,11 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
 class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     val type: KClass<Type>,
     override val name: String,
-    override val getValue: PropGetValue<Model, Type>,
+    override val getValue: ValuePropGetter<Model, Type>,
     override val key: Boolean = false,
-    override val description: Describer<Model, Type>? = null,
-    override val longDescription: Describer<Model, Type>? = null,
-    override val modifiable: PropModifiable<UserContext, Model, Type>? = null,
+    override val description: ValuePropDescriber<Model, Type>? = null,
+    override val longDescription: ValuePropDescriber<Model, Type>? = null,
+    override val modifiable: ValuePropModifiable<UserContext, Model, Type>? = null,
     override val isSystem: Boolean = false,
     override val isDerived: Boolean = false,
     override val doc: String? = null,
@@ -153,11 +153,11 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
 class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     val type: KClass<Type>,
     override val name: String,
-    override val getValue: PropGetValue<Model, Type?>,
+    override val getValue: ValuePropGetter<Model, Type?>,
     override val key: Boolean = false,
-    override val description: Describer<Model, Type>? = null,
-    override val longDescription: Describer<Model, Type>? = null,
-    override val modifiable: PropModifiable<UserContext, Model, Type?>? = null,
+    override val description: ValuePropDescriber<Model, Type>? = null,
+    override val longDescription: ValuePropDescriber<Model, Type>? = null,
+    override val modifiable: ValuePropModifiable<UserContext, Model, Type?>? = null,
     override val isSystem: Boolean = false,
     override val isDerived: Boolean = false,
     override val doc: String? = null,

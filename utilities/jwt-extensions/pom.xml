@@ -4,11 +4,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>jwt-user-context-factory</artifactId>
+    <artifactId>jwt-extensions</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>Kotlin UAPI Utilities - JWT User Context Factory</name>
+    <name>Kotlin UAPI Utilities - JWT-Based Extensions</name>
 
     <parent>
         <groupId>edu.byu.uapi.kotlin.utilities</groupId>
