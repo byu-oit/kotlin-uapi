@@ -95,10 +95,10 @@ chapter; for now, just copy the following stub:
 
 ```kotlin
     override val responseFields: List<ResponseFieldDefinition<LibraryUser, Book, *, *>> = uapiResponse {
-        prop(Book::oclc) {
+        value(Book::oclc) {
             
         }
-        prop(Book::title) {
+        value(Book::title) {
         
         }
     }

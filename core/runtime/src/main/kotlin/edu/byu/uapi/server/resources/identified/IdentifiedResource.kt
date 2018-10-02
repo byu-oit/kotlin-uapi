@@ -19,7 +19,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         return context.pathDeserializer(idType).map({it}, { throw it.asError() })
     }
 
-    val responseFields: List<ResponseFieldDefinition<UserContext, Model, *, *>>
+    val responseFields: List<ResponseFieldDefinition<UserContext, Model, *>>
 
     val createOperation: Creatable<UserContext, Id, Model, *>?
         get() = this.takeIfType()

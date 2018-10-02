@@ -205,7 +205,7 @@ fun introspectListView(
     TODO("not implemented")
 }
 
-private fun introspectResponseModel(responseFields: List<ResponseFieldDefinition<*, *, *, *>>): ResponseModel {
+private fun introspectResponseModel(responseFields: List<ResponseFieldDefinition<*, *, *>>): ResponseModel {
     TODO()
 }
 

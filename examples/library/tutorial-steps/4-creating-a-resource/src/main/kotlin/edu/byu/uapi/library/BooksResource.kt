@@ -30,11 +30,11 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
         return true
     }
 
-    override val responseFields: List<ResponseFieldDefinition<LibraryUser, Book, *, *>> = uapiResponse {
-        prop(Book::oclc) {
+    override val responseFields: List<ResponseFieldDefinition<LibraryUser, Book, *>> = uapiResponse {
+        value(Book::oclc) {
 
         }
-        prop(Book::title) {
+        value(Book::title) {
 
         }
     }

@@ -18,11 +18,18 @@ class BookResource : IdentifiedResource<
 
     override val idType = Long::class
 
-    override fun loadModel(userContext: MyUserContext, id: Long): Book? {
+    override fun loadModel(
+        userContext: MyUserContext,
+        id: Long
+    ): Book? {
         return Library.getBook(id)
     }
 
-    override fun canUserViewModel(userContext: MyUserContext, id: Long, model: Book): Boolean {
+    override fun canUserViewModel(
+        userContext: MyUserContext,
+        id: Long,
+        model: Book
+    ): Boolean {
         return true // all books are publicly viewable
     }
 
@@ -30,29 +37,27 @@ class BookResource : IdentifiedResource<
         return model.oclc
     }
 
-    override val responseFields: List<ResponseFieldDefinition<MyUserContext, Book, *, *>>
+    override val responseFields: List<ResponseFieldDefinition<MyUserContext, Book, *>>
         get() = uapiResponse {
-            prop<Long>("oclc") {
+            value(Book::oclc) {
                 key = true
-                getValue { book -> book.oclc }
                 displayLabel = "OCLC Control Number"
             }
-            prop<String>("isbn") {
-                getValue { book -> book.isbn!! }
+            nullableValue(Book::isbn) {
                 isSystem = true
                 displayLabel = "International Standard Book Number"
             }
-            prop<String>("title") {
-                getValue { book -> book.title }
+            value(Book::title) {
+                getValue { model.title }
             }
-//            prop<String?>("subtitles") {
-//                getValue { book -> book.subtitles }
-//            }
-            prop<Int>("published_year") {
-                getValue { book -> book.publishedYear }
+            nullableValue(Book::subtitles) {
+                getValue { model.subtitles }
             }
-            prop<String>("publisher") {
-                getValue { book -> book.publisher.name }
+            value(Book::publishedYear) {
+            }
+            nullableValue<Int>("publisher") {
+                getValue { model.publisher.publisherId }
+                description { model.publisher.name }
             }
         }
 }

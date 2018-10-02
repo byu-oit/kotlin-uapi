@@ -6,36 +6,75 @@ import java.time.Instant
 import java.util.*
 import kotlin.reflect.KClass
 
-typealias Describer<Model, Value> = (Model, Value) -> String?
+typealias Describer<Model, Value> = DescriptionContext<Model, Value>.() -> String?
 
-sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop : UAPIProperty>(
-    val name: String,
-    val getValue: (Model) -> Type,
-    val key: Boolean = false,
-    val description: Describer<Model, Type>? = null,
-    val longDescription: Describer<Model, Type>? = null,
-    val modifiable: ((UserContext, Model) -> Boolean)? = null,
-    val isSystem: Boolean = false,
-    val isDerived: Boolean = false,
-    val doc: String? = null,
-    val displayLabel: String? = null
-) {
+sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Prop : UAPIProperty> {
+    abstract val name: String
+    abstract val key: Boolean
+    abstract val isSystem: Boolean
+    abstract val isDerived: Boolean
+    abstract val doc: String?
+    abstract val displayLabel: String?
 
-    fun toProp(
+
+    abstract fun toProp(
         userContext: UserContext,
         model: Model,
         typeDictionary: TypeDictionary
-    ): Prop {
-        val value = this.getValue(model)
-        val getDesc = this.description
-        val description = if (getDesc == null) OrMissing.Missing else OrMissing.Present(getDesc(model, value))
-        val getLongDesc = this.description
-        val longDescription = if (getLongDesc == null) OrMissing.Missing else OrMissing.Present(getLongDesc(model, value))
+    ): UAPIProperty
+
+}
+
+sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, NonNullType : Any>
+    : ResponseFieldDefinition<UserContext, Model, UAPIValueProperty<NonNullType>>() {
+
+    abstract override val name: String
+    abstract val getValue: PropGetValue<Model, Type>
+    abstract override val key: Boolean
+    abstract val description: Describer<Model, NonNullType>?
+    abstract val longDescription: Describer<Model, NonNullType>?
+    abstract val modifiable: PropModifiable<UserContext, Model, Type>?
+    abstract override val isSystem: Boolean
+    abstract override val isDerived: Boolean
+    abstract override val doc: String?
+    abstract override val displayLabel: String?
+
+
+    private fun getDescriptions(
+        model: Model,
+        value: Type
+    ): Pair<OrMissing<String>, OrMissing<String>> {
+        val desc = if (description == null) OrMissing.Missing else OrMissing.Present(description)
+        val longDesc = if (longDescription == null) OrMissing.Missing else OrMissing.Present(longDescription)
+
+        return if (value == null) {
+            desc.map { null } to longDesc.map { null }
+        } else {
+            val context = DescriptionContext(model, asNonNull(value))
+            val d = desc.map { fn -> fn?.invoke(context) }
+            val ld = longDesc.map { fn -> fn?.invoke(context) }
+            d to ld
+        }
+    }
+
+    protected abstract fun asNonNull(value: Type): NonNullType
+
+    override fun toProp(
+        userContext: UserContext,
+        model: Model,
+        typeDictionary: TypeDictionary
+    ): UAPIValueProperty<NonNullType> {
+        val value: Type = this.getValue(GetValueContext(model))
+        val (description, longDescription) = getDescriptions(model, value)
 
         val getModifiable = this.modifiable
 
         val apiType = when {
-            getModifiable != null -> if (getModifiable(userContext, model)) APIType.MODIFIABLE else APIType.READ_ONLY
+            getModifiable != null -> if (getModifiable(ModifiableContext(userContext, model, value))) {
+                APIType.MODIFIABLE
+            } else {
+                APIType.READ_ONLY
+            }
             isDerived -> APIType.DERIVED
             isSystem -> APIType.SYSTEM
             // TODO(Handle 'related')
@@ -55,7 +94,6 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop 
         )
     }
 
-    //    protected abstract val propConstructor: PropConstructor<Type, Prop>
     protected abstract fun construct(
         typeDictionary: TypeDictionary,
         value: Type,
@@ -66,34 +104,27 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Type, Prop 
         displayLabel: String?,
         domain: OrMissing<String>,
         relatedResource: OrMissing<String>
-    ): Prop
+    ): UAPIValueProperty<NonNullType>
 
 }
 
 class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     val type: KClass<Type>,
-    name: String,
-    getValue: (Model) -> Type,
-    key: Boolean = false,
-    description: Describer<Model, Type>? = null,
-    longDescription: Describer<Model, Type>? = null,
-    modifiable: ((UserContext, Model) -> Boolean)? = null,
-    isSystem: Boolean = false,
-    isDerived: Boolean = false,
-    doc: String? = null,
-    displayLabel: String? = null
-) : ResponseFieldDefinition<UserContext, Model, Type, UAPIValueProperty<*>>(
-    name = name,
-    getValue = getValue,
-    key = key,
-    description = description,
-    longDescription = longDescription,
-    modifiable = modifiable,
-    isSystem = isSystem,
-    isDerived = isDerived,
-    doc = doc,
-    displayLabel = displayLabel
-) {
+    override val name: String,
+    override val getValue: PropGetValue<Model, Type>,
+    override val key: Boolean = false,
+    override val description: Describer<Model, Type>? = null,
+    override val longDescription: Describer<Model, Type>? = null,
+    override val modifiable: PropModifiable<UserContext, Model, Type>? = null,
+    override val isSystem: Boolean = false,
+    override val isDerived: Boolean = false,
+    override val doc: String? = null,
+    override val displayLabel: String? = null
+) : ResponseValueFieldDefinition<UserContext, Model, Type, Type>() {
+
+    //Oh, the joys of hacking around Java's Generic system
+    override fun asNonNull(value: Type): Type = value
+
     override fun construct(
         typeDictionary: TypeDictionary,
         value: Type,
@@ -121,28 +152,22 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
 
 class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     val type: KClass<Type>,
-    name: String,
-    getValue: (Model) -> Type?,
-    key: Boolean = false,
-    description: Describer<Model, Type>? = null,
-    longDescription: Describer<Model, Type>? = null,
-    modifiable: ((UserContext, Model) -> Boolean)? = null,
-    isSystem: Boolean = false,
-    isDerived: Boolean = false,
-    doc: String? = null,
-    displayLabel: String? = null
-) : ResponseFieldDefinition<UserContext, Model, Type?, UAPIValueProperty<*>>(
-    name = name,
-    getValue = getValue,
-    key = key,
-    description = description?.before { p1, p2 -> p1 to p2!! },
-    longDescription = longDescription?.before { p1, p2 -> p1 to p2!! },
-    modifiable = modifiable,
-    isSystem = isSystem,
-    isDerived = isDerived,
-    doc = doc,
-    displayLabel = displayLabel
-) {
+    override val name: String,
+    override val getValue: PropGetValue<Model, Type?>,
+    override val key: Boolean = false,
+    override val description: Describer<Model, Type>? = null,
+    override val longDescription: Describer<Model, Type>? = null,
+    override val modifiable: PropModifiable<UserContext, Model, Type?>? = null,
+    override val isSystem: Boolean = false,
+    override val isDerived: Boolean = false,
+    override val doc: String? = null,
+    override val displayLabel: String? = null
+) : ResponseValueFieldDefinition<UserContext, Model, Type?, Type>() {
+
+    //Oh, the joys of hacking around Java's Generic system
+    @Suppress("UNCHECKED_CAST")
+    override fun asNonNull(value: Type?): Type = value as Type
+
     override fun construct(
         typeDictionary: TypeDictionary,
         value: Type?,
@@ -155,7 +180,7 @@ class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type 
         relatedResource: OrMissing<String>
     ): UAPIValueProperty<Type> {
         return UAPIValueProperty(
-            value,
+            if (value == null) null else asNonNull(value),
             typeDictionary.scalarConverter(this.type).map({ it }, { throw it.asError() }),
             description,
             longDescription,
@@ -167,8 +192,6 @@ class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type 
         )
     }
 }
-
-private fun Instant.toDate() = Date(this.toEpochMilli())
 
 private inline fun <P, R1, R2> ((P) -> R1).then(crossinline fn: (R1) -> R2): (P) -> R2 {
     return { p -> fn(this(p)) }

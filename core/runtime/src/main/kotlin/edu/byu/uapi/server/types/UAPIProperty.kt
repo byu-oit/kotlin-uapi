@@ -52,6 +52,7 @@ class UAPIValueProperty<Value: Any>(
 sealed class OrMissing<out Type : Any> {
 
     abstract fun ifPresent(fn: (Type?) -> Unit)
+    abstract fun <R: Any> map(fn: (Type?) -> R?): OrMissing<R>
 
     data class Present<out Type : Any>(
         val value: Type?
@@ -59,11 +60,17 @@ sealed class OrMissing<out Type : Any> {
         override fun ifPresent(fn: (Type?) -> Unit) {
             fn(value)
         }
+
+        override fun <R : Any> map(fn: (Type?) -> R?): OrMissing<R> {
+            return Present(fn(this.value))
+        }
     }
 
     object Missing : OrMissing<Nothing>() {
         override fun ifPresent(fn: (Nothing?) -> Unit) {
         }
+
+        override fun <R : Any> map(fn: (Nothing?) -> R?) = Missing
     }
 }
 

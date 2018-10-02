@@ -38,7 +38,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private open class Base : IdentifiedResource<String, String, String> {
-        override val responseFields: List<ResponseFieldDefinition<String, String, *, *>>
+        override val responseFields: List<ResponseFieldDefinition<String, String, *>>
             get() = TODO("not implemented")
         override val idType: KClass<String>
             get() = TODO("not implemented")
