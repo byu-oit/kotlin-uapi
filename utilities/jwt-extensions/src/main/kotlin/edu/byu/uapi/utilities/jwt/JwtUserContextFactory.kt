@@ -1,6 +1,7 @@
 package edu.byu.uapi.utilities.jwt
 
 import edu.byu.jwt.ByuJwt
+import edu.byu.jwt.openid.OIDDiscoveryLoader
 import edu.byu.jwt.validate.ByuJwtValidator
 import edu.byu.jwt.validate.ByuJwtValidatorImpl
 import edu.byu.jwt.validate.JWTValidationException
@@ -9,9 +10,10 @@ import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 
 abstract class JwtUserContextFactory<UserContext : Any>(
-    private val validator: ByuJwtValidator = ByuJwtValidatorImpl.create()
+    private val validator: ByuJwtValidator = defaultJwtValidator()
 ) : UserContextFactory<UserContext> {
 
     override fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext> {
@@ -49,6 +51,11 @@ abstract class JwtUserContextFactory<UserContext : Any>(
 
     companion object {
         private val LOG: Logger = LoggerFactory.getLogger(JwtUserContextFactory::class.java)
+
+        private fun defaultJwtValidator() = ByuJwtValidatorImpl(Collections.singleton(
+            OIDDiscoveryLoader.Builder()
+                .defaultCacheDuration(300_000 /* 5 minutes */)
+                .build()
+        ))
     }
 }
-
