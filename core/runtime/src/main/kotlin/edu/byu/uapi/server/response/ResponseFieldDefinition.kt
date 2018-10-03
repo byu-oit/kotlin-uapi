@@ -1,6 +1,5 @@
 package edu.byu.uapi.server.response
 
-import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.types.*
 import kotlin.reflect.KClass
 
@@ -19,8 +18,7 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Prop : UAPI
 
     abstract fun toProp(
         userContext: UserContext,
-        model: Model,
-        typeDictionary: TypeDictionary
+        model: Model
     ): Prop
 
 }
@@ -61,8 +59,7 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
 
     override fun toProp(
         userContext: UserContext,
-        model: Model,
-        typeDictionary: TypeDictionary
+        model: Model
     ): UAPIValueProperty<NonNullType> {
         val value: Type = this.getValue(model)
         val (description, longDescription) = getDescriptions(model, value)
@@ -82,7 +79,6 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
         }
 
         return construct(
-            typeDictionary,
             value,
             apiType,
             this.key,
@@ -95,7 +91,6 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
     }
 
     protected abstract fun construct(
-        typeDictionary: TypeDictionary,
         value: Type,
         apiType: APIType,
         key: Boolean,
@@ -126,7 +121,6 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     override fun asNonNull(value: Type): Type = value
 
     override fun construct(
-        typeDictionary: TypeDictionary,
         value: Type,
         apiType: APIType,
         key: Boolean,
@@ -138,7 +132,6 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     ): UAPIValueProperty<Type> {
         return UAPIValueProperty(
             value,
-            typeDictionary.scalarConverter(this.type).map({ it }, { throw it.asError() }),
             description,
             longDescription,
             apiType,
@@ -169,7 +162,6 @@ class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type 
     override fun asNonNull(value: Type?): Type = value as Type
 
     override fun construct(
-        typeDictionary: TypeDictionary,
         value: Type?,
         apiType: APIType,
         key: Boolean,
@@ -181,7 +173,6 @@ class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type 
     ): UAPIValueProperty<Type> {
         return UAPIValueProperty(
             if (value == null) null else asNonNull(value),
-            typeDictionary.scalarConverter(this.type).map({ it }, { throw it.asError() }),
             description,
             longDescription,
             apiType,

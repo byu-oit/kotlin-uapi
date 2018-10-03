@@ -7,7 +7,6 @@ import edu.byu.uapi.server.UserContextResult
 import edu.byu.uapi.server.types.Failure
 import edu.byu.uapi.server.types.Success
 import edu.byu.uapi.server.types.SuccessOrFailure
-import edu.byu.uapi.server.types.map
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -26,8 +25,9 @@ class LocalDevelopmentBearerTokenUserContextFactory<UserContext : Any>(
     }
 
     override fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext> {
+        LOG.debug("Creating user context")
         val authnInfo = maybeDecorateAuthInfo(authenticationInfo)
-        return authnInfo.map(
+        return authnInfo.resolve(
             { wrapped.createUserContext(it) },
             { it }
         )
@@ -41,11 +41,14 @@ class LocalDevelopmentBearerTokenUserContextFactory<UserContext : Any>(
         val auth: String? = authInfo.headers["Authorization"]?.firstOrNull()
 
         if (auth == null || !auth.startsWith("Bearer ")) {
+            LOG.debug("No bearer token; not decorating")
             return Success(authInfo)
         }
 
+        LOG.debug("Calling userinfo service with bearer token")
         val (code, body) = callUrl(userInfoServiceUrl, auth)
 
+        LOG.debug("Got response code $code")
         return when (code) {
             401 -> Failure(UserContextResult.Failure("Invalid bearer token in 'Authorization' header."))
             403 -> Failure(handleUnauthorized(body))

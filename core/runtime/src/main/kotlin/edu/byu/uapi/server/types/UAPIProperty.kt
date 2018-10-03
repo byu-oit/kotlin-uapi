@@ -1,35 +1,32 @@
 package edu.byu.uapi.server.types
 
-import edu.byu.uapi.server.scalars.ScalarConverter
-import edu.byu.uapi.server.serialization.TreeSerializationStrategy
-import edu.byu.uapi.server.serialization.UAPISerializableTree
-import edu.byu.uapi.server.serialization.UAPISerializableValue
-import edu.byu.uapi.server.serialization.ValueSerializationStrategy
+import edu.byu.uapi.server.rendering.Renderable
+import edu.byu.uapi.server.rendering.Renderer
+import edu.byu.uapi.server.scalars.ScalarType
 
-sealed class UAPIProperty: UAPISerializableTree {
+sealed class UAPIProperty: Renderable {
     abstract val apiType: APIType
     abstract val key: Boolean
     abstract val displayLabel: String?
     abstract val domain: OrMissing<String>
     abstract val relatedResource: OrMissing<String>
 
-    final override fun serialize(strategy: TreeSerializationStrategy) {
-        serializeValue(strategy)
-        strategy.value("api_type", apiType)
+    final override fun render(renderer: Renderer<*>) {
+        renderValue(renderer)
+        renderer.value("api_type", apiType)
         if (key) {
-            strategy.boolean("key", key)
+            renderer.value("key", key)
         }
-        displayLabel?.let { strategy.string("display_label", it) }
-        domain.ifPresent { strategy.string("domain", it) }
-        relatedResource.ifPresent { strategy.string("related_resource", it) }
+        displayLabel?.let { renderer.value("display_label", it) }
+        domain.ifPresent { renderer.value("domain", it) }
+        relatedResource.ifPresent { renderer.value("related_resource", it) }
     }
 
-    protected abstract fun serializeValue(ser: TreeSerializationStrategy)
+    protected abstract fun renderValue(renderer: Renderer<*>)
 }
 
 class UAPIValueProperty<Value: Any>(
     val value: Value?,
-    val scalarConverter: ScalarConverter<Value>,
     val description: OrMissing<String>,
     val longDescription: OrMissing<String>,
     override val apiType: APIType,
@@ -38,14 +35,12 @@ class UAPIValueProperty<Value: Any>(
     override val domain: OrMissing<String>,
     override val relatedResource: OrMissing<String>
 ): UAPIProperty() {
-    override fun serializeValue(
-        ser: TreeSerializationStrategy
+    override fun renderValue(
+        renderer: Renderer<*>
     ) {
-        ser.value("value") {
-            scalarConverter.serialize(value, this)
-        }
-        description.ifPresent { ser.string("description", it) }
-        longDescription.ifPresent { ser.string("long_description", it) }
+        renderer.value("value", value)
+        description.ifPresent { renderer.value("description", it) }
+        longDescription.ifPresent { renderer.value("long_description", it) }
     }
 }
 
@@ -74,16 +69,12 @@ sealed class OrMissing<out Type : Any> {
     }
 }
 
-enum class APIType(private val apiValue: String) : UAPISerializableValue {
+enum class APIType(val apiValue: String) {
     READ_ONLY("read-only"),
     MODIFIABLE("modifiable"),
     SYSTEM("system"),
     DERIVED("derived"),
     RELATED("related");
-
-    override fun serialize(strategy: ValueSerializationStrategy) {
-        strategy.string(this.apiValue)
-    }
 }
 
 

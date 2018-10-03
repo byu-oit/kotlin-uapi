@@ -3,7 +3,6 @@ package edu.byu.uapi.server.resources.identified
 import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.inputs.PathParamDeserializer
 import edu.byu.uapi.server.response.ResponseFieldDefinition
-import edu.byu.uapi.server.types.map
 import edu.byu.uapi.server.validation.Validating
 import kotlin.reflect.KClass
 
@@ -16,7 +15,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
     fun idFromModel(model: Model): Id
 
     fun getIdDeserializer(context: TypeDictionary): PathParamDeserializer<Id> {
-        return context.pathDeserializer(idType).map({it}, { throw it.asError() })
+        return context.pathDeserializer(idType).resolve({it}, { throw it.asError() })
     }
 
     // TODO: Maybe it would be better to have a map of types to field definitions/renderers? That'll especially help with trees of objects.

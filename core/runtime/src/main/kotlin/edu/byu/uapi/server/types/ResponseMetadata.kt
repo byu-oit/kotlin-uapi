@@ -1,32 +1,30 @@
 package edu.byu.uapi.server.types
 
 import edu.byu.uapi.server.FIELDSET_BASIC
-import edu.byu.uapi.server.serialization.TreeSerializationStrategy
-import edu.byu.uapi.server.serialization.UAPISerializableTree
+import edu.byu.uapi.server.rendering.Renderable
+import edu.byu.uapi.server.rendering.Renderer
 import java.time.Instant
 
-sealed class ResponseMetadata: UAPISerializableTree {
+sealed class ResponseMetadata : Renderable {
     abstract val validationResponse: ValidationResponse
     abstract val validationInformation: List<String>
     abstract val cache: CacheMeta?
 
-    final override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.tree("validation_response", validationResponse)
-        strategy.strings("validation_information", validationInformation)
-        if (cache != null) {
-            strategy.tree("cache", cache)
-        }
-        serializeExtras(strategy)
+    final override fun render(renderer: Renderer<*>) {
+        renderer.tree("validation_response", validationResponse)
+        renderer.valueArray("validation_information", validationInformation)
+        cache?.let { renderer.tree("cache", it) }
+        renderExtras(renderer)
     }
 
-    abstract fun serializeExtras(ser: TreeSerializationStrategy)
+    abstract fun renderExtras(renderer: Renderer<*>)
 }
 
 data class UAPIErrorMetadata(
     override val validationResponse: ValidationResponse,
     override val validationInformation: List<String>
 ) : ResponseMetadata() {
-    override fun serializeExtras(ser: TreeSerializationStrategy) {
+    override fun renderExtras(renderer: Renderer<*>) {
     }
 
     override val cache: CacheMeta? = null
@@ -41,11 +39,11 @@ data class CollectionMetadata(
     override val validationInformation: List<String> = emptyList(),
     override val cache: CacheMeta? = null
 ) : ResponseMetadata() {
-    override fun serializeExtras(ser: TreeSerializationStrategy) {
-        ser.number("collection_size", collectionSize)
-        ser.mergeTree(sortMetadata)
-        ser.mergeTree(searchMetadata)
-        ser.mergeTree(subsetMetadata)
+    override fun renderExtras(renderer: Renderer<*>) {
+        renderer.value("collection_size", collectionSize)
+        sortMetadata?.render(renderer)
+        searchMetadata?.render(renderer)
+        subsetMetadata?.render(renderer)
     }
 }
 
@@ -54,12 +52,12 @@ data class CollectionSubsetMetadata(
     val subsetStart: Int,
     val defaultSubsetSize: Int,
     val maxSubsetSize: Int
-): UAPISerializableTree {
-    override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.number("subset_size", subsetSize)
-        strategy.number("subset_start", subsetStart)
-        strategy.number("default_subset_size", defaultSubsetSize)
-        strategy.number("max_subset_size", maxSubsetSize)
+) : Renderable {
+    override fun render(renderer: Renderer<*>) {
+        renderer.value("subset_size", subsetSize)
+        renderer.value("subset_start", subsetStart)
+        renderer.value("default_subset_size", defaultSubsetSize)
+        renderer.value("max_subset_size", maxSubsetSize)
     }
 }
 
@@ -67,21 +65,21 @@ data class SortableCollectionMetadata(
     val sortPropertiesAvailable: List<String>,
     val sortPropertiesDefault: List<String>,
     val sortOrderDefault: SortOrder
-): UAPISerializableTree {
-    override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.strings("sort_properties_available", sortPropertiesAvailable)
-        strategy.strings("sort_properties_default", sortPropertiesDefault)
-        strategy.enum("sort_order_default", sortOrderDefault)
+) : Renderable {
+    override fun render(renderer: Renderer<*>) {
+        renderer.value("sort_properties_available", sortPropertiesAvailable)
+        renderer.value("sort_properties_default", sortPropertiesDefault)
+        renderer.value("sort_order_default", sortOrderDefault)
     }
 }
 
 data class SearchableCollectionMetadata(
     val searchContextsAvailable: Map<String, Collection<String>>
-): UAPISerializableTree {
-    override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.tree("search_contexts_available") {
+) : Renderable {
+    override fun render(renderer: Renderer<*>) {
+        renderer.tree("search_contexts_available") {
             searchContextsAvailable.entries.forEach { e ->
-                strings(e.key, e.value)
+                valueArray(e.key, e.value)
             }
         }
     }
@@ -92,17 +90,17 @@ data class UAPIResourceMeta(
     override val validationInformation: List<String> = emptyList(),
     override val cache: CacheMeta? = null
 ) : ResponseMetadata() {
-    override fun serializeExtras(ser: TreeSerializationStrategy) {
+    override fun renderExtras(renderer: Renderer<*>) {
     }
 }
 
 data class ValidationResponse(
     val code: Int = 200,
     val message: String = "OK"
-): UAPISerializableTree {
-    override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.number("code", code)
-        strategy.string("message", message)
+) : Renderable {
+    override fun render(renderer: Renderer<*>) {
+        renderer.value("code", code)
+        renderer.value("message", message)
     }
 
     companion object {
@@ -115,9 +113,9 @@ data class ValidationResponse(
 
 data class CacheMeta(
     val dateTime: Instant
-): UAPISerializableTree {
-    override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.string("date_time", dateTime.toString())
+) : Renderable {
+    override fun render(renderer: Renderer<*>) {
+        renderer.value("date_time", dateTime)
     }
 }
 
@@ -131,12 +129,12 @@ data class FieldsetsMetadata(
     override val cache: CacheMeta? = null
 
 ) : ResponseMetadata() {
-    override fun serializeExtras(ser: TreeSerializationStrategy) {
-        ser.strings("field_sets_returned", fieldSetsReturned)
-        ser.strings("field_sets_available", fieldSetsAvailable)
-        ser.strings("field_sets_default", fieldSetsDefault)
-        ser.tree("contexts_available") {
-            contextsAvailable.forEach { k, v -> ser.strings(k, v) }
+    override fun renderExtras(renderer: Renderer<*>) {
+        renderer.valueArray("field_sets_returned", fieldSetsReturned)
+        renderer.valueArray("field_sets_available", fieldSetsAvailable)
+        renderer.valueArray("field_sets_default", fieldSetsDefault)
+        renderer.tree("contexts_available") {
+            contextsAvailable.forEach { k, v -> renderer.valueArray(k, v) }
         }
     }
 }

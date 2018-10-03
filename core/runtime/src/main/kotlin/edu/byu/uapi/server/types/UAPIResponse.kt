@@ -1,19 +1,20 @@
 package edu.byu.uapi.server.types
 
-import edu.byu.uapi.server.serialization.TreeSerializationStrategy
-import edu.byu.uapi.server.serialization.UAPISerializableTree
+import edu.byu.uapi.server.rendering.Renderable
+import edu.byu.uapi.server.rendering.Renderer
+import edu.byu.uapi.server.rendering.render
 
-sealed class UAPIResponse<MetaType : ResponseMetadata>: UAPISerializableTree {
+sealed class UAPIResponse<MetaType : ResponseMetadata> : Renderable {
     abstract val metadata: MetaType
     abstract val links: UAPILinks
 
-    final override fun serialize(strategy: TreeSerializationStrategy) {
-        serializeExtras(strategy)
-        strategy.tree("links", links)
-        strategy.tree("metadata", metadata)
+    final override fun render(renderer: Renderer<*>) {
+        renderExtras(renderer)
+        renderer.tree("links", links)
+        renderer.tree("metadata", metadata)
     }
 
-    protected open fun serializeExtras(ser: TreeSerializationStrategy) {
+    protected open fun renderExtras(renderer: Renderer<*>) {
     }
 }
 
@@ -21,9 +22,9 @@ data class UAPIFieldsetsCollectionResponse(
     val values: List<UAPIFieldsetsResponse>,
     override val metadata: CollectionMetadata,
     override val links: UAPILinks
-): UAPIResponse<CollectionMetadata>() {
-    override fun serializeExtras(ser: TreeSerializationStrategy) {
-        ser.trees("values", values)
+) : UAPIResponse<CollectionMetadata>() {
+    override fun renderExtras(renderer: Renderer<*>) {
+        renderer.treeArray("values", values)
     }
 }
 
@@ -32,8 +33,8 @@ data class UAPIPropertiesResponse(
     override val metadata: UAPIResourceMeta,
     override val links: UAPILinks
 ) : UAPIResponse<UAPIResourceMeta>() {
-    override fun serializeExtras(ser: TreeSerializationStrategy) {
-        ser.mergeTree(this.properties)
+    override fun renderExtras(renderer: Renderer<*>) {
+        properties.render(renderer)
     }
 }
 
@@ -42,8 +43,8 @@ data class UAPIFieldsetsResponse(
     override val metadata: FieldsetsMetadata,
     override val links: UAPILinks = emptyMap()
 ) : UAPIResponse<FieldsetsMetadata>() {
-    override fun serializeExtras(ser: TreeSerializationStrategy) {
-        ser.mergeTree(this.fieldsets)
+    override fun renderExtras(renderer: Renderer<*>) {
+        fieldsets.render(renderer)
     }
 }
 
@@ -59,7 +60,7 @@ data class GenericUAPIErrorResponse(
     val statusCode: Int,
     val message: String,
     val validationInformation: List<String>
-): UAPIErrorResponse() {
+) : UAPIErrorResponse() {
     override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
         ValidationResponse(statusCode, message),
         validationInformation

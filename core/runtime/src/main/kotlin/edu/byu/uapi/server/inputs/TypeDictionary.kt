@@ -1,8 +1,9 @@
 package edu.byu.uapi.server.inputs
 
 import edu.byu.uapi.server.scalars.EnumScalarConverterHelper
-import edu.byu.uapi.server.scalars.ScalarConverter
-import edu.byu.uapi.server.scalars.defaultScalarConverters
+import edu.byu.uapi.server.scalars.ScalarType
+import edu.byu.uapi.server.scalars.builtinScalarTypeMap
+import edu.byu.uapi.server.scalars.builtinScalarTypes
 import edu.byu.uapi.server.types.Success
 import edu.byu.uapi.server.types.SuccessOrFailure
 import kotlin.reflect.KClass
@@ -12,16 +13,16 @@ interface TypeDictionary {
     fun <Type : Any> pathDeserializer(type: KClass<Type>): SuccessOrFailure<PathParamDeserializer<Type>, DeserializationFailure<*>>
     fun <Type : Any> queryDeserializer(type: KClass<Type>): SuccessOrFailure<QueryParamDeserializer<Type>, DeserializationFailure<*>>
 
-    fun <Type: Any> scalarConverter(type: KClass<Type>): SuccessOrFailure<ScalarConverter<Type>, DeserializationFailure<*>>
+    fun <Type: Any> scalarConverter(type: KClass<Type>): SuccessOrFailure<ScalarType<Type>, DeserializationFailure<*>>
 }
 
 class DefaultTypeDictionary : TypeDictionary {
 
-    private val explicitScalarConverters = mapOf<KClass<*>, ScalarConverter<*>>() + defaultScalarConverters
+    private val explicitScalarConverters = mapOf<KClass<*>, ScalarType<*>>() + builtinScalarTypeMap
 
     private val explicitPathDeserializers = mapOf<KClass<*>, PathParamDeserializer<*>>(
 
-    ) + defaultScalarConverters.mapValues { ScalarPathParamDeserializer(it.value) }
+    ) + builtinScalarTypes.map { it.type to ScalarPathParamDeserializer(it) }
 
     override fun <Type : Any> pathDeserializer(type: KClass<Type>): SuccessOrFailure<PathParamDeserializer<Type>, DeserializationFailure<*>> {
         if (explicitPathDeserializers.containsKey(type)) {
@@ -43,10 +44,10 @@ class DefaultTypeDictionary : TypeDictionary {
         TODO("not implemented")
     }
 
-    override fun <Type : Any> scalarConverter(type: KClass<Type>): SuccessOrFailure<ScalarConverter<Type>, DeserializationFailure<*>> {
+    override fun <Type : Any> scalarConverter(type: KClass<Type>): SuccessOrFailure<ScalarType<Type>, DeserializationFailure<*>> {
         if (explicitScalarConverters.containsKey(type)) {
             @Suppress("UNCHECKED_CAST")
-            return Success(explicitScalarConverters[type] as ScalarConverter<Type>)
+            return Success(explicitScalarConverters[type] as ScalarType<Type>)
         }
         if (type.isEnum()) {
             return Success(EnumScalarConverterHelper.getEnumScalarConverter(type))

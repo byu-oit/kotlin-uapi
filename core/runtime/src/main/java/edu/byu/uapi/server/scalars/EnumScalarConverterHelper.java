@@ -5,11 +5,11 @@ import kotlin.reflect.KClass;
 
 public class EnumScalarConverterHelper {
     @SuppressWarnings("unchecked")
-    public static <Type> ScalarConverter<Type> getEnumScalarConverter(KClass<Type> type) {
+    public static <Type> ScalarType<Type> getEnumScalarConverter(KClass<Type> type) {
         final Class<Type> javaType = JvmClassMappingKt.getJavaClass(type);
         if (!javaType.isEnum()) {
             throw new IllegalArgumentException(javaType + " is not an enum type");
         }
-        return new EnumScalarConverter((Enum[]) javaType.getEnumConstants());
+        return new EnumScalarType((Enum[]) javaType.getEnumConstants());
     }
 }

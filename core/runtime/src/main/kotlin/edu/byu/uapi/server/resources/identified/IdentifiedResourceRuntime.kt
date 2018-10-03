@@ -30,7 +30,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     @Throws(DeserializationError::class)
     fun constructId(params: Map<String, String>): Id {
         val deser = resource.getIdDeserializer(typeDictionary)
-        return deser.deserializePathParams(params).map({it}, {throw it.asError()})
+        return deser.deserializePathParams(params).resolve({it}, {throw it.asError()})
     }
 
     init {
@@ -88,7 +88,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         model: Model
     ): Map<String, UAPIProperty> {
         return resource.responseFields.map { f ->
-            f.name to f.toProp(userContext, model, typeDictionary)
+            f.name to f.toProp(userContext, model)
         }.toMap()
     }
 

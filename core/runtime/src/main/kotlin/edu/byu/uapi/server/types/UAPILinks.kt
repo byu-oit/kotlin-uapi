@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.types
 
-import edu.byu.uapi.server.serialization.TreeSerializationStrategy
-import edu.byu.uapi.server.serialization.UAPISerializableTree
+import edu.byu.uapi.server.rendering.Renderable
+import edu.byu.uapi.server.rendering.Renderer
 
 typealias UAPILinks = Map<String, UAPILink>
 
@@ -9,15 +9,15 @@ data class UAPILink(
     val rel: String,
     val href: String,
     val method: LinkMethod = LinkMethod.GET
-): UAPISerializableTree {
-    override fun serialize(strategy: TreeSerializationStrategy) {
-        strategy.string("rel", rel)
-        strategy.string("href", href)
-        strategy.enum("method", method)
+) : Renderable {
+    override fun render(renderer: Renderer<*>) {
+        renderer.value("rel", rel)
+        renderer.value("href", href)
+        renderer.value("method", method)
     }
 }
 
-enum class LinkMethod{
+enum class LinkMethod {
     GET,
     PUT,
     POST,

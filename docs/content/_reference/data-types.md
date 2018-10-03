@@ -80,6 +80,8 @@ All binary values are represented as Base-64 encoded strings.
 Kotlin Type | JSON Type
 ------------|----------
 `java.util.UUID` | `string`
+`java.net.URL` | `string`
+`java.net.URI` | `string`
 
 ## UAPI-Specific Types
 
