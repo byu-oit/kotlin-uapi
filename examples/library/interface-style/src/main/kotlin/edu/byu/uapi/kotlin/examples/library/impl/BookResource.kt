@@ -3,7 +3,7 @@ package edu.byu.uapi.kotlin.examples.library.impl
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
-import edu.byu.uapi.server.response.ResponseFieldDefinition
+import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.uapiResponse
 
 /**
@@ -37,7 +37,7 @@ class BookResource : IdentifiedResource<
         return model.oclc
     }
 
-    override val responseFields: List<ResponseFieldDefinition<MyUserContext, Book, *>>
+    override val responseFields: List<ResponseField<MyUserContext, Book, *>>
         get() = uapiResponse {
             value(Book::oclc) {
                 key = true

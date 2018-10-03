@@ -3,7 +3,7 @@ package edu.byu.uapi.server.resources.identified
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
-import edu.byu.uapi.server.response.ResponseFieldDefinition
+import edu.byu.uapi.server.response.ResponseField
 import io.kotlintest.Description
 import io.kotlintest.data.forall
 import io.kotlintest.matchers.collections.containExactly
@@ -144,7 +144,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     private data class NewFoo(val value: String)
 
     private open class FooResource(val model: Foo? = Foo("bar"), val canUserView: Boolean = true) : IdentifiedResource<User, String, Foo> {
-        override val responseFields: List<ResponseFieldDefinition<User, Foo, *>>
+        override val responseFields: List<ResponseField<User, Foo, *>>
             get() = TODO("not implemented")
         override val idType: KClass<String> = String::class
 

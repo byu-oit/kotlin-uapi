@@ -3,11 +3,11 @@ package edu.byu.uapi.server.response
 import edu.byu.uapi.server.types.*
 import kotlin.reflect.KClass
 
-typealias ValuePropDescriber<Model, Value> = (Model, Value) -> String?
+typealias ValuePropDescriber<Model, Value> = (Model, value: Value) -> String?
 typealias ValuePropGetter<Model, Value> = (Model) -> Value
-typealias ValuePropModifiable<UserContext, Model, Value> = (UserContext, Model, Value) -> Boolean
+typealias ValuePropModifiable<UserContext, Model, Value> = (UserContext, Model, value: Value) -> Boolean
 
-sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Prop : UAPIProperty> {
+sealed class ResponseField<UserContext : Any, Model : Any, Prop : UAPIProperty> {
     abstract val name: String
     abstract val key: Boolean
     abstract val isSystem: Boolean
@@ -23,8 +23,11 @@ sealed class ResponseFieldDefinition<UserContext : Any, Model : Any, Prop : UAPI
 
 }
 
-sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, NonNullType : Any>
-    : ResponseFieldDefinition<UserContext, Model, UAPIValueProperty<NonNullType>>() {
+typealias ArrayPropGetter<Model, Item> = (Model) -> Collection<Item>
+typealias ArrayPropDescriber<Model, Item> = (Model, item: Item, index: Int) -> String?
+
+sealed class ValueResponseFieldBase<UserContext : Any, Model : Any, Type, NonNullType : Any>
+    : ResponseField<UserContext, Model, UAPIValueProperty<Type>>() {
 
     abstract override val name: String
     abstract val getValue: ValuePropGetter<Model, Type>
@@ -41,16 +44,16 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
     private fun getDescriptions(
         model: Model,
         value: Type
-    ): Pair<OrMissing<String>, OrMissing<String>> {
-        val desc = if (description == null) OrMissing.Missing else OrMissing.Present(description)
-        val longDesc = if (longDescription == null) OrMissing.Missing else OrMissing.Present(longDescription)
+    ): Pair<OrMissing<String?>, OrMissing<String?>> {
+        val desc = description.orMissing()
+        val longDesc = longDescription.orMissing()
 
         return if (value == null) {
-            desc.map { null } to longDesc.map { null }
+            (desc.map { null } to longDesc.map { null })
         } else {
             val nonNull = asNonNull(value)
-            val d = desc.map { fn -> fn?.invoke(model,  nonNull) }
-            val ld = longDesc.map { fn -> fn?.invoke(model, nonNull) }
+            val d = desc.map { fn -> fn(model, nonNull) }
+            val ld = longDesc.map { fn -> fn(model, nonNull) }
             d to ld
         }
     }
@@ -60,23 +63,13 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
     override fun toProp(
         userContext: UserContext,
         model: Model
-    ): UAPIValueProperty<NonNullType> {
+    ): UAPIValueProperty<Type> {
         val value: Type = this.getValue(model)
         val (description, longDescription) = getDescriptions(model, value)
 
-        val getModifiable = this.modifiable
+        val modifiable = this.modifiable?.invoke(userContext, model, value)
 
-        val apiType = when {
-            getModifiable != null -> if (getModifiable(userContext, model, value)) {
-                APIType.MODIFIABLE
-            } else {
-                APIType.READ_ONLY
-            }
-            isDerived -> APIType.DERIVED
-            isSystem -> APIType.SYSTEM
-            // TODO(Handle 'related')
-            else -> APIType.READ_ONLY
-        }
+        val apiType = getApiType(modifiable, isDerived, isSystem)
 
         return construct(
             value,
@@ -94,16 +87,88 @@ sealed class ResponseValueFieldDefinition<UserContext : Any, Model : Any, Type, 
         value: Type,
         apiType: APIType,
         key: Boolean,
-        description: OrMissing<String>,
-        longDescription: OrMissing<String>,
+        description: OrMissing<String?>,
+        longDescription: OrMissing<String?>,
         displayLabel: String?,
         domain: OrMissing<String>,
         relatedResource: OrMissing<String>
-    ): UAPIValueProperty<NonNullType>
+    ): UAPIValueProperty<Type>
 
 }
 
-class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
+class ValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>(
+    val itemType: KClass<Item>,
+    override val name: String,
+    val getValues: ArrayPropGetter<Model, Item>,
+    override val key: Boolean = false,
+    val description: ArrayPropDescriber<Model, Item>? = null,
+    val longDescription: ArrayPropDescriber<Model, Item>? = null,
+    val modifiable: ValuePropModifiable<UserContext, Model, Collection<Item>>? = null,
+    override val isSystem: Boolean = false,
+    override val isDerived: Boolean = false,
+    override val doc: String? = null,
+    override val displayLabel: String? = null
+) : ResponseField<UserContext, Model, UAPIValueArrayProperty<Item>>() {
+    override fun toProp(
+        userContext: UserContext,
+        model: Model
+    ): UAPIValueArrayProperty<Item> {
+        val values = this.getValues(model)
+
+        val modifiable = this.modifiable?.invoke(userContext, model, values)
+
+        val apiType = getApiType(modifiable, isDerived, isSystem)
+
+        val decoratedValues = values.mapIndexed { index, item ->
+            val (desc, longDesc) = getDescriptions(model, item, index)
+            ValueArrayItem(
+                item,
+                desc,
+                longDesc,
+                OrMissing.Missing
+            )
+        }
+
+        return UAPIValueArrayProperty(
+            decoratedValues,
+            apiType,
+            key,
+            displayLabel,
+            OrMissing.Missing,
+            OrMissing.Missing
+        )
+    }
+
+    private fun getDescriptions(
+        model: Model,
+        value: Item,
+        index: Int
+    ): Pair<OrMissing<String?>, OrMissing<String?>> {
+        val desc = description.orMissing()
+        val longDesc = longDescription.orMissing()
+
+        val d = desc.map { fn -> fn(model, value, index) }
+        val ld = longDesc.map { fn -> fn(model, value, index) }
+        return d to ld
+    }
+
+}
+
+fun getApiType(
+    modifiable: Boolean?,
+    derived: Boolean,
+    system: Boolean
+): APIType {
+    return when {
+        modifiable != null -> if (modifiable) APIType.MODIFIABLE else APIType.READ_ONLY
+        derived -> APIType.DERIVED
+        system -> APIType.SYSTEM
+        // TODO(Handle 'related')
+        else -> APIType.READ_ONLY
+    }
+}
+
+class ValueResponseField<UserContext : Any, Model : Any, Type : Any>(
     val type: KClass<Type>,
     override val name: String,
     override val getValue: ValuePropGetter<Model, Type>,
@@ -115,7 +180,7 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     override val isDerived: Boolean = false,
     override val doc: String? = null,
     override val displayLabel: String? = null
-) : ResponseValueFieldDefinition<UserContext, Model, Type, Type>() {
+) : ValueResponseFieldBase<UserContext, Model, Type, Type>() {
 
     //Oh, the joys of hacking around Java's Generic system
     override fun asNonNull(value: Type): Type = value
@@ -124,8 +189,8 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
         value: Type,
         apiType: APIType,
         key: Boolean,
-        description: OrMissing<String>,
-        longDescription: OrMissing<String>,
+        description: OrMissing<String?>,
+        longDescription: OrMissing<String?>,
         displayLabel: String?,
         domain: OrMissing<String>,
         relatedResource: OrMissing<String>
@@ -143,7 +208,7 @@ class ValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
     }
 }
 
-class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type : Any>(
+class NullableValueResponseField<UserContext : Any, Model : Any, Type : Any>(
     val type: KClass<Type>,
     override val name: String,
     override val getValue: ValuePropGetter<Model, Type?>,
@@ -155,7 +220,7 @@ class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type 
     override val isDerived: Boolean = false,
     override val doc: String? = null,
     override val displayLabel: String? = null
-) : ResponseValueFieldDefinition<UserContext, Model, Type?, Type>() {
+) : ValueResponseFieldBase<UserContext, Model, Type?, Type>() {
 
     //Oh, the joys of hacking around Java's Generic system
     @Suppress("UNCHECKED_CAST")
@@ -165,14 +230,14 @@ class NullableValueResponseFieldDefinition<UserContext : Any, Model : Any, Type 
         value: Type?,
         apiType: APIType,
         key: Boolean,
-        description: OrMissing<String>,
-        longDescription: OrMissing<String>,
+        description: OrMissing<String?>,
+        longDescription: OrMissing<String?>,
         displayLabel: String?,
         domain: OrMissing<String>,
         relatedResource: OrMissing<String>
-    ): UAPIValueProperty<Type> {
+    ): UAPIValueProperty<Type?> {
         return UAPIValueProperty(
-            if (value == null) null else asNonNull(value),
+            value,
             description,
             longDescription,
             apiType,

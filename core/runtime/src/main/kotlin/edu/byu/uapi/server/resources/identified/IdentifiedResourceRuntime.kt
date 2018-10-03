@@ -3,7 +3,7 @@ package edu.byu.uapi.server.resources.identified
 import edu.byu.uapi.server.FIELDSET_BASIC
 import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.inputs.DeserializationError
-import edu.byu.uapi.server.response.ResponseFieldDefinition
+import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.schemas.*
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor
@@ -205,7 +205,7 @@ fun introspectListView(
     TODO("not implemented")
 }
 
-private fun introspectResponseModel(responseFields: List<ResponseFieldDefinition<*, *, *>>): ResponseModel {
+private fun introspectResponseModel(responseFields: List<ResponseField<*, *, *>>): ResponseModel {
     TODO()
 }
 

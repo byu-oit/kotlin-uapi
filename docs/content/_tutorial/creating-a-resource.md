@@ -94,7 +94,7 @@ We also need to describe the responses we send when someone loads our resource. 
 chapter; for now, just copy the following stub:
 
 ```kotlin
-    override val responseFields: List<ResponseFieldDefinition<LibraryUser, Book, *, *>> = uapiResponse {
+    override val responseFields: List<ResponseField<LibraryUser, Book, *>> = uapiResponse {
         value(Book::oclc) {
             
         }

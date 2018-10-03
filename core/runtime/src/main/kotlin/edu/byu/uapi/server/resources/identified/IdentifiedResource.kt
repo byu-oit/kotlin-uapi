@@ -2,7 +2,7 @@ package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.inputs.PathParamDeserializer
-import edu.byu.uapi.server.response.ResponseFieldDefinition
+import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.validation.Validating
 import kotlin.reflect.KClass
 
@@ -20,7 +20,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
     // TODO: Maybe it would be better to have a map of types to field definitions/renderers? That'll especially help with trees of objects.
     //   Then again, it's not THAT hard to share around a list representing the fields for a given type...
-    val responseFields: List<ResponseFieldDefinition<UserContext, Model, *>>
+    val responseFields: List<ResponseField<UserContext, Model, *>>
 
     val createOperation: Creatable<UserContext, Id, Model, *>?
         get() = this.takeIfType()

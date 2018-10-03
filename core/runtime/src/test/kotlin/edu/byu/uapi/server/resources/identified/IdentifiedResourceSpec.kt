@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.resources.identified
 
-import edu.byu.uapi.server.response.ResponseFieldDefinition
+import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.validation.Validating
 import io.kotlintest.data.forall
 import io.kotlintest.shouldBe
@@ -38,7 +38,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private open class Base : IdentifiedResource<String, String, String> {
-        override val responseFields: List<ResponseFieldDefinition<String, String, *>>
+        override val responseFields: List<ResponseField<String, String, *>>
             get() = TODO("not implemented")
         override val idType: KClass<String>
             get() = TODO("not implemented")

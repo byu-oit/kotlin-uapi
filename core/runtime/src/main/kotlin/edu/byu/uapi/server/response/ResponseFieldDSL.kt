@@ -4,7 +4,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
 inline fun <UserContext : Any, Model : Any> uapiResponse(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
-    : List<ResponseFieldDefinition<UserContext, Model, *>> {
+    : List<ResponseField<UserContext, Model, *>> {
     val r = UAPIResponseInit<UserContext, Model>()
     r.fn()
     return r.getList()
@@ -13,7 +13,7 @@ inline fun <UserContext : Any, Model : Any> uapiResponse(fn: UAPIResponseInit<Us
 class UAPIResponseInit<UserContext : Any, Model : Any>() {
 
     @PublishedApi
-    internal val fieldList: MutableList<ResponseFieldDefinition<UserContext, Model, *>> = mutableListOf()
+    internal val fieldList: MutableList<ResponseField<UserContext, Model, *>> = mutableListOf()
 
     inline fun <reified T : Any> value(
         name: String,
@@ -55,11 +55,86 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
         fieldList.add(p.toDefinition())
     }
 
-    fun getList(): List<ResponseFieldDefinition<UserContext, Model, *>> = fieldList
+    inline fun <reified T: Any> valueArray(
+        name: String,
+        fn: ArrayInit<UserContext, Model, T>.() -> Unit
+    ) {
+        val p = ArrayInit<UserContext, Model, T>(name, T::class)
+        p.fn()
+        fieldList.add(p.toDefinition())
+    }
+
+    inline fun <reified T: Any> valueArray(
+        prop: KProperty1<Model, Collection<T>>,
+        fn: ArrayInit<UserContext, Model, T>.() -> Unit
+    ) {
+        val p = ArrayInit<UserContext, Model, T>(prop.name, T::class)
+        p.getValues(prop)
+        p.fn()
+        fieldList.add(p.toDefinition())
+    }
+
+    fun getList(): List<ResponseField<UserContext, Model, *>> = fieldList
 
 }
 
-sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any> {
+sealed class PropInit<UserContext: Any, Model: Any, Type> {
+    var key: Boolean = false
+
+    protected var modifiableFn: ValuePropModifiable<UserContext, Model, Type>? = null
+
+    fun modifiable(fn: ValuePropModifiable<UserContext, Model, Type>) {
+        this.modifiableFn = fn
+    }
+
+    var isSystem: Boolean = false
+    var isDerived: Boolean = false
+    var doc: String? = null
+    var displayLabel: String? = null
+}
+
+class ArrayInit<UserContext: Any, Model: Any, Type: Any>(
+    val name: String,
+    val itemType: KClass<Type>
+): PropInit<UserContext, Model, Collection<Type>>() {
+    protected lateinit var valueGetter: ArrayPropGetter<Model, Type>
+
+    fun getValues(fn: ArrayPropGetter<Model, Type>) {
+        valueGetter = fn
+    }
+
+    protected var descriptionFn: ArrayPropDescriber<Model, Type>? = null
+
+    fun description(fn: ArrayPropDescriber<Model, Type>) {
+        this.descriptionFn = fn
+    }
+
+    protected var longDescriptionFn: ArrayPropDescriber<Model, Type>? = null
+
+    fun longDescription(fn: ArrayPropDescriber<Model, Type>) {
+        longDescriptionFn = fn
+    }
+
+    @PublishedApi
+    internal fun toDefinition(): ResponseField<UserContext, Model, *> {
+        return ValueArrayResponseField(
+            itemType = itemType,
+            name = name,
+            getValues = valueGetter,
+            key = key,
+            description = descriptionFn,
+            longDescription = longDescriptionFn,
+            modifiable = modifiableFn,
+            isSystem = isSystem,
+            isDerived = isDerived,
+            doc = doc,
+            displayLabel = displayLabel
+        )
+    }
+
+}
+
+sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any>: PropInit<UserContext, Model, Type>() {
     protected lateinit var valueGetter: ValuePropGetter<Model, Type>
 
     val nullable: Boolean = false
@@ -67,8 +142,6 @@ sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any> 
     fun getValue(fn: ValuePropGetter<Model, Type>) {
         valueGetter = fn
     }
-
-    var key: Boolean = false
 
     protected var descriptionFn: ValuePropDescriber<Model, NotNullType>? = null
 
@@ -82,19 +155,8 @@ sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any> 
         longDescriptionFn = fn
     }
 
-    protected var modifiableFn: ValuePropModifiable<UserContext, Model, Type>? = null
-
-    fun modifiable(fn: ValuePropModifiable<UserContext, Model, Type>) {
-        this.modifiableFn = fn
-    }
-
-    var isSystem: Boolean = false
-    var isDerived: Boolean = false
-    var doc: String? = null
-    var displayLabel: String? = null
-
     @PublishedApi
-    internal abstract fun toDefinition(): ResponseFieldDefinition<UserContext, Model, *>
+    internal abstract fun toDefinition(): ResponseField<UserContext, Model, *>
 
 }
 
@@ -104,8 +166,8 @@ class UAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
 ) : ValueInit<UserContext, Model, Type, Type>() {
 
     @PublishedApi
-    override fun toDefinition(): ResponseFieldDefinition<UserContext, Model, *> {
-        return ValueResponseFieldDefinition(
+    override fun toDefinition(): ResponseField<UserContext, Model, *> {
+        return ValueResponseField(
             type,
             name,
             valueGetter,
@@ -125,8 +187,8 @@ class NullableUAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
 ) : ValueInit<UserContext, Model, Type?, Type>() {
 
     @PublishedApi
-    override fun toDefinition(): ResponseFieldDefinition<UserContext, Model, *> {
-        return NullableValueResponseFieldDefinition(
+    override fun toDefinition(): ResponseField<UserContext, Model, *> {
+        return NullableValueResponseField(
             type,
             name,
             valueGetter,
