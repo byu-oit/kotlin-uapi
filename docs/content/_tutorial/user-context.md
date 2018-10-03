@@ -22,7 +22,7 @@ how to construct one. You do this by passing an instance of `UserContextFactory`
 Your user context class can contain anything you want. Ideally, you should be able to determine if a user is authorized
 to perform an action on a record using nothing but data contained in the user context and in the record itself.
 
-Let's make you Library User class contain a few simple values:
+Let's make your Library User class contain a few simple values:
 
 ```kotlin
 
