@@ -19,6 +19,8 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         return context.pathDeserializer(idType).map({it}, { throw it.asError() })
     }
 
+    // TODO: Maybe it would be better to have a map of types to field definitions/renderers? That'll especially help with trees of objects.
+    //   Then again, it's not THAT hard to share around a list representing the fields for a given type...
     val responseFields: List<ResponseFieldDefinition<UserContext, Model, *>>
 
     val createOperation: Creatable<UserContext, Id, Model, *>?
