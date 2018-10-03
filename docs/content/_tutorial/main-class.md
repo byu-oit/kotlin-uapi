@@ -32,7 +32,7 @@ This will start a Spark embedded server on port 8080.
 But wait!  Your IDE is probably lighting up with red squiggly error lines right now! That's because we
 need to provide our Runtime instance with a way to handle user authentication and authorization.
 
-We'll cover the specifics of this in the next section, but for now, let's just stub out the interfaces
+We'll explain what we're doing here in the [next lesson](./user-context.md), but for now, let's just stub out the interfaces
 that the Runtime wants.
 
 Create a file named `src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt`:
