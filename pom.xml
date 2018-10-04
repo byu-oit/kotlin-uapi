@@ -12,14 +12,21 @@
     <name>Kotlin UAPI Parent POM</name>
 
     <prerequisites>
-        <maven>3.1</maven>
+        <maven>3.5</maven>
     </prerequisites>
 
-    <parent>
-        <groupId>edu.byu</groupId>
-        <artifactId>maven-byu-pom</artifactId>
-        <version>2.0.3</version>
-    </parent>
+    <distributionManagement>
+        <repository>
+            <id>byu-release-repo</id>
+            <name>BYU Release Repository</name>
+            <url>https://developer.byu.edu/maven2/content/repositories/byu-release-repo</url>
+        </repository>
+        <snapshotRepository>
+            <id>byu-snapshot-repo</id>
+            <name>BYU Snapshot Repository</name>
+            <url>https://developer.byu.edu/maven2/content/repositories/byu-snapshot-repo</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <modules>
         <!--<module>uapi-types</module>-->
@@ -119,6 +126,30 @@
         <testSourceDirectory>src/test/kotlin</testSourceDirectory>
 
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M2</version>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.5</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>1.8.0</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>

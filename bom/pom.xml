@@ -11,12 +11,22 @@
 
     <packaging>pom</packaging>
 
+    <prerequisites>
+        <maven>3.5</maven>
+    </prerequisites>
 
-    <parent>
-        <groupId>edu.byu</groupId>
-        <artifactId>maven-byu-pom</artifactId>
-        <version>2.0.3</version>
-    </parent>
+    <distributionManagement>
+        <repository>
+            <id>byu-release-repo</id>
+            <name>BYU Release Repository</name>
+            <url>https://developer.byu.edu/maven2/content/repositories/byu-release-repo</url>
+        </repository>
+        <snapshotRepository>
+            <id>byu-snapshot-repo</id>
+            <name>BYU Snapshot Repository</name>
+            <url>https://developer.byu.edu/maven2/content/repositories/byu-snapshot-repo</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <dependencyManagement>
         <dependencies>
