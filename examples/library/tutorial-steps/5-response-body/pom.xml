@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>edu.byu.uapi.kotlin.utilities</groupId>
-            <artifactId>jwt-user-context-factory</artifactId>
+            <artifactId>jwt-extensions</artifactId>
         </dependency>
 
         <dependency>
@@ -50,6 +50,12 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.25</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 

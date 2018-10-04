@@ -7,6 +7,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.json.Json
 import javax.json.JsonObject
+import javax.json.JsonObjectBuilder
 import javax.json.JsonValue
 
 class JsonRenderer(override val typeDictionary: TypeDictionary) : RendererBase<JsonRenderer, JsonObject, JsonValue>() {
@@ -14,7 +15,7 @@ class JsonRenderer(override val typeDictionary: TypeDictionary) : RendererBase<J
 
     override val scalarRenderer = JsonValueScalarRenderer
 
-    private val root = Json.createObjectBuilder()
+    private val root: JsonObjectBuilder = Json.createObjectBuilder()
 
     override fun addScalar(
         key: String,

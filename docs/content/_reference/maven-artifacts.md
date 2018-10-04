@@ -30,6 +30,7 @@ To import a Bill of Materials, you must add a `<dependencyManagement>` section t
   </dependencies>
 </dependencyManagement>
 ```
+{% include uapi-version.html %}
 
 ## Packages
 
@@ -100,6 +101,9 @@ automated testing; production applications should have more advanced logging.
 </dependency>
 ```
 
+{% include maven-version.html group='org.slf4j' artifact='slf4j-simple' ver_filter='1.7' %}
+
+
 ## [Log4j 2](https://logging.apache.org/log4j/2.x/)
 
 If you haven't heard of Log4j, you haven't been around the Java world for long.
@@ -114,6 +118,8 @@ You're on your own for figuring out the details of your Log4j logger configurati
 </dependency>
 ```
 
+{% include maven-version.html group='org.apache.logging.log4j' artifact='log4j-slf4j-impl' %}
+
 ## [Tinylog](https://tinylog.org/)
 
 Tinylog is a very small and fast logger, ideal for size-sensitive environments like AWS Lambda and Android. 
@@ -122,12 +128,15 @@ It offers bindings for SLF4j.
 ```xml
 <dependency>
   <groupId>org.tinylog</groupId>
-  <artifactId>slf4j-binding</artifactId>
+  <artifactId>tinylog</artifactId>
   <version>{latest tinylog version}</version>
 </dependency>
 <dependency>
   <groupId>org.tinylog</groupId>
-  <artifactId>tinylog</artifactId>
+  <artifactId>slf4j-binding</artifactId>
   <version>{latest tinylog version}</version>
 </dependency>
 ```
+
+{% include maven-version.html group='org.tinylog' artifact='tinylog' %}
+{% include maven-version.html group='org.tinylog' artifact='slf4j-binding' %}

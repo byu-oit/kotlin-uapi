@@ -38,6 +38,7 @@ as the UAPI Bill of Materials POM does not include the example code.
   <version>{Latest version here}</version>
 </dependency>
 ```
+{% include uapi-version.html %}
 
 We also need to tell the Kotlin compiler to target Java 8. Add the following to the Kotlin maven plugin configuration:
 
@@ -46,6 +47,22 @@ We also need to tell the Kotlin compiler to target Java 8. Add the following to 
     <jvmTarget>1.8</jvmTarget>
 </configuration>
 ```
+
+It's pretty useful to be able to get debug logs, right? The Runtime and its dependencies use the pluggable
+SLF4J facade for logging; you need to add a dependency to actually make it log things. We keep a 
+[partial list](../_reference/maven-artifacts.md#logging) of compatible logging tools. Normally you'd
+use something fully-featured, like Log4J, but we'll just use the simple SLF4J logger, which dumps logs
+to stdout:
+
+```xml
+<dependency>
+  <groupId>org.slf4j</groupId>
+  <artifactId>slf4j-simple</artifactId>
+  <version>{latest SLF4j Version}</version>
+</dependency>
+```
+
+{% include maven-version.html group="org.slf4j" artifact="slf4j-simple" ver_filter="1.7" %}
 
 You can feel free to remove the `junit` and `kotlin-test` dependencies,
 as well as `src/main/kotlin/edu/byu/uapi/library/Hello.kt` and 

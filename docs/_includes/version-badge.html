@@ -1,0 +1,21 @@
+{% assign label = include.label %}
+{% assign encodedLabel = label | url_encode %}
+{% assign logo = include.logo %}
+{% if include.extra_params %}
+{% assign extra = include.extra_params | prepend:'&' %}
+{% else %}
+{% assign extra = '' %}
+{% endif %}
+
+{% capture image %}
+<img src="https://img.shields.io/{{include.shieldPath}}.svg?style=for-the-badge&label={{encodedLabel}}{{extra}}&logo={{logo}}" alt="{{label}}"/>
+{% endcapture %}
+
+{%- if include.url -%}}
+<a href="{{include.url}}">
+    {{image}}
+</a>
+{%- else -%}
+{{image}}
+{%- endif -%}
+

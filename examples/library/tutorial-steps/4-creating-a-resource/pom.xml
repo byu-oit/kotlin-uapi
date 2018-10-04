@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>edu.byu.uapi.kotlin.utilities</groupId>
-            <artifactId>jwt-user-context-factory</artifactId>
+            <artifactId>jwt-extensions</artifactId>
         </dependency>
 
         <dependency>

@@ -3,7 +3,7 @@ title: Home
 order: 1
 ---
 
-![GitHub release](https://img.shields.io/github/tag/byu-oit/kotlin-uapi.svg)
+![GitHub release](https://img.shields.io/github/tag/byu-oit/kotlin-uapi.svg?label=Latest+Release)
 
 # BYU Kotlin UAPI Runtime
 
