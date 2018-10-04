@@ -1,3 +1,5 @@
+[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=byu-oit/kotlin-uapi)](https://dependabot.com)
+
 # kotlin-uapi-dsl
 
 **This is very, very much a work in progress and could break or change at any time**
