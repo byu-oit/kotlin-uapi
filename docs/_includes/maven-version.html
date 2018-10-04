@@ -1,12 +1,12 @@
-{% assign group = include.group %}
-{% assign artifact = include.artifact %}
+{%- assign group = include.group -%}
+{%- assign artifact = include.artifact -%}
 
-{% assign shieldPath = 'maven-central/v/' | append: group | append: '/' | append: artifact %}
+{%- assign shieldPath = 'maven-central/v/' | append: group | append: '/' | append: artifact -%}
 
-{% if include.ver_filter %}
-  {% assign shieldPath = shieldPath | append:'/' | append: include.ver_filter %}
-{% endif %}
+{%- if include.ver_filter -%}
+   {%- assign shieldPath = shieldPath | append:'/' | append: include.ver_filter -%}
+{%- endif -%}
 
-{% assign label = 'Maven: ' | append: group | append:':' | append: artifact %}
+{%- assign label = 'Maven: ' | append: group | append:':' | append: artifact -%}
 
-{% include version-badge.html label=label shieldPath=shieldPath %}
+{%- include version-badge.html label=label shieldPath=shieldPath -%}

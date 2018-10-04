@@ -70,3 +70,10 @@ The API model is the output of the DSL. It contains a data structure representin
 Subclasses of the sealed class UAPIScalar represent the different datatypes that are natively understood by the UAPI.  These are the basic JSON types, plus types which are serialized to a string, but are governed by a non-JSON specification. For example, a date/time is serialized as a string, but the format of that string is governed by [RFC 3339](https://tools.ietf.org/html/rfc3339), so there is a UAPIDateTime scalar class which understands this serialization.
 
 All data types that are serialized to and from our UAPI implementations must be converted to/from one of these scalar types. The datatypes module contains JSON serialization/deserialization providers for all of the scalar types.
+
+# Joseph's Big List of Crazy Ideas
+
+* Standard Field Definitions (byu_id, etc.)
+* Lifecycle hooks
+* Make all functions `suspend` and use coroutines
+* Extension modules - use lifecycle hooks to do things like add caching, etc.
