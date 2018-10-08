@@ -18,7 +18,7 @@ This means that fields in a response don't just look like this:
 
 ```json
 {
-  "title": "A Player of Games"
+  "title": "The Player of Games"
 }
 ```
 
@@ -27,7 +27,7 @@ Instead, we wrap the value with a bunch of metadata:
 ```json
 {
   "title": {
-    "value": "A Player of Games",
+    "value": "The Player of Games",
     "api_type": "read-only",
     "display_label": "Title"
   }
