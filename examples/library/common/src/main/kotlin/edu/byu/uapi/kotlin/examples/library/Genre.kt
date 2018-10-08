@@ -5,7 +5,7 @@ package edu.byu.uapi.kotlin.examples.library
  * kotlin-uapi-dsl-pom
  */
 
-class Genre (val genreId: Int,
+class Genre (val code: String,
              val name: String){
     override fun toString(): String {
         return name

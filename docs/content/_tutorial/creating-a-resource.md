@@ -11,7 +11,8 @@ resources are rarely used, so we'll just implement an `IdentifiedResource`.
 
 ## Stubbing out a Resource
 
-Create a file named `BooksResource.kt`:
+Create a file named `BooksResource.kt`. You will probably want to put it in the same directory as your `User` classes,
+`src/main/kotlin/edu/byu/uapi/library/`.
 
 ```kotlin
 

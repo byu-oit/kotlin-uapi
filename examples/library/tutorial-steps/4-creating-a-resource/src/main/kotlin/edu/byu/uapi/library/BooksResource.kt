@@ -15,7 +15,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
         userContext: LibraryUser,
         id: Long
     ): Book? {
-        return Library.getBook(id)
+        return Library.getBookByOclc(id)
     }
 
     override fun idFromModel(model: Book): Long {

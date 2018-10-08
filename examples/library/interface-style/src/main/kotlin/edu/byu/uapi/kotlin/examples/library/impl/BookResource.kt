@@ -22,7 +22,7 @@ class BookResource : IdentifiedResource<
         userContext: MyUserContext,
         id: Long
     ): Book? {
-        return Library.getBook(id)
+        return Library.getBookByOclc(id)
     }
 
     override fun canUserViewModel(

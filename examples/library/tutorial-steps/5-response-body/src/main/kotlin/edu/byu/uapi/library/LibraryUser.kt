@@ -12,6 +12,7 @@ class LibraryUser(
   val isLibrarian: Boolean
 ) {
     val isCardholder = cardholderId != null
+    val canModifyBooks: Boolean = isLibrarian
 }
 
 private val librarianNetIds = setOf("{your NetId here}")

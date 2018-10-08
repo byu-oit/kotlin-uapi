@@ -59,7 +59,6 @@
             <version>1.7.25</version>
         </dependency>
 
-
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-core</artifactId>

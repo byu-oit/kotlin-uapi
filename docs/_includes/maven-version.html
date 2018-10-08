@@ -7,6 +7,6 @@
    {%- assign shieldPath = shieldPath | append:'/' | append: include.ver_filter -%}
 {%- endif -%}
 
-{%- assign label = 'Maven: ' | append: group | append:':' | append: artifact -%}
+{%- assign label = 'Maven: ' | append: group | append:' : ' | append: artifact -%}
 
 {%- include version-badge.html label=label shieldPath=shieldPath -%}

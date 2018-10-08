@@ -1,7 +1,12 @@
 package edu.byu.uapi.server.response
 
+import java.lang.annotation.Inherited
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
+
+@DslMarker
+@Inherited
+annotation class InResponseFieldDsl
 
 inline fun <UserContext : Any, Model : Any> uapiResponse(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
     : List<ResponseField<UserContext, Model, *>> {
@@ -10,6 +15,7 @@ inline fun <UserContext : Any, Model : Any> uapiResponse(fn: UAPIResponseInit<Us
     return r.getList()
 }
 
+@InResponseFieldDsl
 class UAPIResponseInit<UserContext : Any, Model : Any>() {
 
     @PublishedApi
@@ -55,7 +61,7 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
         fieldList.add(p.toDefinition())
     }
 
-    inline fun <reified T: Any> valueArray(
+    inline fun <reified T : Any> valueArray(
         name: String,
         fn: ArrayInit<UserContext, Model, T>.() -> Unit
     ) {
@@ -64,7 +70,7 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
         fieldList.add(p.toDefinition())
     }
 
-    inline fun <reified T: Any> valueArray(
+    inline fun <reified T : Any> valueArray(
         prop: KProperty1<Model, Collection<T>>,
         fn: ArrayInit<UserContext, Model, T>.() -> Unit
     ) {
@@ -78,7 +84,8 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
 
 }
 
-sealed class PropInit<UserContext: Any, Model: Any, Type> {
+@InResponseFieldDsl
+sealed class PropInit<UserContext : Any, Model : Any, Type> {
     var key: Boolean = false
 
     protected var modifiableFn: ValuePropModifiable<UserContext, Model, Type>? = null
@@ -93,10 +100,10 @@ sealed class PropInit<UserContext: Any, Model: Any, Type> {
     var displayLabel: String? = null
 }
 
-class ArrayInit<UserContext: Any, Model: Any, Type: Any>(
-    val name: String,
-    val itemType: KClass<Type>
-): PropInit<UserContext, Model, Collection<Type>>() {
+class ArrayInit<UserContext : Any, Model : Any, Type : Any>(
+    internal val name: String,
+    internal val itemType: KClass<Type>
+) : PropInit<UserContext, Model, Collection<Type>>() {
     protected lateinit var valueGetter: ArrayPropGetter<Model, Type>
 
     fun getValues(fn: ArrayPropGetter<Model, Type>) {
@@ -134,10 +141,9 @@ class ArrayInit<UserContext: Any, Model: Any, Type: Any>(
 
 }
 
-sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any>: PropInit<UserContext, Model, Type>() {
+@InResponseFieldDsl
+sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any> : PropInit<UserContext, Model, Type>() {
     protected lateinit var valueGetter: ValuePropGetter<Model, Type>
-
-    val nullable: Boolean = false
 
     fun getValue(fn: ValuePropGetter<Model, Type>) {
         valueGetter = fn
@@ -161,8 +167,8 @@ sealed class ValueInit<UserContext : Any, Model : Any, Type, NotNullType : Any>:
 }
 
 class UAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
-    val name: String,
-    val type: KClass<Type>
+    internal val name: String,
+    internal val type: KClass<Type>
 ) : ValueInit<UserContext, Model, Type, Type>() {
 
     @PublishedApi
@@ -182,8 +188,8 @@ class UAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
 }
 
 class NullableUAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
-    val name: String,
-    val type: KClass<Type>
+    internal val name: String,
+    internal val type: KClass<Type>
 ) : ValueInit<UserContext, Model, Type?, Type>() {
 
     @PublishedApi
