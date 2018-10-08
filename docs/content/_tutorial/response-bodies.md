@@ -34,6 +34,9 @@ Instead, we wrap the value with a bunch of metadata:
 }
 ```
 
+Like we said, *surprise!* Go on, get it out of your system, and then come back when you want to hear the reasons *why* we
+would do this.
+
 We do this so as to provide information to the client about both the field and the value of the field. 
 The intention is to simplify the development of client applications, especially Web UIs, by providing them with the information
 they need to be able to drive decisions that would otherwise require the addition of business logic to the client.
