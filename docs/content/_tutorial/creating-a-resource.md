@@ -15,6 +15,13 @@ Create a file named `BooksResource.kt`. You will probably want to put it in the 
 `src/main/kotlin/edu/byu/uapi/library/`.
 
 ```kotlin
+package edu.byu.uapi.library
+
+import edu.byu.uapi.kotlin.examples.library.Book
+import edu.byu.uapi.kotlin.examples.library.Library
+import edu.byu.uapi.server.resources.identified.IdentifiedResource
+import edu.byu.uapi.server.resources.identified.fields
+import kotlin.reflect.KClass
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
 
@@ -91,19 +98,22 @@ in our catalog. We'll cover authorizations for modifying a `Book` when we add mo
     }
 ```
 
-We also need to describe the responses we send when someone loads our resource. We'll cover the details in the next
-chapter; for now, just copy the following stub:
+We also need to describe the responses we send when someone loads our resource. We'll cover the details in the 
+[next chapter](./response-bodies.md); for now, just copy the following stub:
 
 ```kotlin
-    override val responseFields: List<ResponseField<LibraryUser, Book, *>> = uapiResponse {
-        value(Book::oclc) {
-            
+    override val responseFields = fields {
+        value<Long>("oclc") {
+            getValue { book -> book.oclc }
         }
-        value(Book::title) {
-        
+        value<String>("title") {
+            getValue { book -> book.title }
         }
     }
 ```
+
+This defines two fields for our response, "oclc" and "title". It also specifies (in `getValue`) how to get the value of each
+field from an instance of `Book`.
 
 {% include callouts/code.html content="Your completed resource should look like [this](https://github.com/byu-oit/kotlin-uapi/blob/master/examples/library/tutorial-steps/4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BookResource.kt)." %}
 
@@ -146,8 +156,7 @@ This should return a JSON response like:
       "validation_response": {
         "code": 200,
         "message": "OK"
-      },
-      "validation_information": []
+      }
     }
   },
   "links": {},
@@ -156,7 +165,6 @@ This should return a JSON response like:
       "code": 200,
       "message": "OK"
     },
-    "validation_information": [],
     "field_sets_returned": [
       "basic"
     ],

@@ -3,6 +3,8 @@ package edu.byu.uapi.server.resources.identified
 import edu.byu.uapi.server.inputs.TypeDictionary
 import edu.byu.uapi.server.inputs.PathParamDeserializer
 import edu.byu.uapi.server.response.ResponseField
+import edu.byu.uapi.server.response.UAPIResponseInit
+import edu.byu.uapi.server.response.uapiResponse
 import edu.byu.uapi.server.validation.Validating
 import kotlin.reflect.KClass
 
@@ -101,6 +103,9 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         fun handleCreateWithId(userContext: UserContext, input: Input, id: Id)
     }
 }
+
+inline fun <UserContext : Any, Model : Any> IdentifiedResource<UserContext, *, Model>.fields(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
+    : List<ResponseField<UserContext, Model, *>> = uapiResponse(fn)
 
 data class CollectionWithTotal<T>(
     val totalItems: Int,

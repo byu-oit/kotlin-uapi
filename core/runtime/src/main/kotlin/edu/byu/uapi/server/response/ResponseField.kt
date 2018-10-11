@@ -24,7 +24,7 @@ sealed class ResponseField<UserContext : Any, Model : Any, Prop : UAPIProperty> 
 }
 
 typealias ArrayPropGetter<Model, Item> = (Model) -> Collection<Item>
-typealias ArrayPropDescriber<Model, Item> = (Model, item: Item, index: Int) -> String?
+typealias ArrayPropDescriber<Model, Item> = (Model, array: Collection<Item?>, item: Item, index: Int) -> String?
 
 sealed class ValueResponseFieldBase<UserContext : Any, Model : Any, Type, NonNullType : Any>
     : ResponseField<UserContext, Model, UAPIValueProperty<Type>>() {
@@ -96,23 +96,28 @@ sealed class ValueResponseFieldBase<UserContext : Any, Model : Any, Type, NonNul
 
 }
 
-class ValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>(
-    val itemType: KClass<Item>,
+sealed class ValueArrayResponseField<UserContext: Any, Model: Any, Item: Any>
+    : ResponseField<UserContext, Model, UAPIValueArrayProperty<Item?>>(){
+    abstract val itemType: KClass<Item>
+}
+
+class SimpleValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>(
+    override val itemType: KClass<Item>,
     override val name: String,
-    val getValues: ArrayPropGetter<Model, Item>,
+    val getValues: ArrayPropGetter<Model, Item?>,
     override val key: Boolean = false,
     val description: ArrayPropDescriber<Model, Item>? = null,
     val longDescription: ArrayPropDescriber<Model, Item>? = null,
-    val modifiable: ValuePropModifiable<UserContext, Model, Collection<Item>>? = null,
+    val modifiable: ValuePropModifiable<UserContext, Model, Collection<Item?>>? = null,
     override val isSystem: Boolean = false,
     override val isDerived: Boolean = false,
     override val doc: String? = null,
     override val displayLabel: String? = null
-) : ResponseField<UserContext, Model, UAPIValueArrayProperty<Item>>() {
+) : ValueArrayResponseField<UserContext, Model, Item>() {
     override fun toProp(
         userContext: UserContext,
         model: Model
-    ): UAPIValueArrayProperty<Item> {
+    ): UAPIValueArrayProperty<Item?> {
         val values = this.getValues(model)
 
         val modifiable = this.modifiable?.invoke(userContext, model, values)
@@ -120,7 +125,7 @@ class ValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>(
         val apiType = getApiType(modifiable, isDerived, isSystem)
 
         val decoratedValues = values.mapIndexed { index, item ->
-            val (desc, longDesc) = getDescriptions(model, item, index)
+            val (desc, longDesc) = getDescriptions(model, values, item, index)
             ValueArrayItem(
                 item,
                 desc,
@@ -141,17 +146,104 @@ class ValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>(
 
     private fun getDescriptions(
         model: Model,
-        value: Item,
+        array: Collection<Item?>,
+        value: Item?,
         index: Int
     ): Pair<OrMissing<String?>, OrMissing<String?>> {
         val desc = description.orMissing()
         val longDesc = longDescription.orMissing()
 
-        val d = desc.map { fn -> fn(model, value, index) }
-        val ld = longDesc.map { fn -> fn(model, value, index) }
+        if (value == null) {
+            return desc.map { null } to longDesc.map { null }
+        }
+
+        val d = desc.map { fn -> fn(model, array, value, index) }
+        val ld = longDesc.map { fn -> fn(model, array, value, index) }
         return d to ld
     }
 
+}
+
+typealias TransformingArrayValueGetter<Model, Item, Value> = (Model, Item) -> Value
+typealias TransformingArrayDescriber<Model, Item, Value> = (Model, array: Collection<Item?>, valueArray: Collection<Value?>, Item, value: Value, index: Int) -> String?
+//typealias TransformingArrayModifiable<UserContext, Model, Item, Value> = (UserContext, Model, items: Collection<Item?>, values: Collection<Value?>) -> Boolean
+
+class TransformingValueArrayResponseField<UserContext : Any, Model : Any, Item : Any, Value : Any>(
+    override val itemType: KClass<Value>,
+    override val name: String,
+    val getArray: ArrayPropGetter<Model, Item?>,
+    val getValue: TransformingArrayValueGetter<Model, Item, Value>,
+    override val key: Boolean = false,
+    val description: TransformingArrayDescriber<Model, Item, Value>? = null,
+    val longDescription: TransformingArrayDescriber<Model, Item, Value>? = null,
+    val modifiable: ValuePropModifiable<UserContext, Model, Collection<Value?>>? = null,
+    override val isSystem: Boolean = false,
+    override val isDerived: Boolean = false,
+    override val doc: String? = null,
+    override val displayLabel: String? = null
+) : ValueArrayResponseField<UserContext, Model, Value>() {
+    override fun toProp(
+        userContext: UserContext,
+        model: Model
+    ): UAPIValueArrayProperty<Value?> {
+        val items = this.getArray(model)
+        val itemAndValue = mutableListOf<Pair<Item?, Value?>>()
+        val values = mutableListOf<Value?>()
+
+        for (item in items) {
+            val value = if (item == null) {
+                null
+            } else {
+                getValue(model, item)
+            }
+            itemAndValue.add(item to value)
+            values.add(value)
+        }
+
+        val modifiable = this.modifiable?.invoke(userContext, model, values)
+
+        val apiType = getApiType(modifiable, isDerived, isSystem)
+
+        val decoratedValues = itemAndValue.mapIndexed { index, pair ->
+            val (item, value) = pair
+            val (desc, longDesc) = getDescriptions(model, items, values, item, value, index)
+            ValueArrayItem(
+                value,
+                desc,
+                longDesc,
+                OrMissing.Missing
+            )
+        }
+
+        return UAPIValueArrayProperty(
+            decoratedValues,
+            apiType,
+            key,
+            displayLabel,
+            OrMissing.Missing,
+            OrMissing.Missing
+        )
+    }
+
+    private fun getDescriptions(
+        model: Model,
+        items: Collection<Item?>,
+        values: Collection<Value?>,
+        item: Item?,
+        value: Value?,
+        index: Int
+    ): Pair<OrMissing<String?>, OrMissing<String?>> {
+        val desc = description.orMissing()
+        val longDesc = longDescription.orMissing()
+
+        if (item == null || value == null) {
+            return desc.map { null } to longDesc.map { null }
+        }
+
+        val d = desc.map { fn -> fn(model, items, values, item, value, index) }
+        val ld = longDesc.map { fn -> fn(model, items, values, item, value, index) }
+        return d to ld
+    }
 }
 
 fun getApiType(
@@ -246,25 +338,6 @@ class NullableValueResponseField<UserContext : Any, Model : Any, Type : Any>(
             domain,
             relatedResource
         )
-    }
-}
-
-private inline fun <P, R1, R2> ((P) -> R1).then(crossinline fn: (R1) -> R2): (P) -> R2 {
-    return { p -> fn(this(p)) }
-}
-
-private inline fun <P1, P2, R1, R2> ((P1, P2) -> R1).then(crossinline fn: (R1) -> R2): (P1, P2) -> R2 {
-    return { p1, p2 -> fn(this(p1, p2)) }
-}
-
-private inline fun <P, PPrime, R> ((PPrime) -> R).before(crossinline fn: (P) -> PPrime): (P) -> R {
-    return { p -> this(fn(p)) }
-}
-
-private inline fun <P1, P1Prime, P2, P2Prime, R> ((P1Prime, P2Prime) -> R).before(crossinline fn: (P1, P2) -> Pair<P1Prime, P2Prime>): (P1, P2) -> R {
-    return { p1, p2 ->
-        val (p1p, p2p) = fn(p1, p2)
-        this(p1p, p2p)
     }
 }
 

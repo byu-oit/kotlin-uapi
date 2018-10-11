@@ -55,7 +55,7 @@ class BookResource : IdentifiedResource<
             }
             value<Int>("publisher") {
                 getValue { book -> book.publisher.publisherId }
-                description { book, publisherId -> book.publisher.name }
+                description { book, publisherId -> book.publisher.commonName }
             }
         }
 }

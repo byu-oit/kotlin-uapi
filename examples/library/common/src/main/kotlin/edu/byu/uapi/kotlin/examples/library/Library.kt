@@ -46,7 +46,7 @@ object Library {
     fun getPublisher(byPublisherId: Int): Publisher? {
         return DB.querySingle("select * from library.publisher where publisher_id = ?",
                               { setInt(1, byPublisherId) }) {
-            Publisher(getInt("publisher_id"), getString("name"))
+            Publisher(getInt("publisher_id"), getString("common_name"), getString("full_name"))
         }
     }
 

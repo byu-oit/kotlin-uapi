@@ -5,7 +5,8 @@ set schema library;
 
 create table if not exists publisher (
   publisher_id bigint identity primary key not null,
-  name varchar(100) not null
+  common_name varchar(30) not null,
+  full_name varchar(100)
 );
 
 create table if not exists book (
@@ -68,15 +69,15 @@ create table if not exists loans (
 );
 
 
-insert into publisher (publisher_id, name)
-values (1, 'Simon & Schuster'),
-       (2, 'Random House'),
-       (3, 'Tor'),
-       (4, 'Gnome Press'),
-       (5, 'Macmillan'),
-       (6, 'Signet'),
-       (7, 'HarperCollins'),
-       (8, 'Oxford University Press')
+insert into publisher (publisher_id, common_name, full_name)
+values (1, 'Simon & Schuster', null),
+       (2, 'Random House', null),
+       (3, 'Tor', 'Tor Books'),
+       (4, 'Gnome Press', 'The Gnome Press'),
+       (5, 'Macmillan', 'Macmillan Publishers'),
+       (6, 'Signet', 'Signet Books'),
+       (7, 'HarperCollins', 'HarperCollins Publishers'),
+       (8, 'Oxford', 'Oxford University Press')
        ;
 
 insert into book (book_id, oclc, isbn, title, published_year, publisher_id)

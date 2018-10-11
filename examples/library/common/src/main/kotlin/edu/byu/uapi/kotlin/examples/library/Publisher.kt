@@ -5,9 +5,8 @@ package edu.byu.uapi.kotlin.examples.library
  * kotlin-uapi-dsl-pom
  */
 
-class Publisher (val publisherId: Int,
-                 val name: String){
-    override fun toString(): String {
-        return name
-    }
-}
+data class Publisher(
+    val publisherId: Int,
+    val commonName: String,
+    val fullName: String?
+)

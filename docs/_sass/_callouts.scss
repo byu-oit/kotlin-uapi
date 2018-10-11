@@ -52,3 +52,14 @@
 .callout-might-change {
   --callout-color: #FCC015;
 }
+
+.callout-kotlin {
+  --callout-color: #806EE3;
+}
+
+.icon-kotlin::before {
+  display: inline-block;
+  content: url("./kotlin-logo.svg");
+  width: 35px;
+  height: 35px;
+}

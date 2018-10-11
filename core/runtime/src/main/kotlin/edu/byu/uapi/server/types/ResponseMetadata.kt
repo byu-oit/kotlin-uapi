@@ -12,7 +12,9 @@ sealed class ResponseMetadata : Renderable {
 
     final override fun render(renderer: Renderer<*>) {
         renderer.tree("validation_response", validationResponse)
-        renderer.valueArray("validation_information", validationInformation)
+        if (validationInformation.isNotEmpty()) {
+            renderer.valueArray("validation_information", validationInformation)
+        }
         cache?.let { renderer.tree("cache", it) }
         renderExtras(renderer)
     }

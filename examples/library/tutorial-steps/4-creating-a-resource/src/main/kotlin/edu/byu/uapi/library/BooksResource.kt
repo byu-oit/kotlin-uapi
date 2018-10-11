@@ -3,6 +3,7 @@ package edu.byu.uapi.library
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
+import edu.byu.uapi.server.resources.identified.fields
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.uapiResponse
 import kotlin.reflect.KClass
@@ -30,12 +31,12 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
         return true
     }
 
-    override val responseFields: List<ResponseField<LibraryUser, Book, *>> = uapiResponse {
-        value(Book::oclc) {
-
+    override val responseFields = fields {
+        value<Long>("oclc") {
+            getValue { book -> book.oclc }
         }
-        value(Book::title) {
-
+        value<String>("title") {
+            getValue { book -> book.title }
         }
     }
 
