@@ -120,6 +120,7 @@ field from an instance of `Book`.
 Now, if you run your API, it should start! You should be able to use WSO2 OAuth credentials to to call your API.
 Our library database comes with a pre-loaded list of Books; try loading these and see what they are!
 
+* 26811595
 * 890303755
 * 733291011
 * 35231812
@@ -128,14 +129,15 @@ Our library database comes with a pre-loaded list of Books; try loading these an
 * 969863614
 * 53896777
 * 23033258
+* 71126670
 
-Let's load the first one. Using the REST client of your choice, make a call to `http://localhost:8080/books/890303755`.
+Let's load the first one, *Good Omens*, OCLC #26811595. Using the REST client of your choice, make a call to `http://localhost:8080/books/26811595`.
 Don't forget to include an OAuth Bearer token!
 
 Here's what a request using `cURL` might look like:
 
 ```bash
-curl -H "Authorization: Bearer {your OAuth token here}" http://localhost:8080/books/890303755
+curl -H "Authorization: Bearer {your OAuth token here}" http://localhost:8080/books/26811595
 ```
 
 This should return a JSON response like:
@@ -144,11 +146,11 @@ This should return a JSON response like:
 {
   "basic": {
     "oclc": {
-      "value": 890303755,
+      "value": 26811595,
       "api_type": "read-only"
     },
     "title": {
-      "value": "The Player of Games",
+      "value": "Good Omens",
       "api_type": "read-only"
     },
     "links": {},

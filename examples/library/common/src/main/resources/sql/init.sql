@@ -33,7 +33,9 @@ create table if not exists author (
 create table if not exists book_authors (
   book_id bigint not null references book(book_id),
   author_id bigint not null references author(author_id),
-  primary key (book_id, author_id)
+  author_order int not null,
+  primary key (book_id, author_id),
+  unique (book_id, author_order)
 );
 
 create table if not exists genre (
@@ -77,7 +79,8 @@ values (1, 'Simon & Schuster', null),
        (5, 'Macmillan', 'Macmillan Publishers'),
        (6, 'Signet', 'Signet Books'),
        (7, 'HarperCollins', 'HarperCollins Publishers'),
-       (8, 'Oxford', 'Oxford University Press')
+       (8, 'Oxford', 'Oxford University Press'),
+       (9, 'Workman', 'Workman Publishing')
        ;
 
 insert into book (book_id, oclc, isbn, title, published_year, publisher_id)
@@ -89,7 +92,8 @@ values (1, 733291011, '978-0451530653', 'The War of the Worlds', 1898, 6),
        (6, 53896777, '0-553-29335-4', 'Foundation', 1951, 4),
        (7, 890303755, '0-333-47110-5', 'The Player of Games', 1988, 5),
        (8, 23033258, null, 'Mere Christianity', 1952, 7),
-       (9, 71126670, '0-199-55397-1', 'The Life and Strange Surprizing Adventures of Robinson Crusoe, Of York, Mariner', 1719, 8)
+       (9, 71126670, '0-199-55397-1', 'The Life and Strange Surprizing Adventures of Robinson Crusoe, Of York, Mariner', 1719, 8),
+       (10, 26811595, '0-575-04800-X', 'Good Omens', 1990, 9)
        ;
 
 insert into book_subtitles (book_id, subtitle_order, subtitle)
@@ -99,6 +103,7 @@ values (3, 1, 'Book One of the Stormlight Archive'),
        (9, 1, 'Who lived Eight and Twenty Years, all alone in an un-inhabited Island on the Coast of America, near the Mouth of the Great River of Oroonoque'),
        (9, 2, 'Having been cast on Shore by Shipwreck, wherein all the Men perished but himself'),
        (9, 3, 'With An Account how he was at last as strangely deliver''d by Pyrates'),
+       (10, 1, 'The Nice and Accurate Prophecies of Agnes Nutter, Witch')
        ;
 
 insert into author (AUTHOR_ID, name)
@@ -108,19 +113,23 @@ values (1, 'H. G. Wells'),
        (4, 'Isaac Asimov'),
        (5, 'Iaian M. Banks'),
        (6, 'C. S. Lewis'),
-       (7, 'Daniel Defoe')
+       (7, 'Daniel Defoe'),
+       (8, 'Terry Pratchett'),
+       (9, 'Neil Gaiman')
        ;
 
-insert into book_authors (book_id, author_id)
- values (1, 1),
-        (2, 2),
-        (3, 3),
-        (4, 3),
-        (5, 3),
-        (6, 4),
-        (7, 5),
-        (8, 6),
-        (9, 7)
+insert into book_authors (book_id, author_id, author_order)
+ values (1, 1, 1),
+        (2, 2, 1),
+        (3, 3, 1),
+        (4, 3, 1),
+        (5, 3, 1),
+        (6, 4, 1),
+        (7, 5, 1),
+        (8, 6, 1),
+        (9, 7, 1),
+        (10, 8, 1),
+        (10, 9, 2)
         ;
 
 insert into genre (genre_code, name)
@@ -145,7 +154,10 @@ values (1, 'SFI'),
        (7, 'SFI'),
        (8, 'THEO'),
        (9, 'ADV'),
-       (9, 'HFI')
+       (9, 'HFI'),
+       (10, 'FI'),
+       (10, 'FAN'),
+       (10, 'LOL')
         ;
 
 insert into book_copy(copy_id, book_id)
@@ -166,7 +178,9 @@ values (1, 1),
        (15, 7),
        (16, 8),
        (17, 8),
-       (18, 9)
+       (18, 9),
+       (19, 10),
+       (20, 10)
 ;
 
 insert into cardholder (CARDHOLDER_ID, net_id, name)
@@ -187,6 +201,7 @@ values (1,  1, TIMESTAMP '2010-01-01 00:00:00', date '2010-01-15', timestamp '20
        (12, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (15, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (16, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
+       (20, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (17, 4, timestamp '2018-08-28 17:43:12', date '2018-09-11', null, false),
        (18, 4, timestamp '2018-08-28 17:43:12', date '2018-09-11', null, false)
 ;

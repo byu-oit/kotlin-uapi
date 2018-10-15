@@ -80,12 +80,38 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
         fieldList.add(p.toDefinition())
     }
 
-    inline fun <reified T : Any, Item : Any> valueArray(
+    inline fun <reified Value : Any, Item : Any> mappedValueArray(
+        name: String,
         listProp: KProperty1<Model, Collection<Item?>>,
-        valueProp: KProperty1<Item, T>,
-        fn: TransformingArrayInit<UserContext, Model, T, Item>.() -> Unit
+        valueProp: KProperty1<Item, Value>,
+        fn: MappedValueArrayInit<UserContext, Model, Value, Item>.() -> Unit
     ) {
+        val p = MappedValueArrayInit<UserContext, Model, Value, Item>(name.toSnakeCase(), Value::class)
+        p.getArray(listProp)
+        p.getValue(valueProp)
+        p.fn()
+        fieldList.add(p.toDefinition())
+    }
 
+    inline fun <reified Value : Any, Item : Any> mappedValueArray(
+        listProp: KProperty1<Model, Collection<Item?>>,
+        valueProp: KProperty1<Item, Value>,
+        fn: MappedValueArrayInit<UserContext, Model, Value, Item>.() -> Unit
+    ) {
+        val p = MappedValueArrayInit<UserContext, Model, Value, Item>(listProp.name.toSnakeCase(), Value::class)
+        p.getArray(listProp)
+        p.getValue(valueProp)
+        p.fn()
+        fieldList.add(p.toDefinition())
+    }
+
+    inline fun <reified Value: Any, Item: Any> mappedValueArray(
+        name: String,
+        fn: MappedValueArrayInit<UserContext, Model, Value, Item>.() -> Unit
+    ) {
+        val p = MappedValueArrayInit<UserContext, Model, Value, Item>(name.toSnakeCase(), Value::class)
+        p.fn()
+        fieldList.add(p.toDefinition())
     }
 
     fun getList(): List<ResponseField<UserContext, Model, *>> = fieldList
@@ -148,7 +174,7 @@ class ArrayInit<UserContext : Any, Model : Any, Type : Any>(
     }
 }
 
-class TransformingArrayInit<UserContext : Any, Model : Any, Value : Any, Item : Any>(
+class MappedValueArrayInit<UserContext : Any, Model : Any, Value : Any, Item : Any>(
     internal val name: String,
     internal val itemType: KClass<Value>
 ) : PropInit<UserContext, Model, Collection<Value?>>() {
@@ -206,7 +232,7 @@ class TransformingArrayInit<UserContext : Any, Model : Any, Value : Any, Item : 
 
     @PublishedApi
     internal fun toDefinition(): ResponseField<UserContext, Model, *> {
-        return TransformingValueArrayResponseField(
+        return MappedValueArrayResponseField(
             itemType = itemType,
             name = name,
             getArray = arrayGetter,

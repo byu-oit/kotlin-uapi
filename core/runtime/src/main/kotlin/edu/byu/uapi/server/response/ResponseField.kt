@@ -168,7 +168,7 @@ typealias TransformingArrayValueGetter<Model, Item, Value> = (Model, Item) -> Va
 typealias TransformingArrayDescriber<Model, Item, Value> = (Model, array: Collection<Item?>, valueArray: Collection<Value?>, Item, value: Value, index: Int) -> String?
 //typealias TransformingArrayModifiable<UserContext, Model, Item, Value> = (UserContext, Model, items: Collection<Item?>, values: Collection<Value?>) -> Boolean
 
-class TransformingValueArrayResponseField<UserContext : Any, Model : Any, Item : Any, Value : Any>(
+class MappedValueArrayResponseField<UserContext : Any, Model : Any, Item : Any, Value : Any>(
     override val itemType: KClass<Value>,
     override val name: String,
     val getArray: ArrayPropGetter<Model, Item?>,

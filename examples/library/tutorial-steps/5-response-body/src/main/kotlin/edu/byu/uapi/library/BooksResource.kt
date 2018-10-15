@@ -1,6 +1,8 @@
 package edu.byu.uapi.library
 
+import edu.byu.uapi.kotlin.examples.library.Author
 import edu.byu.uapi.kotlin.examples.library.Book
+import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
@@ -62,33 +64,20 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
             doc = "The book's subtitles, if any"
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
         }
-        valueArray<String>("genres") {
-            getValues { book -> book.genres.map { it.code } }
-            description { book, genres, value, index -> book.genres[index].name }
-            displayLabel = "Genre"
+        mappedValueArray("author_ids", Book::authors, Author::authorId) {
+            description(Author::name)
+            displayLabel = "Author(s)"
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
         }
-        valueArray<Int>("author_ids") {
-            getValues { book -> book.authors.map { it.authorId } }
-            description { book, authors, value, index -> book.authors[index].name }
-            displayLabel = "Author"
+        mappedValueArray(Book::genres, Genre::code) {
+            displayLabel = "Genre(s)"
+            description(Genre::name)
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
         }
-//        valueArray(Book::authors) {
-//            description { book, item, index -> item.name }
-//        }
-
-//        valueArray(Book::authors, Author::id) {
-//            description = Author::name
-//            longDescription = Author::name
-//            description { book, author -> author.name }
-//        }
-
         value(Book::publishedYear) {
             displayLabel = "Publication Year"
             doc = "The year the book was published"
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
         }
-
     }
 }

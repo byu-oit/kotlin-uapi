@@ -6,7 +6,11 @@ package edu.byu.uapi.kotlin.examples.library
  */
 
 class Author (val authorId: Int,
-              val name: String) {
+              val name: String,
+              val order: Int): Comparable<Author> {
+
+    override fun compareTo(other: Author): Int = this.order - other.order
+
     override fun toString(): String {
         return name
     }
