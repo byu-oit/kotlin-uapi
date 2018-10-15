@@ -17,6 +17,7 @@
         <module>3-user-context</module>
         <module>4-creating-a-resource</module>
         <module>5-response-body</module>
+        <module>6-listing-resources</module>
     </modules>
 
 </project>
