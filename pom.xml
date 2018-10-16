@@ -66,7 +66,7 @@
 
         <plugins.kotlin.version>${kotlin.version}</plugins.kotlin.version>
         <plugins.compiler.version>3.8.0</plugins.compiler.version>
-        <plugins.surefire.version>2.22.0</plugins.surefire.version>
+        <plugins.surefire.version>2.22.1</plugins.surefire.version>
         <plugins.dependency.version>3.1.1</plugins.dependency.version>
         <plugins.shade.version>3.2.0</plugins.shade.version>
 
