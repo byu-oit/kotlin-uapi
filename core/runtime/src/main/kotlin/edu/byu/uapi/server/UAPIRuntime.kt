@@ -1,7 +1,7 @@
 package edu.byu.uapi.server
 
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
-import edu.byu.uapi.server.inputs.TypeDictionary
+import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
 import java.util.*

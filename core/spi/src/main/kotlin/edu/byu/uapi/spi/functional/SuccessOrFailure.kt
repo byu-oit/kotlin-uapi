@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.types
+package edu.byu.uapi.spi.functional
 
 sealed class SuccessOrFailure<out Success, out Fail> {
     abstract fun <R> resolve(happy: (Success) -> R, sad: (Fail) -> R): R

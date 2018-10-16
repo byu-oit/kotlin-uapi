@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.scalars;
 
+import edu.byu.uapi.spi.scalars.ScalarType;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KClass;
 

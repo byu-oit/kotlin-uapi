@@ -1,6 +1,6 @@
-package edu.byu.uapi.server.rendering
+package edu.byu.uapi.spi.rendering
 
-import edu.byu.uapi.server.inputs.TypeDictionary
+import edu.byu.uapi.spi.dictionary.TypeDictionary
 
 class MapRenderer(override val typeDictionary: TypeDictionary) : RendererBase<MapRenderer, Map<String, Any?>, Any?>() {
 

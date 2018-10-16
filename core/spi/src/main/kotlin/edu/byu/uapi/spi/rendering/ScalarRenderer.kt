@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.rendering
+package edu.byu.uapi.spi.rendering
 
 interface ScalarRenderer<out ValueType> {
     fun string(value: String): ValueType

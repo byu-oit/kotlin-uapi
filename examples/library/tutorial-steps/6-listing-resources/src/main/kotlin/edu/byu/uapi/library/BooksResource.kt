@@ -6,9 +6,50 @@ import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
+import edu.byu.uapi.spi.input.CollectionParams
+import edu.byu.uapi.spi.input.SearchParams
+import edu.byu.uapi.spi.input.SortParams
 import kotlin.reflect.KClass
 
-class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
+data class BookListParams(
+    override val filter: BookFilters?,
+    override val sort: SortParams<BookSortField>,
+    override val search: SearchParams<BookSearchContext>?
+) : CollectionParams.Filtering<BookFilters>,
+    CollectionParams.Searching<BookSearchContext>,
+    CollectionParams.Sorting<BookSortField> {
+    companion object
+        : CollectionParams.Filtering.Companion<BookFilters>,
+          CollectionParams.Searching.Companion<BookSearchContext>,
+          CollectionParams.Sorting.Companion<BookSortField> {
+        override val filterType: KClass<BookFilters> = BookFilters::class
+        override val defaultSortFields: List<BookSortField> = listOf(BookSortField.OCLC)
+        override val searchContextFields: Map<BookSearchContext, Collection<String>> = mapOf()
+    }
+}
+
+enum class BookSearchContext {
+
+}
+
+enum class BookSortField {
+    OCLC
+}
+
+data class BookFilters(
+    val isbn: String?,
+    val title: String?,
+    val subtitle: String?,
+    val publisherId: Set<Int>,
+    val hasAvailableCopies: Boolean,
+    val authorId: Set<Int>,
+    val genre: Set<String>,
+    val published: IntRange
+)
+
+class BooksResource : IdentifiedResource<LibraryUser, Long, Book>
+//                      , IdentifiedResource.Listable<LibraryUser, Long, Book, BookListParams>
+{
 
     override val idType: KClass<Long> = Long::class
 

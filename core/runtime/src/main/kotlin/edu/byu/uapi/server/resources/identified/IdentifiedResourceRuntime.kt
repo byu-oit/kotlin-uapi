@@ -1,8 +1,8 @@
 package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.FIELDSET_BASIC
-import edu.byu.uapi.server.inputs.TypeDictionary
-import edu.byu.uapi.server.inputs.DeserializationError
+import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.dictionary.DeserializationError
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.schemas.*
 import edu.byu.uapi.server.types.*

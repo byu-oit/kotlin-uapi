@@ -1,8 +1,8 @@
 package edu.byu.uapi.server.types
 
-import edu.byu.uapi.server.rendering.Renderable
-import edu.byu.uapi.server.rendering.Renderer
-import edu.byu.uapi.server.rendering.render
+import edu.byu.uapi.spi.rendering.Renderable
+import edu.byu.uapi.spi.rendering.Renderer
+import edu.byu.uapi.spi.rendering.render
 
 sealed class UAPIResponse<MetaType : ResponseMetadata> : Renderable {
     abstract val metadata: MetaType

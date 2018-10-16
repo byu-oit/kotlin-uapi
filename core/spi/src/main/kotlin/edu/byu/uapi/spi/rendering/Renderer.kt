@@ -1,6 +1,6 @@
-package edu.byu.uapi.server.rendering
+package edu.byu.uapi.spi.rendering
 
-import edu.byu.uapi.server.inputs.TypeDictionary
+import edu.byu.uapi.spi.dictionary.TypeDictionary
 
 interface Renderer<Output : Any> {
     val typeDictionary: TypeDictionary

@@ -1,20 +1,16 @@
 package edu.byu.uapi.server.inputs
 
 import edu.byu.uapi.server.scalars.EnumScalarConverterHelper
-import edu.byu.uapi.server.scalars.ScalarType
+import edu.byu.uapi.spi.scalars.ScalarType
 import edu.byu.uapi.server.scalars.builtinScalarTypeMap
 import edu.byu.uapi.server.scalars.builtinScalarTypes
-import edu.byu.uapi.server.types.Success
-import edu.byu.uapi.server.types.SuccessOrFailure
+import edu.byu.uapi.spi.dictionary.DeserializationFailure
+import edu.byu.uapi.spi.functional.Success
+import edu.byu.uapi.spi.functional.SuccessOrFailure
+import edu.byu.uapi.spi.input.PathParamDeserializer
+import edu.byu.uapi.spi.input.QueryParamDeserializer
+import edu.byu.uapi.spi.dictionary.TypeDictionary
 import kotlin.reflect.KClass
-import kotlin.reflect.KClassifier
-
-interface TypeDictionary {
-    fun <Type : Any> pathDeserializer(type: KClass<Type>): SuccessOrFailure<PathParamDeserializer<Type>, DeserializationFailure<*>>
-    fun <Type : Any> queryDeserializer(type: KClass<Type>): SuccessOrFailure<QueryParamDeserializer<Type>, DeserializationFailure<*>>
-
-    fun <Type: Any> scalarConverter(type: KClass<Type>): SuccessOrFailure<ScalarType<Type>, DeserializationFailure<*>>
-}
 
 class DefaultTypeDictionary : TypeDictionary {
 
@@ -58,16 +54,3 @@ class DefaultTypeDictionary : TypeDictionary {
 
 private fun KClass<*>.isEnum() = this.java.isEnum
 
-data class DeserializationFailure<T>(
-    val type: KClassifier,
-    val message: String,
-    val cause: Throwable? = null
-) {
-    fun asError(): DeserializationError = DeserializationError(type, message, cause)
-}
-
-class DeserializationError(
-    val type: KClassifier,
-    message: String,
-    cause: Throwable? = null
-) : Exception("Error deserializing type $type: $message", cause)

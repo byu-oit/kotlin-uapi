@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.rendering
+package edu.byu.uapi.spi.rendering
 
 interface Renderable {
     fun render(renderer: Renderer<*>)

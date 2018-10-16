@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.types
 
-import edu.byu.uapi.server.rendering.Renderable
-import edu.byu.uapi.server.rendering.Renderer
+import edu.byu.uapi.spi.rendering.Renderable
+import edu.byu.uapi.spi.rendering.Renderer
 
 typealias UAPILinks = Map<String, UAPILink>
 

@@ -5,8 +5,8 @@ import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
-import edu.byu.uapi.server.inputs.TypeDictionary
-import edu.byu.uapi.server.rendering.Renderable
+import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceOperation
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceOperation.*
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime

@@ -1,14 +1,8 @@
 package edu.byu.uapi.server.validation
 
+import edu.byu.uapi.spi.validation.Validating
+import edu.byu.uapi.spi.validation.ValidationFailure
 import java.util.*
-
-interface Validating {
-
-    fun expect(field: String, should: String, condition: () -> Boolean): Boolean
-
-    fun collectFailures(): List<ValidationFailure>
-
-}
 
 class DefaultValidating: Validating {
 
@@ -27,7 +21,3 @@ class DefaultValidating: Validating {
     }
 }
 
-data class ValidationFailure(
-    val field: String,
-    val should: String
-)

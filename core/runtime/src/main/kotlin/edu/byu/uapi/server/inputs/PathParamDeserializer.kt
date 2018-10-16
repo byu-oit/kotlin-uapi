@@ -1,12 +1,12 @@
 package edu.byu.uapi.server.inputs
 
-import edu.byu.uapi.server.scalars.ScalarType
-import edu.byu.uapi.server.types.*
+import edu.byu.uapi.spi.dictionary.DeserializationFailure
+import edu.byu.uapi.spi.scalars.ScalarType
+import edu.byu.uapi.spi.functional.Failure
+import edu.byu.uapi.spi.input.PathParamDeserializer
+import edu.byu.uapi.spi.functional.SuccessOrFailure
+import edu.byu.uapi.spi.functional.asFailure
 import kotlin.reflect.KClass
-
-interface PathParamDeserializer<T : Any> {
-    fun deserializePathParams(values: Map<String, String>): SuccessOrFailure<T, DeserializationFailure<*>>
-}
 
 class ScalarPathParamDeserializer<T: Any>(
     private val type: ScalarType<T>

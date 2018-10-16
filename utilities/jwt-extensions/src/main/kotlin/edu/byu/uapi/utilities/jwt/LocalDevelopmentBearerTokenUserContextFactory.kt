@@ -4,9 +4,9 @@ import edu.byu.jwt.validate.ByuJwtValidator
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
-import edu.byu.uapi.server.types.Failure
-import edu.byu.uapi.server.types.Success
-import edu.byu.uapi.server.types.SuccessOrFailure
+import edu.byu.uapi.spi.functional.Failure
+import edu.byu.uapi.spi.functional.Success
+import edu.byu.uapi.spi.functional.SuccessOrFailure
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.InputStream

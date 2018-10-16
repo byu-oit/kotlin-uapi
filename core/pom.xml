@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.byu.uapi.kotlin</groupId>
+    <artifactId>kotlin-uapi-core-pom</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Kotlin UAPI Core Parent POM</name>
+
+    <modules>
+        <module>spi</module>
+	    <module>runtime</module>
+    </modules>
+
+    <parent>
+        <groupId>edu.byu.uapi.kotlin</groupId>
+        <artifactId>kotlin-uapi-pom</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <dependencyManagement>
+        <dependencies>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.response.ResponseField
-import edu.byu.uapi.server.validation.Validating
+import edu.byu.uapi.spi.validation.Validating
 import io.kotlintest.data.forall
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.DescribeSpec

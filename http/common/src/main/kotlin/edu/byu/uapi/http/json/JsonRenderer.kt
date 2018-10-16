@@ -1,8 +1,8 @@
 package edu.byu.uapi.http.json
 
-import edu.byu.uapi.server.inputs.TypeDictionary
-import edu.byu.uapi.server.rendering.RendererBase
-import edu.byu.uapi.server.rendering.ScalarRenderer
+import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.rendering.RendererBase
+import edu.byu.uapi.spi.rendering.ScalarRenderer
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.json.Json

@@ -1,7 +1,7 @@
-package edu.byu.uapi.server.rendering
+package edu.byu.uapi.spi.rendering
 
-import edu.byu.uapi.server.scalars.ScalarType
-import edu.byu.uapi.server.types.onFailure
+import edu.byu.uapi.spi.scalars.ScalarType
+import edu.byu.uapi.spi.functional.onFailure
 import kotlin.reflect.KClass
 
 abstract class RendererBase<Self : RendererBase<Self, Output, Scalar>, Output : Any, Scalar> : Renderer<Output> {

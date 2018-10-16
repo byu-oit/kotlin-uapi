@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.validation
 
+import edu.byu.uapi.spi.validation.Validating
 import kotlin.reflect.KProperty0
 
 

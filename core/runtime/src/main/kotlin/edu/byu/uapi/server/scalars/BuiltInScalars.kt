@@ -1,9 +1,14 @@
 package edu.byu.uapi.server.scalars
 
-import edu.byu.uapi.server.inputs.DeserializationFailure
+import edu.byu.uapi.spi.dictionary.DeserializationFailure
 import edu.byu.uapi.server.inputs.fail
-import edu.byu.uapi.server.rendering.ScalarRenderer
+import edu.byu.uapi.spi.rendering.ScalarRenderer
 import edu.byu.uapi.server.types.*
+import edu.byu.uapi.spi.functional.Success
+import edu.byu.uapi.spi.functional.SuccessOrFailure
+import edu.byu.uapi.spi.functional.asFailure
+import edu.byu.uapi.spi.functional.asSuccess
+import edu.byu.uapi.spi.scalars.ScalarType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.net.MalformedURLException
@@ -15,15 +20,6 @@ import java.time.*
 import java.time.format.DateTimeParseException
 import java.util.*
 import kotlin.reflect.KClass
-
-interface ScalarType<T : Any> {
-    val type: KClass<T>
-    fun fromString(value: String): SuccessOrFailure<T, DeserializationFailure<T>>
-    fun <S> render(
-        value: T,
-        renderer: ScalarRenderer<S>
-    ): S
-}
 
 val builtinScalarTypes: List<ScalarType<*>> = listOf<ScalarType<*>>(
     // Primitives and pseudo-primitives
