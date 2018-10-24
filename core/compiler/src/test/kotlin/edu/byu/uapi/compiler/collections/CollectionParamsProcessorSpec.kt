@@ -11,19 +11,19 @@ class CollectionParamsProcessorSpec : DescribeSpec() {
             val proc = CollectionParamsProcessor()
 
             it("Does stuff") {
-                val compilation = javac()
-                    .withClasspathFrom(javaClass.classLoader)
-                    .withProcessors(proc)
-                    .compile(
-                        JavaFileObjects.forResource("params/AllParams.java"),
-                        JavaFileObjects.forResource("params/TestFilters.java"),
-                        JavaFileObjects.forResource("params/TestSearchContext.java"),
-                        JavaFileObjects.forResource("params/TestSortField.java")
-                    )
-                assertThat(compilation)
-                    .succeededWithoutWarnings()
-                assertThat(compilation)
-                    .generatedSourceFile("params/AllParams\$CollectionParamsProvider")
+//                val compilation = javac()
+//                    .withClasspathFrom(javaClass.classLoader)
+//                    .withProcessors(proc)
+//                    .compile(
+//                        JavaFileObjects.forResource("params/AllParams.java"),
+//                        JavaFileObjects.forResource("params/TestFilters.java"),
+//                        JavaFileObjects.forResource("params/TestSearchContext.java"),
+//                        JavaFileObjects.forResource("params/TestSortField.java")
+//                    )
+//                assertThat(compilation)
+//                    .succeededWithoutWarnings()
+//                assertThat(compilation)
+//                    .generatedSourceFile("params/AllParams\$CollectionParamsProvider")
 //
 //                assertThat(
 //                ).withClasspathFrom(CollectionParamsProcessorSpec::class.java.classLoader)

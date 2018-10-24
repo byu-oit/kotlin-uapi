@@ -57,6 +57,7 @@
         <annotations.javapoet.version>1.11.1</annotations.javapoet.version>
         <annotations.auto-common.version>0.10</annotations.auto-common.version>
         <annotations.auto-service.version>1.0-rc4</annotations.auto-service.version>
+        <annotations.kotlin-metadata.version>1.4.0</annotations.kotlin-metadata.version>
 
         <test.kotlintest.version>3.1.10</test.kotlintest.version>
         <test.mockito.version>2.23.0</test.mockito.version>
@@ -165,6 +166,11 @@
                 <artifactId>auto-service</artifactId>
                 <version>${annotations.auto-service.version}</version>
                 <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
+                <artifactId>kotlin-metadata</artifactId>
+                <version>${annotations.kotlin-metadata.version}</version>
             </dependency>
 
             <!-- Test -->
@@ -352,6 +358,7 @@
                             <ignoreNonCompile>true</ignoreNonCompile>
                             <ignoredDependencies>
                                 <ignoredDependency>org.jetbrains:annotations</ignoredDependency>
+                                <ignoredDependency>com.google.code.findbugs:jsr305</ignoredDependency>
                             </ignoredDependencies>
                         </configuration>
                     </execution>
