@@ -6,50 +6,66 @@ import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
-import edu.byu.uapi.spi.input.CollectionParams
-import edu.byu.uapi.spi.input.SearchParams
-import edu.byu.uapi.spi.input.SortParams
+import edu.byu.uapi.spi.annotations.CollectionParams
+import edu.byu.uapi.spi.annotations.DefaultSort
+import edu.byu.uapi.spi.annotations.SearchFields
+import edu.byu.uapi.spi.input.BetweenInclusive
+import edu.byu.uapi.spi.input.Params
+import java.time.Year
 import kotlin.reflect.KClass
 
-data class BookListParams(
-    override val filter: BookFilters?,
-    override val sort: SortParams<BookSortField>,
-    override val search: SearchParams<BookSearchContext>?
-) : CollectionParams.Filtering<BookFilters>,
-    CollectionParams.Searching<BookSearchContext>,
-    CollectionParams.Sorting<BookSortField> {
-    companion object
-        : CollectionParams.Filtering.Companion<BookFilters>,
-          CollectionParams.Searching.Companion<BookSearchContext>,
-          CollectionParams.Sorting.Companion<BookSortField> {
-        override val filterType: KClass<BookFilters> = BookFilters::class
-        override val defaultSortFields: List<BookSortField> = listOf(BookSortField.OCLC)
-        override val searchContextFields: Map<BookSearchContext, Collection<String>> = mapOf()
-    }
-}
+@CollectionParams
+interface BookListParams :
+    Params.Filtering<BookFilters>,
+    Params.Searching<BookSearchContext>,
+    Params.Sorting<BookSortField>
 
 enum class BookSearchContext {
-
+    @SearchFields("title", "subtitles")
+    titles,
+    @SearchFields("authors.name")
+    authors,
+    @SearchFields("genres.name", "genres.code")
+    genres,
+    @SearchFields("oclc", "isbn")
+    control_numbers;
 }
 
 enum class BookSortField {
-    OCLC
+    @DefaultSort(order = 2)
+    oclc,
+    @DefaultSort(order = 1)
+    title,
+    publisher_id,
+    publisher_name,
+    isbn,
+    published_year
 }
 
-data class BookFilters(
-    val isbn: String?,
-    val title: String?,
-    val subtitle: String?,
-    val publisherId: Set<Int>,
-    val hasAvailableCopies: Boolean,
-    val authorId: Set<Int>,
-    val genre: Set<String>,
-    val published: IntRange
-)
+interface BookFilters{
+    val isbn: String?
+    val title: String?
+    val subtitle: String?
+    val publisherId: Set<Int>
+    val hasAvailableCopies: Boolean?
+    val authorId: Set<Int>
+    val genre: Set<String>
+    val published: BetweenInclusive<Year>
+}
+
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book>
-//                      , IdentifiedResource.Listable<LibraryUser, Long, Book, BookListParams>
+                      , IdentifiedResource.Listable<LibraryUser, Long, Book, BookListParams>
 {
+    override fun list(
+        userContext: LibraryUser,
+        params: BookListParams
+    ): Collection<Book> {
+        TODO("not implemented")
+    }
+
+    override val paramsType: KClass<BookListParams>
+        get() = TODO("not implemented")
 
     override val idType: KClass<Long> = Long::class
 

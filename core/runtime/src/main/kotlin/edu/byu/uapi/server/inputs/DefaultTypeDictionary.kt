@@ -8,7 +8,7 @@ import edu.byu.uapi.spi.dictionary.DeserializationFailure
 import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.functional.SuccessOrFailure
 import edu.byu.uapi.spi.input.PathParamDeserializer
-import edu.byu.uapi.spi.input.QueryParamDeserializer
+import edu.byu.uapi.spi.input.QueryParamReader
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import kotlin.reflect.KClass
 
@@ -33,7 +33,7 @@ class DefaultTypeDictionary : TypeDictionary {
         TODO("Add new deserializer types - generated, reflective, etc.")
     }
 
-    override fun <Type : Any> queryDeserializer(type: KClass<Type>): SuccessOrFailure<QueryParamDeserializer<Type>, DeserializationFailure<*>> {
+    override fun <Type : Any> queryDeserializer(type: KClass<Type>): SuccessOrFailure<QueryParamReader<Type>, DeserializationFailure<*>> {
 //        if (explicitPathDeserializers.containsKey(type)) {
 //            return Success(explicitPathDeserializers[type])
 //        }

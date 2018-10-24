@@ -32,7 +32,17 @@
         <dependencies>
             <dependency>
                 <groupId>edu.byu.uapi.kotlin</groupId>
+                <artifactId>uapi-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.kotlin</groupId>
                 <artifactId>uapi-runtime</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.kotlin</groupId>
+                <artifactId>uapi-compiler</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

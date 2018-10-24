@@ -54,11 +54,16 @@
 
         <http.spark.version>2.8.0</http.spark.version>
 
+        <annotations.javapoet.version>1.11.1</annotations.javapoet.version>
+        <annotations.auto-common.version>0.10</annotations.auto-common.version>
+        <annotations.auto-service.version>1.0-rc4</annotations.auto-service.version>
+
         <test.kotlintest.version>3.1.10</test.kotlintest.version>
         <test.mockito.version>2.23.0</test.mockito.version>
         <test.mockitokotlin.version>2.0.0-RC3</test.mockitokotlin.version>
         <test.junit.platform.version>1.3.1</test.junit.platform.version>
         <test.junit.version>5.3.1</test.junit.version>
+        <test.google.compile.version>0.15</test.google.compile.version>
 
         <plugins.enforcer.version>3.0.0-M2</plugins.enforcer.version>
         <plugins.enforcer.requireMaven>3.5</plugins.enforcer.requireMaven>
@@ -144,6 +149,24 @@
                 <version>${http.spark.version}</version>
             </dependency>
 
+            <!-- Annotation Processing -->
+            <dependency>
+                <groupId>com.squareup</groupId>
+                <artifactId>javapoet</artifactId>
+                <version>${annotations.javapoet.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.auto</groupId>
+                <artifactId>auto-common</artifactId>
+                <version>${annotations.auto-common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.auto.service</groupId>
+                <artifactId>auto-service</artifactId>
+                <version>${annotations.auto-service.version}</version>
+                <optional>true</optional>
+            </dependency>
+
             <!-- Test -->
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -201,6 +224,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${logging.slf4j.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.testing.compile</groupId>
+                <artifactId>compile-testing</artifactId>
+                <version>${test.google.compile.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

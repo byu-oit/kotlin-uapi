@@ -2,7 +2,7 @@ package edu.byu.uapi.spi.input
 
 import kotlin.reflect.KClass
 
-object CollectionParams {
+object Params {
     interface Filtering<Filter : Any> {
         val filter: Filter?
 
@@ -28,6 +28,16 @@ object CollectionParams {
             val searchContextFields: Map<SearchContext, Collection<String>>
         }
     }
+}
+
+interface BetweenInclusive<Type> {
+    val start: Type?
+    val end: Type?
+}
+
+interface BetweenExclusive<Type> {
+    val start: Type?
+    val end: Type?
 }
 
 data class SortParams<SortableFields : Enum<SortableFields>>(
