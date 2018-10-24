@@ -44,7 +44,7 @@
 
         <byu.jwt.version>2.1.0-SNAPSHOT</byu.jwt.version>
 
-        <util.guava.version>26.0-jre</util.guava.version>
+        <util.guava.version>27.0-jre</util.guava.version>
 
         <logging.slf4j.version>1.7.25</logging.slf4j.version>
 
