@@ -7,6 +7,7 @@ import edu.byu.uapi.server.UserContextResult
 import edu.byu.uapi.spi.functional.Failure
 import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.functional.SuccessOrFailure
+import edu.byu.uapi.spi.functional.resolve
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
