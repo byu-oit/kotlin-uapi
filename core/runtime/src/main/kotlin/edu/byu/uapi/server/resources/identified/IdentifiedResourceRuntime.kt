@@ -1,12 +1,14 @@
 package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.FIELDSET_BASIC
-import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.dictionary.DeserializationError
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.schemas.*
+import edu.byu.uapi.server.spi.UAPITypeError
+import edu.byu.uapi.server.spi.asError
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor
+import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.functional.resolve
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -27,7 +29,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         private val LOG = loggerFor<IdentifiedResourceRuntime<*, *, *>>()
     }
 
-    @Throws(DeserializationError::class)
+    @Throws(UAPITypeError::class)
     fun constructId(params: Map<String, String>): Id {
         val deser = resource.getIdDeserializer(typeDictionary)
         return deser.deserializePathParams(params).resolve({it}, {throw it.asError()})

@@ -1,6 +1,6 @@
 package params;
 
-import edu.byu.uapi.spi.dictionary.DeserializationFailure;
+import edu.byu.uapi.spi.dictionary.TypeFailure;
 import edu.byu.uapi.spi.dictionary.TypeDictionary;
 import edu.byu.uapi.spi.functional.Failure;
 import edu.byu.uapi.spi.functional.Success;
@@ -9,13 +9,12 @@ import edu.byu.uapi.spi.input.*;
 import kotlin.jvm.JvmClassMappingKt;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public class AllParamsCollectionParamsProvider implements CollectionParamsProvider<AllParams> {
 
     @NotNull
-    public QueryParamReader<AllParams> getReader(@NotNull TypeDictionary dictionary) {
+    public SuccessOrFailure<QueryParamReader<AllParams>, TypeFailure<?>> getReader(@NotNull TypeDictionary dictionary) {
         return null;
     }
 
@@ -77,7 +76,7 @@ public class AllParamsCollectionParamsProvider implements CollectionParamsProvid
 
     public static class Reader implements QueryParamReader<AllParams> {
         @NotNull
-        public SuccessOrFailure<AllParams, DeserializationFailure<?>> deserializeQueryParams(@NotNull Map<String, ? extends Set<String>> values) {
+        public SuccessOrFailure<AllParams, TypeFailure<?>> deserializeQueryParams(@NotNull Map<String, ? extends Set<String>> values) {
             final Set<String> keys = values.keySet();
             final TestFilters filters;
             if (hasAny(keys, FILTER_PARAMS_NAMES)) {
@@ -144,13 +143,13 @@ public class AllParamsCollectionParamsProvider implements CollectionParamsProvid
             ));
         }
 
-        private static <T> Failure<DeserializationFailure<?>> fail(Class<T> type, String message) {
+        private static <T> Failure<TypeFailure<?>> fail(Class<T> type, String message) {
             return fail(type, message, null);
         }
 
-        private static <T> Failure<DeserializationFailure<?>> fail(Class<T> type, String message, Throwable cause) {
-            return new Failure<DeserializationFailure<?>>(
-                    new DeserializationFailure<T>(
+        private static <T> Failure<TypeFailure<?>> fail(Class<T> type, String message, Throwable cause) {
+            return new Failure<TypeFailure<?>>(
+                    new TypeFailure(
                             JvmClassMappingKt.getKotlinClass(type),
                             message,
                             cause

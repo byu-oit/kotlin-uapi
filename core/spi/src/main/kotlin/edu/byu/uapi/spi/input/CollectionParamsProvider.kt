@@ -1,10 +1,22 @@
 package edu.byu.uapi.spi.input
 
-import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.functional.asSuccess
 
 interface CollectionParamsProvider<Params : Any> {
-    fun getReader(dictionary: TypeDictionary): QueryParamReader<Params>
-    fun getMeta(dictionary: TypeDictionary): CollectionParamsMeta
+    fun getReader(): QueryParamReader<Params>
+    fun getMeta(): CollectionParamsMeta
+}
+
+object EmptyCollectionParamsProvider: CollectionParamsProvider<Params.Empty> {
+    override fun getReader(): QueryParamReader<Params.Empty> {
+        return object : QueryParamReader<Params.Empty> {
+            override fun deserializeQueryParams(values: Map<String, Set<String>>) = Params.Empty.asSuccess()
+        }
+    }
+
+    override fun getMeta(): CollectionParamsMeta {
+        return CollectionParamsMeta(null, null, null)
+    }
 }
 
 data class CollectionParamsMeta(

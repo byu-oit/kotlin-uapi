@@ -1,8 +1,7 @@
 package edu.byu.uapi.spi.input
 
-import edu.byu.uapi.spi.dictionary.DeserializationFailure
-import edu.byu.uapi.spi.functional.SuccessOrFailure
+import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
 
 interface PathParamDeserializer<T : Any> {
-    fun deserializePathParams(values: Map<String, String>): SuccessOrFailure<T, DeserializationFailure<*>>
+    fun deserializePathParams(values: Map<String, String>): MaybeTypeFailure<T>
 }

@@ -3,6 +3,8 @@ package edu.byu.uapi.spi.input
 import kotlin.reflect.KClass
 
 object Params {
+    object Empty {}
+
     interface Filtering<Filter : Any> {
         val filter: Filter?
 

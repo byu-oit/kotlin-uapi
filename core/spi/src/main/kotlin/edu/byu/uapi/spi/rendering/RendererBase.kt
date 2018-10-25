@@ -1,7 +1,6 @@
 package edu.byu.uapi.spi.rendering
 
 import edu.byu.uapi.spi.scalars.ScalarType
-import edu.byu.uapi.spi.functional.onFailure
 import kotlin.reflect.KClass
 
 abstract class RendererBase<Self : RendererBase<Self, Output, Scalar>, Output : Any, Scalar> : Renderer<Output> {
@@ -27,8 +26,7 @@ abstract class RendererBase<Self : RendererBase<Self, Output, Scalar>, Output : 
     protected abstract fun addEmptyArray(key: String)
 
     private fun <T : Any> scalarTypeFor(type: KClass<T>): ScalarType<T> {
-        return typeDictionary.scalarConverter(type)
-            .onFailure { throw it.asError() }
+        return typeDictionary.scalarType(type) ?: throw RenderingException("Unable to find scalar type for $type")
     }
 
     private fun <T : Any> renderScalar(value: T?): Scalar {

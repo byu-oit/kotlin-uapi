@@ -1,8 +1,7 @@
 package edu.byu.uapi.spi.input
 
-import edu.byu.uapi.spi.dictionary.DeserializationFailure
-import edu.byu.uapi.spi.functional.SuccessOrFailure
+import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
 
 interface QueryParamReader<T : Any> {
-    fun deserializeQueryParams(values: Map<String, Set<String>>): SuccessOrFailure<T, DeserializationFailure<*>>
+    fun deserializeQueryParams(values: Map<String, Set<String>>): MaybeTypeFailure<T>
 }
