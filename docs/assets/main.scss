@@ -6,6 +6,14 @@
 @import "syntax-base16-unikitty-light";
 @import "callouts";
 
+a, a:visited {
+  color: #0057B8;
+}
+
+a:hover {
+  color: #002E5D;
+}
+
 a.header-edit-button {
   color: white;
 

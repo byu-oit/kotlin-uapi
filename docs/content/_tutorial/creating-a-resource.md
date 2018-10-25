@@ -115,7 +115,7 @@ We also need to describe the responses we send when someone loads our resource. 
 This defines two fields for our response, "oclc" and "title". It also specifies (in `getValue`) how to get the value of each
 field from an instance of `Book`.
 
-{% include callouts/code.html content="Your completed resource should look like [this](https://github.com/byu-oit/kotlin-uapi/blob/master/examples/library/tutorial-steps/4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BookResource.kt)." %}
+{% include callouts/code.html content="Your completed resource should look like [this](https://github.com/byu-oit/kotlin-uapi/blob/master/examples/library/tutorial-steps/4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt)." %}
 
 Now, if you run your API, it should start! You should be able to use WSO2 OAuth credentials to to call your API.
 Our library database comes with a pre-loaded list of Books; try loading these and see what they are!
