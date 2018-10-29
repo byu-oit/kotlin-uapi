@@ -5,17 +5,17 @@ import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
 import edu.byu.uapi.spi.dictionary.TypeFailure
 import edu.byu.uapi.spi.functional.Failure
 import edu.byu.uapi.spi.functional.asFailure
-import edu.byu.uapi.spi.input.PathParamDeserializer
+import edu.byu.uapi.spi.input.PathParamReader
 import edu.byu.uapi.spi.scalars.ScalarType
 import kotlin.reflect.KClass
 import kotlin.reflect.KClassifier
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
 
-class ScalarPathParamDeserializer<T: Any>(
+class ScalarPathParamReader<T: Any>(
     private val type: ScalarType<T>
-): PathParamDeserializer<T> {
-    override fun deserializePathParams(values: Map<String, String>): MaybeTypeFailure<T> {
+): PathParamReader<T> {
+    override fun read(values: Map<String, String>): MaybeTypeFailure<T> {
         if (values.size != 1) {
             return typeFailure(type.type, "Expected exactly 1 path parameter")
         }
@@ -23,9 +23,9 @@ class ScalarPathParamDeserializer<T: Any>(
     }
 }
 
-class ReflectivePathParamDeserializer<T : Any>(
+class ReflectivePathParamReader<T : Any>(
     val type: KClass<T>
-) : PathParamDeserializer<T> {
+) : PathParamReader<T> {
 
     init {
         if (type.isData) {
@@ -33,7 +33,7 @@ class ReflectivePathParamDeserializer<T : Any>(
         }
     }
 
-    override fun deserializePathParams(values: Map<String, String>): MaybeTypeFailure<T> {
+    override fun read(values: Map<String, String>): MaybeTypeFailure<T> {
         TODO("not implemented")
     }
 }

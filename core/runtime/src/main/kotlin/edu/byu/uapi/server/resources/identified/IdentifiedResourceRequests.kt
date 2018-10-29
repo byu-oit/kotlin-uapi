@@ -1,5 +1,7 @@
 package edu.byu.uapi.server.resources.identified
 
+import edu.byu.uapi.spi.input.SubsetParams
+
 sealed class ResourceRequest<AuthContext> {
     abstract val userContext: AuthContext
 }
@@ -12,7 +14,7 @@ data class ListResourceRequest<
     Filters>(
     override val userContext: UserContext,
     val filters: Filters,
-    val paging: PagingParams? = null
+    val paging: SubsetParams? = null
 ) : ReadResourceRequest<UserContext>()
 
 data class FetchResourceRequest<

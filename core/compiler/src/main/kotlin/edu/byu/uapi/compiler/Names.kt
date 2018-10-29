@@ -27,8 +27,8 @@ object Names {
     val hashSet = className(HashSet::class)
     val stringHashSet = hashSet.parameterize(string)
 
-    val collectionParamsProvider = className(CollectionParamsProvider::class)
-    val collectionParamsMeta = className(CollectionParamsMeta::class)
+    val collectionParamsProvider = className(ListParamReader::class)
+    val collectionParamsMeta = className(ListParamsMeta::class)
     val typeDictionary = className(TypeDictionary::class)
     val searchParamsMeta = className(SearchParamsMeta::class)
     val filterParamsMeta = className(FilterParamsMeta::class)

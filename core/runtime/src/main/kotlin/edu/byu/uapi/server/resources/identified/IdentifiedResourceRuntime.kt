@@ -32,7 +32,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     @Throws(UAPITypeError::class)
     fun constructId(params: Map<String, String>): Id {
         val deser = resource.getIdDeserializer(typeDictionary)
-        return deser.deserializePathParams(params).resolve({it}, {throw it.asError()})
+        return deser.read(params).resolve({it}, {throw it.asError()})
     }
 
     init {
@@ -55,7 +55,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         if (resource.deleteOperation != null) {
             ops.add(IdentifiedResourceOperation.DELETE)
         }
-        if (resource.listView != null || resource.pagedListView != null) {
+        if (resource.listView != null) {
             ops.add(IdentifiedResourceOperation.LIST)
         }
 
@@ -177,7 +177,7 @@ private fun introspect(runtime: IdentifiedResourceRuntime<*, *, *>): IdentifiedR
         name = name,
         identifier = introspectIdentifier(name, resource.idType),
         responseModel = introspectResponseModel(resource.responseFields),
-        listViewModel = introspectListView(resource.listView, resource.pagedListView),
+        listViewModel = introspectListView(resource.listView),
         mutations = IdentifiedResourceMutations(
             introspect(resource.createOperation),
             introspect(resource.updateOperation),
@@ -201,8 +201,7 @@ fun introspect(runtime: IdentifiedResource.Creatable<*, *, *, *>?): CreateOperat
 }
 
 fun introspectListView(
-    listView: IdentifiedResource.Listable<*, *, *, *>?,
-    pagedListView: IdentifiedResource.PagedListable<*, *, *, *>?
+    listView: IdentifiedResource.Listable<*, *, *, *>?
 ): ListViewModel? {
     TODO("not implemented")
 }

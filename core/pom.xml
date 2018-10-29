@@ -13,7 +13,6 @@
 
     <modules>
         <module>spi</module>
-        <module>compiler</module>
 	    <module>runtime</module>
     </modules>
 

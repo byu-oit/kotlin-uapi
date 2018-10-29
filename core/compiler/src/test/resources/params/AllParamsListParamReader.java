@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class AllParamsCollectionParamsProvider implements CollectionParamsProvider<AllParams> {
+public class AllParamsListParamReader implements ListParamReader<AllParams> {
 
     @NotNull
     public SuccessOrFailure<QueryParamReader<AllParams>, TypeFailure<?>> getReader(@NotNull TypeDictionary dictionary) {
@@ -65,8 +65,8 @@ public class AllParamsCollectionParamsProvider implements CollectionParamsProvid
     }
 
     @NotNull
-    public CollectionParamsMeta getMeta(@NotNull TypeDictionary dictionary) {
-        return new CollectionParamsMeta(
+    public ListParamsMeta getMeta(@NotNull TypeDictionary dictionary) {
+        return new ListParamsMeta(
                 SEARCH_PARAMS_META,
                 FILTER_PARAMS_META,
                 SORT_PARAMS_META

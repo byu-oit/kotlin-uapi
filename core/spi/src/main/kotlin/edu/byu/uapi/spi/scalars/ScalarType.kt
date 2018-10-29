@@ -6,6 +6,7 @@ import kotlin.reflect.KClass
 
 interface ScalarType<T : Any> {
     val type: KClass<T>
+    val scalarFormat: ScalarFormat
     fun fromString(value: String): MaybeTypeFailure<T>
     fun <S> render(
         value: T,

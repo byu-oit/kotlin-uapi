@@ -6,6 +6,7 @@ import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
 import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.functional.asSuccess
 import edu.byu.uapi.spi.rendering.ScalarRenderer
+import edu.byu.uapi.spi.scalars.ScalarFormat
 import edu.byu.uapi.spi.scalars.ScalarType
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -73,6 +74,8 @@ open class EnumScalarType<E : Enum<E>>(
     @Suppress("UNCHECKED_CAST")
     constructor(constants: Array<E>) : this(constants.first()::class as KClass<E>)
 
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
+
     private val map: Map<String, E> by lazy {
         type.java.enumConstants.flatMap { e ->
             enumNameVariants(e.toString()).map { it to e }
@@ -133,6 +136,7 @@ private fun enumNameVariants(name: String): Iterable<String> {
 
 object StringScalarType : ScalarType<String> {
     override val type = String::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
     override fun fromString(value: String) = value.asSuccess()
     override fun <S> render(
         value: String,
@@ -142,6 +146,7 @@ object StringScalarType : ScalarType<String> {
 
 object BooleanScalarType : ScalarType<Boolean> {
     override val type = Boolean::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.BOOLEAN
     override fun fromString(value: String): MaybeTypeFailure<Boolean> {
         return when (value.toLowerCase()) {
             "true" -> true.asSuccess()
@@ -158,6 +163,7 @@ object BooleanScalarType : ScalarType<Boolean> {
 
 object CharScalarType : ScalarType<Char> {
     override val type = Char::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
     override fun fromString(value: String): MaybeTypeFailure<Char> {
         if (value.length != 1) {
             return typeFailure<Boolean>("Expected an input with a length of 1, got a length of ${value.length}")
@@ -173,6 +179,7 @@ object CharScalarType : ScalarType<Char> {
 
 object ByteScalarType : ScalarType<Byte> {
     override val type = Byte::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
     override fun fromString(value: String): MaybeTypeFailure<Byte> {
         return value.toByteOrNull()?.asSuccess() ?: typeFailure<Byte>("Invalid byte value")
     }
@@ -185,6 +192,7 @@ object ByteScalarType : ScalarType<Byte> {
 
 object ShortScalarType : ScalarType<Short> {
     override val type = Short::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
     override fun fromString(value: String): MaybeTypeFailure<Short> {
         return value.toShortOrNull()?.asSuccess() ?: typeFailure<Short>("Invalid short integer value")
     }
@@ -197,6 +205,7 @@ object ShortScalarType : ScalarType<Short> {
 
 object IntScalarType : ScalarType<Int> {
     override val type = Int::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
     override fun fromString(value: String): MaybeTypeFailure<Int> {
         return value.toIntOrNull()?.asSuccess() ?: typeFailure<Int>("Invalid integer value")
     }
@@ -209,6 +218,7 @@ object IntScalarType : ScalarType<Int> {
 
 object FloatScalarType : ScalarType<Float> {
     override val type = Float::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.FLOAT
     override fun fromString(value: String): MaybeTypeFailure<Float> {
         return value.toFloatOrNull()?.asSuccess() ?: typeFailure<Float>("Invalid decimal value")
     }
@@ -221,6 +231,7 @@ object FloatScalarType : ScalarType<Float> {
 
 object LongScalarType : ScalarType<Long> {
     override val type = Long::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.LONG
     override fun fromString(value: String): MaybeTypeFailure<Long> {
         return value.toLongOrNull()?.asSuccess() ?: typeFailure<Long>("Invalid long integer value")
     }
@@ -233,6 +244,7 @@ object LongScalarType : ScalarType<Long> {
 
 object DoubleScalarType : ScalarType<Double> {
     override val type = Double::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.DOUBLE
     override fun fromString(value: String): MaybeTypeFailure<Double> {
         return value.toDoubleOrNull()?.asSuccess() ?: typeFailure<Double>("Invalid long decimal value")
     }
@@ -245,6 +257,7 @@ object DoubleScalarType : ScalarType<Double> {
 
 object BigIntegerScalarType : ScalarType<BigInteger> {
     override val type = BigInteger::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.LONG
     override fun fromString(value: String): MaybeTypeFailure<BigInteger> {
         return value.toBigIntegerOrNull()?.asSuccess() ?: typeFailure<BigInteger>("Invalid integer")
     }
@@ -257,6 +270,7 @@ object BigIntegerScalarType : ScalarType<BigInteger> {
 
 object BigDecimalScalarType : ScalarType<BigDecimal> {
     override val type = BigDecimal::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.DOUBLE
     override fun fromString(value: String): MaybeTypeFailure<BigDecimal> {
         return value.toBigDecimalOrNull()?.asSuccess() ?: typeFailure<BigDecimal>("Invalid decimal")
     }
@@ -269,6 +283,7 @@ object BigDecimalScalarType : ScalarType<BigDecimal> {
 
 object InstantScalarType : ScalarType<Instant> {
     override val type = Instant::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
     override fun fromString(value: String): MaybeTypeFailure<Instant> {
         return try {
             Instant.parse(value).asSuccess()
@@ -285,6 +300,7 @@ object InstantScalarType : ScalarType<Instant> {
 
 object LocalDateScalarType : ScalarType<LocalDate> {
     override val type = LocalDate::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.DATE
     override fun fromString(value: String): MaybeTypeFailure<LocalDate> {
         return try {
             LocalDate.parse(value).asSuccess()
@@ -301,6 +317,7 @@ object LocalDateScalarType : ScalarType<LocalDate> {
 
 object LocalDateTimeScalarType : ScalarType<LocalDateTime> {
     override val type = LocalDateTime::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
     override fun fromString(value: String): MaybeTypeFailure<LocalDateTime> {
         return try {
             LocalDateTime.parse(value).asSuccess()
@@ -317,6 +334,7 @@ object LocalDateTimeScalarType : ScalarType<LocalDateTime> {
 
 object ZonedDateTimeScalarType : ScalarType<ZonedDateTime> {
     override val type = ZonedDateTime::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
     override fun fromString(value: String): MaybeTypeFailure<ZonedDateTime> {
         return try {
             ZonedDateTime.parse(value).asSuccess()
@@ -333,6 +351,7 @@ object ZonedDateTimeScalarType : ScalarType<ZonedDateTime> {
 
 object OffsetDateTimeScalarType : ScalarType<OffsetDateTime> {
     override val type = OffsetDateTime::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
     override fun fromString(value: String): MaybeTypeFailure<OffsetDateTime> {
         return try {
             OffsetDateTime.parse(value).asSuccess()
@@ -349,6 +368,7 @@ object OffsetDateTimeScalarType : ScalarType<OffsetDateTime> {
 
 object OffsetTimeScalarType : ScalarType<OffsetTime> {
     override val type = OffsetTime::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.TIME
     override fun fromString(value: String): MaybeTypeFailure<OffsetTime> {
         return try {
             OffsetTime.parse(value).asSuccess()
@@ -365,6 +385,7 @@ object OffsetTimeScalarType : ScalarType<OffsetTime> {
 
 object LocalTimeScalarType : ScalarType<LocalTime> {
     override val type = LocalTime::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.TIME
     override fun fromString(value: String): MaybeTypeFailure<LocalTime> {
         return try {
             LocalTime.parse(value).asSuccess()
@@ -381,6 +402,7 @@ object LocalTimeScalarType : ScalarType<LocalTime> {
 
 object YearMonthScalarType : ScalarType<YearMonth> {
     override val type = YearMonth::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
     override fun fromString(value: String): MaybeTypeFailure<YearMonth> {
         return try {
             YearMonth.parse(value).asSuccess()
@@ -397,6 +419,7 @@ object YearMonthScalarType : ScalarType<YearMonth> {
 
 object MonthDayScalarType : ScalarType<MonthDay> {
     override val type = MonthDay::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
     override fun fromString(value: String): MaybeTypeFailure<MonthDay> {
         return try {
             MonthDay.parse(value).asSuccess()
@@ -413,6 +436,7 @@ object MonthDayScalarType : ScalarType<MonthDay> {
 
 object DurationScalarType : ScalarType<Duration> {
     override val type = Duration::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
     override fun fromString(value: String): MaybeTypeFailure<Duration> {
         return try {
             Duration.parse(value).asSuccess()
@@ -429,6 +453,7 @@ object DurationScalarType : ScalarType<Duration> {
 
 object PeriodScalarType : ScalarType<Period> {
     override val type = Period::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
     override fun fromString(value: String): MaybeTypeFailure<Period> {
         return try {
             Period.parse(value).asSuccess()
@@ -445,6 +470,7 @@ object PeriodScalarType : ScalarType<Period> {
 
 object YearScalarType : ScalarType<Year> {
     override val type = Year::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
     override fun fromString(value: String): MaybeTypeFailure<Year> {
         return try {
             Year.parse(value).asSuccess()
@@ -461,6 +487,7 @@ object YearScalarType : ScalarType<Year> {
 
 object UUIDScalarType : ScalarType<UUID> {
     override val type = UUID::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.UUID
     override fun fromString(value: String): MaybeTypeFailure<UUID> {
         return try {
             UUID.fromString(value).asSuccess()
@@ -477,6 +504,7 @@ object UUIDScalarType : ScalarType<UUID> {
 
 object ByteArrayScalarType : ScalarType<ByteArray> {
     override val type = ByteArray::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.BYTE_ARRAY
     override fun fromString(value: String): MaybeTypeFailure<ByteArray> {
         val decoder = decoderFor(value)
             ?: return typeFailure<ByteArray>("Invalid base64-encoded bytes.")
@@ -498,6 +526,7 @@ object ByteArrayScalarType : ScalarType<ByteArray> {
 
 object ByteBufferScalarType : ScalarType<ByteBuffer> {
     override val type = ByteBuffer::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.BYTE_ARRAY
     override fun fromString(value: String): MaybeTypeFailure<ByteBuffer> {
         val decoder = decoderFor(value)
             ?: return typeFailure<ByteBuffer>("Invalid base64-encoded bytes.")
@@ -519,6 +548,7 @@ object ByteBufferScalarType : ScalarType<ByteBuffer> {
 
 object URLScalarType : ScalarType<URL> {
     override val type: KClass<URL> = URL::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.URI
 
     override fun fromString(value: String): MaybeTypeFailure<URL> {
         return try {
@@ -536,6 +566,7 @@ object URLScalarType : ScalarType<URL> {
 
 object URIScalarType : ScalarType<URI> {
     override val type: KClass<URI> = URI::class
+    override val scalarFormat: ScalarFormat = ScalarFormat.URI
 
     override fun fromString(value: String): MaybeTypeFailure<URI> {
         return try {
@@ -554,6 +585,7 @@ object URIScalarType : ScalarType<URI> {
 abstract class PreJavaTimeScalarTypeBase<T : java.util.Date>
     : ScalarType<T> {
     abstract override val type: KClass<T>
+    override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
     final override fun fromString(value: String): MaybeTypeFailure<T> {
         return try {
             val instant = Instant.parse(value)

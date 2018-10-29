@@ -23,7 +23,7 @@ class CollectionParamsProcessorSpec : DescribeSpec() {
 //                assertThat(compilation)
 //                    .succeededWithoutWarnings()
 //                assertThat(compilation)
-//                    .generatedSourceFile("params/AllParams\$CollectionParamsProvider")
+//                    .generatedSourceFile("params/AllParams\$ListParamReader")
 //
 //                assertThat(
 //                ).withClasspathFrom(CollectionParamsProcessorSpec::class.java.classLoader)

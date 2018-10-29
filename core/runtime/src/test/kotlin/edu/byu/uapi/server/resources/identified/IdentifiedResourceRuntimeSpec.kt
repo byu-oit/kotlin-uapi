@@ -19,8 +19,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     private lateinit var create: IdentifiedResource.Creatable<User, String, Foo, NewFoo>
     private lateinit var update: IdentifiedResource.Updatable<User, String, Foo, Foo>
     private lateinit var delete: IdentifiedResource.Deletable<User, String, Foo>
-    private lateinit var list: IdentifiedResource.Listable<User, String, Foo, Foo>
-    private lateinit var pagedList: IdentifiedResource.PagedListable<User, String, Foo, Foo>
+    private lateinit var list: IdentifiedResource.Listable.NoParams<User, String, Foo>
 
     private lateinit var fixture: IdentifiedResourceRuntime<User, String, Foo>
 
@@ -33,7 +32,6 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
         update = mock()
         delete = mock()
         list = mock()
-        pagedList = mock()
 
         resource = mock {
             on { it.createOperation } doReturn create
@@ -60,7 +58,6 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
                         row(setOf(IdentifiedResourceOperation.UPDATE), settable(update = update)),
                         row(setOf(IdentifiedResourceOperation.DELETE), settable(delete = delete)),
                         row(setOf(IdentifiedResourceOperation.LIST), settable(list = list)),
-                        row(setOf(IdentifiedResourceOperation.LIST), settable(pagedList = pagedList)),
 
                         row(
                             setOf(
@@ -167,15 +164,13 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
         override val createOperation: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
         override val updateOperation: IdentifiedResource.Updatable<User, String, Foo, *>? = null,
         override val deleteOperation: IdentifiedResource.Deletable<User, String, Foo>? = null,
-        override val listView: IdentifiedResource.Listable<User, String, Foo, *>? = null,
-        override val pagedListView: IdentifiedResource.PagedListable<User, String, Foo, *>? = null
+        override val listView: IdentifiedResource.Listable<User, String, Foo, *>? = null
     ) : IdentifiedResource<User, String, Foo> by base
 
     private fun settable(
         create: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
         update: IdentifiedResource.Updatable<User, String, Foo, *>? = null,
         delete: IdentifiedResource.Deletable<User, String, Foo>? = null,
-        list: IdentifiedResource.Listable<User, String, Foo, *>? = null,
-        pagedList: IdentifiedResource.PagedListable<User, String, Foo, *>? = null
-    ) = SettableOpsResource(FooResource(), create, update, delete, list, pagedList)
+        list: IdentifiedResource.Listable<User, String, Foo, *>? = null
+    ) = SettableOpsResource(FooResource(), create, update, delete, list)
 }

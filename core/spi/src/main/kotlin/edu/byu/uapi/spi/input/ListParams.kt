@@ -1,36 +1,50 @@
 package edu.byu.uapi.spi.input
 
-import kotlin.reflect.KClass
+interface ListParams {
+    object Empty: ListParams {}
 
-object Params {
-    object Empty {}
-
-    interface Filtering<Filter : Any> {
+    interface Filtering<Filter : Any>: ListParams {
         val filter: Filter?
-
-        interface Companion<Filter : Any> {
-            val filterType: KClass<Filter>
-        }
     }
 
-    interface Sorting<SortableField : Enum<SortableField>> {
+    interface Sorting<SortableField : Enum<SortableField>>: ListParams {
         val sort: SortParams<SortableField>
-
-        interface Companion<SortableField : Enum<SortableField>> {
-            val defaultSortFields: List<SortableField>
-            val defaultSortOrder: SortOrder
-                get() = SortOrder.ASCENDING
-        }
     }
 
-    interface Searching<SearchContext : Enum<SearchContext>> {
+    interface Searching<SearchContext : Enum<SearchContext>>: ListParams {
         val search: SearchParams<SearchContext>?
-
-        interface Companion<SearchContext : Enum<SearchContext>> {
-            val searchContextFields: Map<SearchContext, Collection<String>>
-        }
     }
+
+    interface SubSetting: ListParams {
+        val page: SubsetParams
+    }
+
 }
+
+data class ListWithTotal<T>(
+    val totalItems: Int,
+    val values: List<T>
+): List<T> by values
+
+inline fun <T, R> ListWithTotal<T>.map(fn: (T) -> R): ListWithTotal<R> {
+    return ListWithTotal(
+        totalItems = this.totalItems,
+        values = this.values.map(fn)
+    )
+}
+
+inline fun <T, R> ListWithTotal<T>.flatMap(fn: (T) -> Iterable<R>): ListWithTotal<R> {
+    return ListWithTotal(
+        totalItems = this.totalItems,
+        values = this.values.flatMap(fn)
+    )
+}
+
+//TODO: Support keyed subsets (subset_key)
+data class SubsetParams(
+    val subsetStartOffset: Int,
+    val subsetSize: Int
+)
 
 interface BetweenInclusive<Type> {
     val start: Type?

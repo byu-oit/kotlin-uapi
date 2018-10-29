@@ -39,7 +39,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <kotlin.version>1.2.71</kotlin.version>
+        <kotlin.version>1.3.0</kotlin.version>
         <!-- Knowns how to read Kotlinc-generated @Metadata annotations -->
         <kotlin.metadata.version>1.4.0</kotlin.metadata.version>
         <!-- Faster compiles, as long as you don't do a `mvn clean` every time -->
@@ -286,6 +286,9 @@
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${plugins.kotlin.version}</version>
                 <inherited>true</inherited>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
                 <executions>
                     <execution>
                         <id>compile</id>

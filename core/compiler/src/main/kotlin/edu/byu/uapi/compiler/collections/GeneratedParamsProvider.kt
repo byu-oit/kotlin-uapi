@@ -12,7 +12,7 @@ internal class GeneratedParamsProvider(val model: ParamsModel) {
     fun generate(): JavaFile {
         val paramsType = ClassName.get(model.packageName, model.name)
 
-        val typeSpec = TypeSpec.classBuilder(model.name + "\$CollectionParamsProvider")
+        val typeSpec = TypeSpec.classBuilder(model.name + "\$ListParamReader")
             .addSuperinterface(Names.collectionParamsProvider.parameterize(paramsType))
 
         val searching = model.searching?.generate()?.also { it.addStaticBits(typeSpec) }

@@ -2,10 +2,8 @@ package edu.byu.uapi.server.spi.reflective
 
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.spi.asError
-import edu.byu.uapi.spi.annotations.DefaultSort
-import edu.byu.uapi.spi.annotations.SearchFields
 import edu.byu.uapi.spi.functional.onFailure
-import edu.byu.uapi.spi.input.Params
+import edu.byu.uapi.spi.input.ListParams
 import edu.byu.uapi.spi.input.SearchParams
 import edu.byu.uapi.spi.input.SortParams
 import io.kotlintest.specs.DescribeSpec
@@ -39,22 +37,18 @@ class CollectionParamsAnalyzeSearchSpec : DescribeSpec() {
         override val filter: TestFilters?,
         override val sort: SortParams<TestSortField>,
         override val search: SearchParams<TestSearchContext>?
-    ) : Params.Filtering<TestFilters>,
-        Params.Searching<TestSearchContext>,
-        Params.Sorting<TestSortField>
+    ) : ListParams.Filtering<TestFilters>,
+        ListParams.Searching<TestSearchContext>,
+        ListParams.Sorting<TestSortField>
 
     enum class TestSearchContext {
-        @SearchFields("field", "another_field")
         context,
-        @SearchFields("a_field")
         another_context
     }
 
     enum class TestSortField {
-        @DefaultSort(order = 1)
         field,
         a_field,
-        @DefaultSort(order = 2)
         another_default_field
     }
 

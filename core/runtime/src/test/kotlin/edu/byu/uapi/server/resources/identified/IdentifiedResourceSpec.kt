@@ -1,6 +1,7 @@
 package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.response.ResponseField
+import edu.byu.uapi.spi.input.ListParams
 import edu.byu.uapi.spi.validation.Validating
 import io.kotlintest.data.forall
 import io.kotlintest.shouldBe
@@ -15,8 +16,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
                 row(IdentifiedResource<String, String, String>::createOperation, IdentifiedResourceSpec::WithCreate),
                 row(IdentifiedResource<String, String, String>::updateOperation, IdentifiedResourceSpec::WithUpdate),
                 row(IdentifiedResource<String, String, String>::deleteOperation, IdentifiedResourceSpec::WithDelete),
-                row(IdentifiedResource<String, String, String>::listView, IdentifiedResourceSpec::WithListable),
-                row(IdentifiedResource<String, String, String>::pagedListView, IdentifiedResourceSpec::WithPagedListable)
+                row(IdentifiedResource<String, String, String>::listView, IdentifiedResourceSpec::WithListable)
             )
             it("should be null if the operation interface hasn't been implemented") {
                 forall(
@@ -186,35 +186,13 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private class WithListable : Base(),
-                                 IdentifiedResource.Listable<String, String, String, String> {
+                                 IdentifiedResource.Listable.NoParams<String, String, String> {
         override fun list(
             userContext: String,
-            params: String
-        ): Collection<String> {
+            params: ListParams.Empty
+        ): List<String> {
             TODO("not implemented")
         }
-
-        override val paramsType: KClass<String>
-            get() = TODO("not implemented")
-
-    }
-
-    private class WithPagedListable : Base(),
-                                      IdentifiedResource.PagedListable<String, String, String, String> {
-        override fun list(
-            userContext: String,
-            filters: String,
-            paging: PagingParams
-        ): CollectionWithTotal<String> {
-            TODO("not implemented")
-        }
-
-        override val paramsType: KClass<String>
-            get() = TODO("not implemented")
-        override val defaultPageSize: Int
-            get() = TODO("not implemented")
-        override val maxPageSize: Int
-            get() = TODO("not implemented")
 
     }
 }

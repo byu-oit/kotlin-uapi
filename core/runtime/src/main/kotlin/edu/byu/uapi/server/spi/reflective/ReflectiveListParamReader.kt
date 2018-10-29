@@ -3,34 +3,30 @@ package edu.byu.uapi.server.spi.reflective
 import edu.byu.uapi.server.inputs.typeError
 import edu.byu.uapi.server.spi.UAPITypeError
 import edu.byu.uapi.server.spi.requireScalarType
-import edu.byu.uapi.spi.annotations.DefaultSort
-import edu.byu.uapi.spi.annotations.SearchFields
 import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.dictionary.TypeFailure
 import edu.byu.uapi.spi.functional.Failure
 import edu.byu.uapi.spi.functional.asSuccess
-import edu.byu.uapi.spi.input.CollectionParamsMeta
-import edu.byu.uapi.spi.input.CollectionParamsProvider
-import edu.byu.uapi.spi.input.Params
-import edu.byu.uapi.spi.input.QueryParamReader
+import edu.byu.uapi.spi.input.ListParamReader
+import edu.byu.uapi.spi.input.ListParamsMeta
+import edu.byu.uapi.spi.input.ParamReadResult
+import edu.byu.uapi.spi.input.QueryParams
 import edu.byu.uapi.spi.scalars.ScalarType
 import kotlin.reflect.*
 import kotlin.reflect.full.*
 
-class ReflectiveCollectionParamsProvider<Params : Any>(
+class ReflectiveListParamReader<Params : Any>(
     val paramsType: KClass<Params>,
     val dictionary: TypeDictionary
-) : CollectionParamsProvider<Params> {
-
-    override fun getReader(): QueryParamReader<Params> {
+) : ListParamReader<Params> {
+    override fun read(input: QueryParams): ParamReadResult<Params> {
         TODO("not implemented")
     }
 
-    override fun getMeta(): CollectionParamsMeta {
+    override fun describe(): ListParamsMeta {
         TODO("not implemented")
     }
-
 }
 
 
@@ -65,18 +61,19 @@ internal fun analyzeSearch(
     toAnalyze: KClass<*>,
     dictionary: TypeDictionary
 ): AnalyzedSearchParams? {
-    val unwrapped = toAnalyze.unwrapParamType(Params.Searching::class) ?: return null
-
-    val enumInfo = unwrapped.getEnumInfo()
-
-    val fields = enumInfo.mapValues {
-        it.value.findInstanceOf<SearchFields>()?.value?.toList()
-            ?: typeError(unwrapped, "value ${it.key} must be annotated with @SearchFields()")
-    }
-
-    val scalarType = dictionary.requireScalarType(unwrapped)
-
-    return AnalyzedSearchParams(unwrapped as KClass<Enum<*>>, enumInfo.keys.toList(), fields, scalarType)
+    return null
+//    val unwrapped = toAnalyze.unwrapParamType(ListParams.Searching::class) ?: return null
+//
+//    val enumInfo = unwrapped.getEnumInfo()
+//
+//    val fields = enumInfo.mapValues {
+//        it.value.findInstanceOf<SearchFields>()?.value?.toList()
+//            ?: typeError(unwrapped, "value ${it.key} must be annotated with @SearchFields()")
+//    }
+//
+//    val scalarType = dictionary.requireScalarType(unwrapped)
+//
+//    return AnalyzedSearchParams(unwrapped as KClass<Enum<*>>, enumInfo.keys.toList(), fields, scalarType)
 }
 
 private inline fun <reified T : Any> Iterable<*>.findInstanceOf(): T? {
@@ -88,20 +85,21 @@ internal fun analyzeSort(
     toAnalyze: KClass<*>,
     dictionary: TypeDictionary
 ): AnalyzedSortParams? {
-    val unwrapped = toAnalyze.unwrapParamType(Params.Searching::class) ?: return null
-
-    val enumInfo = unwrapped.getEnumInfo()
-
-    val defaults = enumInfo.asSequence()
-        .map { it.key to it.value.findInstanceOf<DefaultSort>() }
-        .filter { it.second != null }
-        .sortedBy { it.second?.order }
-        .map { it.first }
-        .toList()
-
-    val scalarType = dictionary.requireScalarType(unwrapped)
-
-    return AnalyzedSortParams(unwrapped as KClass<Enum<*>>, enumInfo.keys.toList(), defaults, scalarType)
+    return null
+//    val unwrapped = toAnalyze.unwrapParamType(ListParams.Searching::class) ?: return null
+//
+//    val enumInfo = unwrapped.getEnumInfo()
+//
+//    val defaults = enumInfo.asSequence()
+//        .map { it.key to it.value.findInstanceOf<DefaultSort>() }
+//        .filter { it.second != null }
+//        .sortedBy { it.second?.order }
+//        .map { it.first }
+//        .toList()
+//
+//    val scalarType = dictionary.requireScalarType(unwrapped)
+//
+//    return AnalyzedSortParams(unwrapped as KClass<Enum<*>>, enumInfo.keys.toList(), defaults, scalarType)
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -109,22 +107,23 @@ internal fun analyzeFilter(
     toAnalyze: KClass<*>,
     dictionary: TypeDictionary
 ): AnalyzedFilterParams? {
-    val unwrapped = toAnalyze.unwrapParamType(Params.Filtering::class) ?: return null
-
-    if (!unwrapped.isData) {
-        typeError(unwrapped, "Type parameter for Params.Filtering must be a data class")
-    }
-
-    val ctor = unwrapped.primaryConstructor
-        ?: typeError(unwrapped, "Missing primary constructor. As this is a data class, this shouldn't be possible?!")
-    val params = ctor.parameters
-    val analyzedParams = params.map { analyzeFilterParam(it, dictionary) }
-
-    return AnalyzedFilterParams(
-        unwrapped,
-        analyzedParams,
-        ctor
-    )
+    return null
+//    val unwrapped = toAnalyze.unwrapParamType(ListParams.Filtering::class) ?: return null
+//
+//    if (!unwrapped.isData) {
+//        typeError(unwrapped, "Type parameter for ListParams.Filtering must be a data class")
+//    }
+//
+//    val ctor = unwrapped.primaryConstructor
+//        ?: typeError(unwrapped, "Missing primary constructor. As this is a data class, this shouldn't be possible?!")
+//    val params = ctor.parameters
+//    val analyzedParams = params.map { analyzeFilterParam(it, dictionary) }
+//
+//    return AnalyzedFilterParams(
+//        unwrapped,
+//        analyzedParams,
+//        ctor
+//    )
 }
 
 private val collectionStar = Collection::class.starProjectedType

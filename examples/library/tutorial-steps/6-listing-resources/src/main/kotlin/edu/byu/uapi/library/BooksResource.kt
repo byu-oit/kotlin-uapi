@@ -6,35 +6,34 @@ import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
-import edu.byu.uapi.spi.annotations.CollectionParams
-import edu.byu.uapi.spi.annotations.DefaultSort
-import edu.byu.uapi.spi.annotations.SearchFields
-import edu.byu.uapi.spi.input.BetweenInclusive
-import edu.byu.uapi.spi.input.Params
+import edu.byu.uapi.spi.input.*
 import java.time.Year
 import kotlin.reflect.KClass
 
-@CollectionParams
-interface BookListParams :
-    Params.Filtering<BookFilters>,
-    Params.Searching<BookSearchContext>,
-    Params.Sorting<BookSortField>
+//interface BookListParams
+//    ListParams.Filtering<BookFilters>,
+//    ListParams.Searching<BookSearchContext>,
+//    ListParams.Sorting<BookSortField>
+
+data class BookListParams(
+    override val sort: SortParams<BookSortField>,
+    override val filter: BookFilters?,
+    override val page: SubsetParams,
+    override val search: SearchParams<BookSearchContext>?
+) : ListParams.Sorting<BookSortField>,
+    ListParams.Filtering<BookFilters>,
+    ListParams.SubSetting,
+    ListParams.Searching<BookSearchContext>
 
 enum class BookSearchContext {
-    @SearchFields("title", "subtitles")
     titles,
-    @SearchFields("authors.name")
     authors,
-    @SearchFields("genres.name", "genres.code")
     genres,
-    @SearchFields("oclc", "isbn")
     control_numbers;
 }
 
 enum class BookSortField {
-    @DefaultSort(order = 2)
     oclc,
-    @DefaultSort(order = 1)
     title,
     publisher_id,
     publisher_name,
@@ -42,7 +41,7 @@ enum class BookSortField {
     published_year
 }
 
-interface BookFilters{
+interface BookFilters {
     val isbn: String?
     val title: String?
     val subtitle: String?
@@ -53,19 +52,31 @@ interface BookFilters{
     val published: BetweenInclusive<Year>
 }
 
-
-class BooksResource : IdentifiedResource<LibraryUser, Long, Book>
-                      , IdentifiedResource.Listable<LibraryUser, Long, Book, BookListParams>
+class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
+                      IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortField>,
+                      IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
+                      IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>,
+                      IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>
 {
+
     override fun list(
         userContext: LibraryUser,
         params: BookListParams
-    ): Collection<Book> {
+    ): ListWithTotal<Book> {
         TODO("not implemented")
     }
 
-    override val paramsType: KClass<BookListParams>
-        get() = TODO("not implemented")
+    override val listParamsType: KClass<BookListParams> = BookListParams::class
+    override val listDefaultSortFields: List<BookSortField> = listOf(BookSortField.title, BookSortField.oclc)
+    override val listDefaultSortOrder: SortOrder = SortOrder.ASCENDING
+    override val listDefaultSubsetSize: Int = 50
+    override val listMaxSubsetSize: Int = 100
+    override fun listSearchContexts(value: BookSearchContext): Collection<String> = when(value) {
+        BookSearchContext.titles -> listOf("title", "subtitles")
+        BookSearchContext.authors -> listOf("authors.name")
+        BookSearchContext.genres -> listOf("genres.code", "genres.name")
+        BookSearchContext.control_numbers -> listOf("oclc", "isbn")
+    }
 
     override val idType: KClass<Long> = Long::class
 
