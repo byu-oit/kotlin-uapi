@@ -55,6 +55,7 @@ class ParamReadException(
     cause
 )
 
-fun ParamReadFailure.thrown(): Nothing {
+@Suppress("NOTHING_TO_INLINE")
+inline fun ParamReadFailure.thrown(): Nothing {
     throw ParamReadException(this.name, this.type, this.message, this.cause)
 }
