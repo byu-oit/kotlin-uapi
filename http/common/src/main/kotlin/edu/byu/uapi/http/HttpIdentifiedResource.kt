@@ -49,7 +49,9 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
             is IdentifiedResourceFetchHandler -> HttpRoute(
                 idPath, HttpMethod.GET, IdentifiedResourceFetchHttpHandler(runtime, op)
             )
-            is IdentifiedResourceListHandler<UserContext, Id, Model, *> -> TODO()
+            is IdentifiedResourceListHandler<UserContext, Id, Model, *> -> HttpRoute(
+                rootPath, HttpMethod.GET, IdentifiedResourceListHttpHandler(runtime, op)
+            )
         }
     }
 }
@@ -154,6 +156,23 @@ class IdentifiedResourceFetchHttpHandler<UserContext : Any, Id : Any, Model : An
             request.asRequestContext(),
             userContext,
             request.path.asIdParams(),
+            request.query.asQueryParams()
+        ))
+        return response.toHttpResponse(runtime.typeDictionary)
+    }
+}
+
+class IdentifiedResourceListHttpHandler<UserContext : Any, Id : Any, Model : Any>(
+    val runtime: UAPIRuntime<UserContext>,
+    val handler: IdentifiedResourceListHandler<UserContext, Id, Model, *>
+) : AuthenticatedHandler<UserContext>(runtime) {
+    override fun handleAuthenticated(
+        request: HttpRequest,
+        userContext: UserContext
+    ): HttpResponse {
+        val response = handler.handle(ListIdentifiedResource(
+            request.asRequestContext(),
+            userContext,
             request.query.asQueryParams()
         ))
         return response.toHttpResponse(runtime.typeDictionary)

@@ -7,7 +7,6 @@ import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
 import edu.byu.uapi.spi.input.*
-import java.time.Year
 import kotlin.reflect.KClass
 
 //interface BookListParams
@@ -38,19 +37,24 @@ enum class BookSortField {
     publisher_id,
     publisher_name,
     isbn,
-    published_year
+    published_year,
+    GENRES__NAME
 }
 
-interface BookFilters {
-    val isbn: String?
-    val title: String?
-    val subtitle: String?
-    val publisherId: Set<Int>
-    val hasAvailableCopies: Boolean?
-    val authorId: Set<Int>
-    val genre: Set<String>
-    val published: BetweenInclusive<Year>
-}
+data class BookFilters (
+    val isbn: String?,
+    val title: String?,
+    val subtitle: String?,
+    val publisherId: Set<Int>,
+    val hasAvailableCopies: Boolean?,
+    val authorId: Set<Int>,
+    val genre: Set<String>,
+    val nested: Nested?
+)
+
+data class Nested(
+    val string: String?
+)
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
                       IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortField>,
@@ -63,7 +67,8 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         userContext: LibraryUser,
         params: BookListParams
     ): ListWithTotal<Book> {
-        TODO("not implemented")
+        println(params)
+        return ListWithTotal(0, emptyList<Book>())
     }
 
     override val listParamsType: KClass<BookListParams> = BookListParams::class

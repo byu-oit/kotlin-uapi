@@ -22,7 +22,7 @@ class DefaultSearchParamsReader<SearchContext : Enum<SearchContext>> private con
             Success(null)
         } else if (textParam != null && contextParam != null) {
             val context = contextParam.asScalar(contextType).useFailure { return it }
-            val text = contextParam.asString().useFailure { return it }
+            val text = textParam.asString().useFailure { return it }
             Success(SearchParams(
                 context = context,
                 text = text

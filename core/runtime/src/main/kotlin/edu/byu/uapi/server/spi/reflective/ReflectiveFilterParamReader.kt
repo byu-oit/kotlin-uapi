@@ -2,6 +2,7 @@ package edu.byu.uapi.server.spi.reflective
 
 import edu.byu.uapi.server.inputs.typeFailure
 import edu.byu.uapi.server.spi.scalarTypeOrFailure
+import edu.byu.uapi.server.util.toSnakeCase
 import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.functional.Success
@@ -32,7 +33,7 @@ class ReflectiveFilterParamReader<Filters : Any> internal constructor(
         if (!hasAny) {
             return Success(null)
         }
-        val values = analyzed.fields.map { it.parameter to it.read(input) }.toMap()
+        val values = analyzed.fields.map { it.parameter to it.read(input).useFailure { f -> return f } }.toMap()
         return Success(analyzed.constructor.callBy(values))
     }
 
@@ -105,7 +106,7 @@ internal data class AnalyzedSimpleFilterField(
         prefix + name, scalarType.scalarFormat, false
     ))
 
-    override fun read(queryParams: QueryParams): ParamReadResult<Any?> = queryParams[name]?.asScalarList(scalarType) ?: Success(null)
+    override fun read(queryParams: QueryParams): ParamReadResult<Any?> = queryParams[name]?.asScalar(scalarType) ?: Success(null)
 }
 
 typealias ContainerCreator<Item, Container> = (Iterable<Item>) -> Container
@@ -151,7 +152,7 @@ internal data class AnalyzedComplexFilterField(
         if (!hasAny) {
             return Success(null)
         }
-        val values = this.fields.map { it.parameter to it.read(nested) }.toMap()
+        val values = this.fields.map { it.parameter to it.read(nested).useFailure { f -> return f } }.toMap()
         return Success(constructor.callBy(values))
     }
 }
@@ -190,7 +191,7 @@ internal fun analyzeComplexFilter(
     }
     return Success(AnalyzedComplexFilterField(
         param,
-        param.name!!,
+        param.name!!.toSnakeCase(),
         type,
         params,
         ctor
@@ -208,7 +209,7 @@ internal fun analyzeValueParam(
     }
     return Success(AnalyzedSimpleFilterField(
         param,
-        param.name!!,
+        param.name!!.toSnakeCase(),
         type,
         dictionary.scalarTypeOrFailure(type).useFailure { return it }
     ))
@@ -240,7 +241,7 @@ private fun analyzeCollectionFilter(
     val scalar = dictionary.scalarTypeOrFailure(item).useFailure { return it }
     return Success(AnalyzedRepeatableFilterField(
         parameter,
-        parameter.name!!,
+        parameter.name!!.toSnakeCase(),
         item,
         collectionCreator,
         scalar

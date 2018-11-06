@@ -76,8 +76,8 @@ data class SortableCollectionMetadata(
     val sortOrderDefault: SortOrder
 ) : Renderable {
     override fun render(renderer: Renderer<*>) {
-        renderer.value(CollectionMeta.KEY_SORT_PROPERTIES_AVAILABLE, sortPropertiesAvailable)
-        renderer.value(CollectionMeta.KEY_SORT_PROPERTIES_DEFAULT, sortPropertiesDefault)
+        renderer.valueArray(CollectionMeta.KEY_SORT_PROPERTIES_AVAILABLE, sortPropertiesAvailable)
+        renderer.valueArray(CollectionMeta.KEY_SORT_PROPERTIES_DEFAULT, sortPropertiesDefault)
         renderer.value(CollectionMeta.KEY_SORT_ORDER_DEFAULT, sortOrderDefault)
     }
 }

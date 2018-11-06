@@ -7,6 +7,6 @@ class DefaultParameterStyleEnumScalar<E: Enum<E>>(
     type: KClass<E>
 ) : EnumScalarType<E>(type, strict = true) {
     override fun renderToString(value: E): String {
-        return value.name.toLowerCase()
+        return value.name.toLowerCase().replace("__", ".")
     }
 }
