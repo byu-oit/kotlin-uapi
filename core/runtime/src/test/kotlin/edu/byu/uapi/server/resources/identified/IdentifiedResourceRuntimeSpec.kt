@@ -5,7 +5,6 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.response.ResponseField
-import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.input.IdParamReader
 import io.kotlintest.Description
 import io.kotlintest.data.forall
@@ -37,7 +36,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
         idReader = mock()
 
         resource = mock {
-            on { it.getIdReader(any(), any()) } doReturn Success(idReader)
+            on { it.getIdReader(any(), any()) } doReturn idReader
             on { it.createOperation } doReturn create
             on { it.updateOperation } doReturn update
             on { it.deleteOperation } doReturn delete

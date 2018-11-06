@@ -2,7 +2,6 @@ package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.schemas.*
-import edu.byu.uapi.server.spi.asError
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.SpecConstants
@@ -33,7 +32,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         private val LOG = loggerFor<IdentifiedResourceRuntime<*, *, *>>()
     }
 
-    val idReader: IdParamReader<Id> = resource.getIdReader(typeDictionary, this.name + "_").onFailure { throw it.asError() }
+    val idReader: IdParamReader<Id> = resource.getIdReader(typeDictionary, this.name + "_")
 
     init {
         LOG.debug("Initializing runtime")
@@ -284,7 +283,6 @@ class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Pa
     private val listView: IdentifiedResource.Listable<UserContext, Id, Model, Params>
 ) : IdentifiedResourceRequestHandler<UserContext, Id, Model, ListIdentifiedResource<UserContext>>(runtime) {
     private val paramReader: ListParamReader<Params> = listView.getListParamReader(runtime.typeDictionary)
-        .onFailure { throw it.asError() }
 
     override fun handle(request: ListIdentifiedResource<UserContext>): UAPIResponse<*> {
         val params = paramReader.read(request.queryParams).onFailure {

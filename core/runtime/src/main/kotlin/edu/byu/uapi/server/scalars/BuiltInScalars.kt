@@ -1,11 +1,9 @@
 package edu.byu.uapi.server.scalars
 
 import com.google.common.collect.ImmutableBiMap
-import edu.byu.uapi.server.inputs.typeFailure
+import edu.byu.uapi.server.inputs.thrown
 import edu.byu.uapi.server.types.APIType
-import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
-import edu.byu.uapi.spi.functional.Success
-import edu.byu.uapi.spi.functional.asSuccess
+import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.rendering.ScalarRenderer
 import edu.byu.uapi.spi.scalars.ScalarFormat
 import edu.byu.uapi.spi.scalars.ScalarType
@@ -93,16 +91,16 @@ open class EnumScalarType<E : Enum<E>>(
 
     override fun renderToString(value: E): String = value.toString()
 
-    override fun fromString(value: String): MaybeTypeFailure<E> {
+    override fun fromString(value: String): E {
         val found = values[value]
         if (found == null && !strict) {
             val variant = variants[value]
-            if (variant != null) return variant.asSuccess()
+            if (variant != null) return variant
         }
         if (found != null) {
-            return found.asSuccess()
+            return found
         }
-        return typeFailure(type, "Invalid " + type.simpleName + " value")
+        UAPITypeError.thrown(type, "Invalid " + type.simpleName + " value")
     }
 
     override fun <S> render(
@@ -152,7 +150,7 @@ private fun enumNameVariants(name: String): Iterable<String> {
 object StringScalarType : ScalarType<String> {
     override val type = String::class
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING
-    override fun fromString(value: String) = value.asSuccess()
+    override fun fromString(value: String): String = value
     override fun <S> render(
         value: String,
         renderer: ScalarRenderer<S>
@@ -162,11 +160,11 @@ object StringScalarType : ScalarType<String> {
 object BooleanScalarType : ScalarType<Boolean> {
     override val type = Boolean::class
     override val scalarFormat: ScalarFormat = ScalarFormat.BOOLEAN
-    override fun fromString(value: String): MaybeTypeFailure<Boolean> {
+    override fun fromString(value: String): Boolean {
         return when (value.toLowerCase()) {
-            "true" -> true.asSuccess()
-            "false" -> false.asSuccess()
-            else -> typeFailure<Boolean>("Invalid boolean value")
+            "true" -> true
+            "false" -> false
+            else -> UAPITypeError.thrown(Boolean::class, "Invalid boolean value")
         }
     }
 
@@ -179,11 +177,11 @@ object BooleanScalarType : ScalarType<Boolean> {
 object CharScalarType : ScalarType<Char> {
     override val type = Char::class
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING
-    override fun fromString(value: String): MaybeTypeFailure<Char> {
+    override fun fromString(value: String): Char {
         if (value.length != 1) {
-            return typeFailure<Boolean>("Expected an input with a length of 1, got a length of ${value.length}")
+            UAPITypeError.thrown(Char::class, "Expected an input with a length of 1, got a length of ${value.length}")
         }
-        return value[0].asSuccess()
+        return value[0]
     }
 
     override fun <S> render(
@@ -195,8 +193,8 @@ object CharScalarType : ScalarType<Char> {
 object ByteScalarType : ScalarType<Byte> {
     override val type = Byte::class
     override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
-    override fun fromString(value: String): MaybeTypeFailure<Byte> {
-        return value.toByteOrNull()?.asSuccess() ?: typeFailure<Byte>("Invalid byte value")
+    override fun fromString(value: String): Byte {
+        return value.toByteOrNull() ?: UAPITypeError.thrown(Byte::class, "Invalid byte value")
     }
 
     override fun <S> render(
@@ -208,8 +206,8 @@ object ByteScalarType : ScalarType<Byte> {
 object ShortScalarType : ScalarType<Short> {
     override val type = Short::class
     override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
-    override fun fromString(value: String): MaybeTypeFailure<Short> {
-        return value.toShortOrNull()?.asSuccess() ?: typeFailure<Short>("Invalid short integer value")
+    override fun fromString(value: String): Short {
+        return value.toShortOrNull() ?: UAPITypeError.thrown(Short::class, "Invalid short integer value")
     }
 
     override fun <S> render(
@@ -221,8 +219,8 @@ object ShortScalarType : ScalarType<Short> {
 object IntScalarType : ScalarType<Int> {
     override val type = Int::class
     override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
-    override fun fromString(value: String): MaybeTypeFailure<Int> {
-        return value.toIntOrNull()?.asSuccess() ?: typeFailure<Int>("Invalid integer value")
+    override fun fromString(value: String): Int {
+        return value.toIntOrNull() ?: UAPITypeError.thrown(Int::class, "Invalid integer value")
     }
 
     override fun <S> render(
@@ -234,8 +232,8 @@ object IntScalarType : ScalarType<Int> {
 object FloatScalarType : ScalarType<Float> {
     override val type = Float::class
     override val scalarFormat: ScalarFormat = ScalarFormat.FLOAT
-    override fun fromString(value: String): MaybeTypeFailure<Float> {
-        return value.toFloatOrNull()?.asSuccess() ?: typeFailure<Float>("Invalid decimal value")
+    override fun fromString(value: String): Float {
+        return value.toFloatOrNull() ?: UAPITypeError.thrown(Float::class, "Invalid decimal value")
     }
 
     override fun <S> render(
@@ -247,8 +245,8 @@ object FloatScalarType : ScalarType<Float> {
 object LongScalarType : ScalarType<Long> {
     override val type = Long::class
     override val scalarFormat: ScalarFormat = ScalarFormat.LONG
-    override fun fromString(value: String): MaybeTypeFailure<Long> {
-        return value.toLongOrNull()?.asSuccess() ?: typeFailure<Long>("Invalid long integer value")
+    override fun fromString(value: String): Long {
+        return value.toLongOrNull() ?: UAPITypeError.thrown(Long::class, "Invalid long integer value")
     }
 
     override fun <S> render(
@@ -260,8 +258,8 @@ object LongScalarType : ScalarType<Long> {
 object DoubleScalarType : ScalarType<Double> {
     override val type = Double::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DOUBLE
-    override fun fromString(value: String): MaybeTypeFailure<Double> {
-        return value.toDoubleOrNull()?.asSuccess() ?: typeFailure<Double>("Invalid long decimal value")
+    override fun fromString(value: String): Double {
+        return value.toDoubleOrNull() ?: UAPITypeError.thrown(Double::class, "Invalid long decimal value")
     }
 
     override fun <S> render(
@@ -273,8 +271,8 @@ object DoubleScalarType : ScalarType<Double> {
 object BigIntegerScalarType : ScalarType<BigInteger> {
     override val type = BigInteger::class
     override val scalarFormat: ScalarFormat = ScalarFormat.LONG
-    override fun fromString(value: String): MaybeTypeFailure<BigInteger> {
-        return value.toBigIntegerOrNull()?.asSuccess() ?: typeFailure<BigInteger>("Invalid integer")
+    override fun fromString(value: String): BigInteger {
+        return value.toBigIntegerOrNull() ?: UAPITypeError.thrown(BigInteger::class, "Invalid integer")
     }
 
     override fun <S> render(
@@ -286,8 +284,8 @@ object BigIntegerScalarType : ScalarType<BigInteger> {
 object BigDecimalScalarType : ScalarType<BigDecimal> {
     override val type = BigDecimal::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DOUBLE
-    override fun fromString(value: String): MaybeTypeFailure<BigDecimal> {
-        return value.toBigDecimalOrNull()?.asSuccess() ?: typeFailure<BigDecimal>("Invalid decimal")
+    override fun fromString(value: String): BigDecimal {
+        return value.toBigDecimalOrNull() ?: UAPITypeError.thrown(BigDecimal::class, "Invalid decimal")
     }
 
     override fun <S> render(
@@ -299,11 +297,11 @@ object BigDecimalScalarType : ScalarType<BigDecimal> {
 object InstantScalarType : ScalarType<Instant> {
     override val type = Instant::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
-    override fun fromString(value: String): MaybeTypeFailure<Instant> {
+    override fun fromString(value: String): Instant {
         return try {
-            Instant.parse(value).asSuccess()
+            Instant.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<Instant>("Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(Instant::class, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -316,11 +314,11 @@ object InstantScalarType : ScalarType<Instant> {
 object LocalDateScalarType : ScalarType<LocalDate> {
     override val type = LocalDate::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DATE
-    override fun fromString(value: String): MaybeTypeFailure<LocalDate> {
+    override fun fromString(value: String): LocalDate {
         return try {
-            LocalDate.parse(value).asSuccess()
+            LocalDate.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<LocalDate>("Invalid timestamp. Must be a valid RFC-3339 'full-date' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(LocalDate::class, "Invalid timestamp. Must be a valid RFC-3339 'full-date' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -333,11 +331,11 @@ object LocalDateScalarType : ScalarType<LocalDate> {
 object LocalDateTimeScalarType : ScalarType<LocalDateTime> {
     override val type = LocalDateTime::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
-    override fun fromString(value: String): MaybeTypeFailure<LocalDateTime> {
+    override fun fromString(value: String): LocalDateTime {
         return try {
-            LocalDateTime.parse(value).asSuccess()
+            LocalDateTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<LocalDateTime>("Invalid date/time. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(LocalDateTime::class, "Invalid date/time. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -350,11 +348,11 @@ object LocalDateTimeScalarType : ScalarType<LocalDateTime> {
 object ZonedDateTimeScalarType : ScalarType<ZonedDateTime> {
     override val type = ZonedDateTime::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
-    override fun fromString(value: String): MaybeTypeFailure<ZonedDateTime> {
+    override fun fromString(value: String): ZonedDateTime {
         return try {
-            ZonedDateTime.parse(value).asSuccess()
+            ZonedDateTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<ZonedDateTime>("Invalid date/time with time zone. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(ZonedDateTime::class, "Invalid date/time with time zone. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -367,11 +365,11 @@ object ZonedDateTimeScalarType : ScalarType<ZonedDateTime> {
 object OffsetDateTimeScalarType : ScalarType<OffsetDateTime> {
     override val type = OffsetDateTime::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
-    override fun fromString(value: String): MaybeTypeFailure<OffsetDateTime> {
+    override fun fromString(value: String): OffsetDateTime {
         return try {
-            OffsetDateTime.parse(value).asSuccess()
+            OffsetDateTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<OffsetDateTime>("Invalid date/time with zone offset. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(OffsetDateTime::class, "Invalid date/time with zone offset. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -384,11 +382,11 @@ object OffsetDateTimeScalarType : ScalarType<OffsetDateTime> {
 object OffsetTimeScalarType : ScalarType<OffsetTime> {
     override val type = OffsetTime::class
     override val scalarFormat: ScalarFormat = ScalarFormat.TIME
-    override fun fromString(value: String): MaybeTypeFailure<OffsetTime> {
+    override fun fromString(value: String): OffsetTime {
         return try {
-            OffsetTime.parse(value).asSuccess()
+            OffsetTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<OffsetTime>("Invalid time with zone offset. Must be a valid RFC-3339 'full-time' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(OffsetTime::class, "Invalid time with zone offset. Must be a valid RFC-3339 'full-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -401,11 +399,11 @@ object OffsetTimeScalarType : ScalarType<OffsetTime> {
 object LocalTimeScalarType : ScalarType<LocalTime> {
     override val type = LocalTime::class
     override val scalarFormat: ScalarFormat = ScalarFormat.TIME
-    override fun fromString(value: String): MaybeTypeFailure<LocalTime> {
+    override fun fromString(value: String): LocalTime {
         return try {
-            LocalTime.parse(value).asSuccess()
+            LocalTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<LocalTime>("Invalid time value. Must be a valid RFC-3339 'partial-time' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(LocalTime::class, "Invalid time value. Must be a valid RFC-3339 'partial-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -418,11 +416,11 @@ object LocalTimeScalarType : ScalarType<LocalTime> {
 object YearMonthScalarType : ScalarType<YearMonth> {
     override val type = YearMonth::class
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING
-    override fun fromString(value: String): MaybeTypeFailure<YearMonth> {
+    override fun fromString(value: String): YearMonth {
         return try {
-            YearMonth.parse(value).asSuccess()
+            YearMonth.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<YearMonth>("Invalid year/month value. Must be formatted like 'yyyy-MM'.")
+            UAPITypeError.thrown(YearMonth::class, "Invalid year/month value. Must be formatted like 'yyyy-MM'.")
         }
     }
 
@@ -435,11 +433,11 @@ object YearMonthScalarType : ScalarType<YearMonth> {
 object MonthDayScalarType : ScalarType<MonthDay> {
     override val type = MonthDay::class
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING
-    override fun fromString(value: String): MaybeTypeFailure<MonthDay> {
+    override fun fromString(value: String): MonthDay {
         return try {
-            MonthDay.parse(value).asSuccess()
+            MonthDay.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<MonthDay>("Invalid year/month value. Must be formatted like '--MM-dd', per ISO-8601.")
+            UAPITypeError.thrown(MonthDay::class, "Invalid year/month value. Must be formatted like '--MM-dd', per ISO-8601.")
         }
     }
 
@@ -452,11 +450,11 @@ object MonthDayScalarType : ScalarType<MonthDay> {
 object DurationScalarType : ScalarType<Duration> {
     override val type = Duration::class
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING
-    override fun fromString(value: String): MaybeTypeFailure<Duration> {
+    override fun fromString(value: String): Duration {
         return try {
-            Duration.parse(value).asSuccess()
+            Duration.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<Duration>("Invalid duration. Must be formatted as an ISO-8601 duration (PnDTnHnMn.nS).")
+            UAPITypeError.thrown(Duration::class, "Invalid duration. Must be formatted as an ISO-8601 duration (PnDTnHnMn.nS).")
         }
     }
 
@@ -469,11 +467,11 @@ object DurationScalarType : ScalarType<Duration> {
 object PeriodScalarType : ScalarType<Period> {
     override val type = Period::class
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING
-    override fun fromString(value: String): MaybeTypeFailure<Period> {
+    override fun fromString(value: String): Period {
         return try {
-            Period.parse(value).asSuccess()
+            Period.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<Period>("Invalid duration. Must be formatted as an ISO-8601 period (PnYnMnD or PnW).")
+            UAPITypeError.thrown(Period::class, "Invalid duration. Must be formatted as an ISO-8601 period (PnYnMnD or PnW).")
         }
     }
 
@@ -486,11 +484,11 @@ object PeriodScalarType : ScalarType<Period> {
 object YearScalarType : ScalarType<Year> {
     override val type = Year::class
     override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
-    override fun fromString(value: String): MaybeTypeFailure<Year> {
+    override fun fromString(value: String): Year {
         return try {
-            Year.parse(value).asSuccess()
+            Year.parse(value)
         } catch (ex: DateTimeParseException) {
-            typeFailure<Year>("Invalid year value.")
+            UAPITypeError.thrown(Year::class, "Invalid year value.")
         }
     }
 
@@ -503,11 +501,11 @@ object YearScalarType : ScalarType<Year> {
 object UUIDScalarType : ScalarType<UUID> {
     override val type = UUID::class
     override val scalarFormat: ScalarFormat = ScalarFormat.UUID
-    override fun fromString(value: String): MaybeTypeFailure<UUID> {
+    override fun fromString(value: String): UUID {
         return try {
-            UUID.fromString(value).asSuccess()
+            UUID.fromString(value)
         } catch (ex: IllegalArgumentException) {
-            typeFailure<UUID>("Invalid UUID value.")
+            UAPITypeError.thrown(UUID::class, "Invalid UUID value.")
         }
     }
 
@@ -520,14 +518,14 @@ object UUIDScalarType : ScalarType<UUID> {
 object ByteArrayScalarType : ScalarType<ByteArray> {
     override val type = ByteArray::class
     override val scalarFormat: ScalarFormat = ScalarFormat.BYTE_ARRAY
-    override fun fromString(value: String): MaybeTypeFailure<ByteArray> {
+    override fun fromString(value: String): ByteArray {
         val decoder = decoderFor(value)
-            ?: return typeFailure<ByteArray>("Invalid base64-encoded bytes.")
+            ?: UAPITypeError.thrown(ByteArray::class, "Invalid base64-encoded bytes.")
 
         return try {
-            decoder.decode(value).asSuccess()
+            decoder.decode(value)
         } catch (er: IllegalArgumentException) {
-            typeFailure<ByteArray>("Invalid base64-encoded bytes.")
+            UAPITypeError.thrown(ByteArray::class, "Invalid base64-encoded bytes.")
         }
     }
 
@@ -542,14 +540,14 @@ object ByteArrayScalarType : ScalarType<ByteArray> {
 object ByteBufferScalarType : ScalarType<ByteBuffer> {
     override val type = ByteBuffer::class
     override val scalarFormat: ScalarFormat = ScalarFormat.BYTE_ARRAY
-    override fun fromString(value: String): MaybeTypeFailure<ByteBuffer> {
+    override fun fromString(value: String): ByteBuffer {
         val decoder = decoderFor(value)
-            ?: return typeFailure<ByteBuffer>("Invalid base64-encoded bytes.")
+            ?: UAPITypeError.thrown(ByteBuffer::class, "Invalid base64-encoded bytes.")
 
         return try {
-            ByteBuffer.wrap(decoder.decode(value)).asSuccess()
+            ByteBuffer.wrap(decoder.decode(value))
         } catch (er: IllegalArgumentException) {
-            typeFailure<ByteBuffer>("Invalid base64-encoded bytes.")
+            UAPITypeError.thrown(ByteBuffer::class, "Invalid base64-encoded bytes.")
         }
     }
 
@@ -565,11 +563,11 @@ object URLScalarType : ScalarType<URL> {
     override val type: KClass<URL> = URL::class
     override val scalarFormat: ScalarFormat = ScalarFormat.URI
 
-    override fun fromString(value: String): MaybeTypeFailure<URL> {
+    override fun fromString(value: String): URL {
         return try {
-            Success(URL(value))
+            URL(value)
         } catch (ex: MalformedURLException) {
-            typeFailure(URL::class, "Malformed URL")
+            UAPITypeError.thrown(URL::class, "Malformed URL")
         }
     }
 
@@ -583,11 +581,11 @@ object URIScalarType : ScalarType<URI> {
     override val type: KClass<URI> = URI::class
     override val scalarFormat: ScalarFormat = ScalarFormat.URI
 
-    override fun fromString(value: String): MaybeTypeFailure<URI> {
+    override fun fromString(value: String): URI {
         return try {
-            Success(URI(value))
+            URI(value)
         } catch (ex: URISyntaxException) {
-            typeFailure(URI::class, "Invalid URI")
+            UAPITypeError.thrown(URI::class, "Invalid URI")
         }
     }
 
@@ -601,12 +599,12 @@ abstract class PreJavaTimeScalarTypeBase<T : java.util.Date>
     : ScalarType<T> {
     abstract override val type: KClass<T>
     override val scalarFormat: ScalarFormat = ScalarFormat.DATE_TIME
-    final override fun fromString(value: String): MaybeTypeFailure<T> {
+    final override fun fromString(value: String): T {
         return try {
             val instant = Instant.parse(value)
-            fromEpochMillis(instant.toEpochMilli()).asSuccess()
+            fromEpochMillis(instant.toEpochMilli())
         } catch (ex: DateTimeParseException) {
-            typeFailure(this.type, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            UAPITypeError.thrown(this.type, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 

@@ -1,7 +1,6 @@
 package edu.byu.uapi.server.resources.identified
 
-import edu.byu.uapi.server.inputs.typeError
-import edu.byu.uapi.server.inputs.typeFailure
+import edu.byu.uapi.server.inputs.thrown
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit
 import edu.byu.uapi.server.response.uapiResponse
@@ -11,10 +10,8 @@ import edu.byu.uapi.server.spi.reflective.ReflectiveFilterParamReader
 import edu.byu.uapi.server.spi.reflective.ReflectiveIdParamReader
 import edu.byu.uapi.server.util.DarkMagic
 import edu.byu.uapi.server.util.DarkMagicException
-import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
+import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.functional.Success
-import edu.byu.uapi.spi.functional.useFailure
 import edu.byu.uapi.spi.input.*
 import edu.byu.uapi.spi.validation.Validating
 import kotlin.reflect.KClass
@@ -38,10 +35,11 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
     fun idFromModel(model: Model): Id
 
+    @Throws(UAPITypeError::class)
     fun getIdReader(
         dictionary: TypeDictionary,
         paramPrefix: String
-    ): MaybeTypeFailure<IdParamReader<Id>> {
+    ): IdParamReader<Id> {
         return defaultIdReader(dictionary, paramPrefix)
     }
 
@@ -104,7 +102,8 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
         val listParamsType: KClass<Params>
 
-        fun getListParamReader(dictionary: TypeDictionary): MaybeTypeFailure<ListParamReader<Params>> {
+        @Throws(UAPITypeError::class)
+        fun getListParamReader(dictionary: TypeDictionary): ListParamReader<Params> {
             return defaultGetListParamReader(dictionary)
         }
 
@@ -130,11 +129,13 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
             fun listSearchContexts(value: SearchContext): Collection<String>
 
-            fun getListSearchParamReader(dictionary: TypeDictionary): MaybeTypeFailure<SearchParamsReader<SearchContext>> {
+            @Throws(UAPITypeError::class)
+            fun getListSearchParamReader(dictionary: TypeDictionary): SearchParamsReader<SearchContext> {
                 return defaultListSearchParamReader(dictionary)
             }
 
-            fun getListSearchContextType(dictionary: TypeDictionary): MaybeTypeFailure<EnumScalarType<SearchContext>> {
+            @Throws(UAPITypeError::class)
+            fun getListSearchContextType(dictionary: TypeDictionary): EnumScalarType<SearchContext> {
                 return defaultListSearchContextType(dictionary)
             }
         }
@@ -145,18 +146,21 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             val listDefaultSortProperties: List<SortProperty>
             val listDefaultSortOrder: SortOrder
 
-            fun getListSortPropertyType(typeDictionary: TypeDictionary): MaybeTypeFailure<EnumScalarType<SortProperty>> {
+            @Throws(UAPITypeError::class)
+            fun getListSortPropertyType(typeDictionary: TypeDictionary): EnumScalarType<SortProperty> {
                 return defaultListSortPropertyType(typeDictionary)
             }
 
-            fun getListSortParamsReader(typeDictionary: TypeDictionary): MaybeTypeFailure<SortParamsReader<SortProperty>> {
+            @Throws(UAPITypeError::class)
+            fun getListSortParamsReader(typeDictionary: TypeDictionary): SortParamsReader<SortProperty> {
                 return defaultListSortParamsReader(typeDictionary)
             }
         }
 
         interface WithFilters<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.Filtering<Filters>, Filters : Any>
             : Listable<UserContext, Id, Model, CollectionParams> {
-            fun getListFilterParamReader(typeDictionary: TypeDictionary): MaybeTypeFailure<FilterParamsReader<Filters>> {
+            @Throws(UAPITypeError::class)
+            fun getListFilterParamReader(typeDictionary: TypeDictionary): FilterParamsReader<Filters> {
                 return defaultListFilterParamReader(typeDictionary)
             }
         }
@@ -216,10 +220,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserContext, Id, Model>.defaultIdReader(
     dictionary: TypeDictionary,
     paramPrefix: String
-): MaybeTypeFailure<IdParamReader<Id>> {
+): IdParamReader<Id> {
     val idType = this.idType
     if (dictionary.isScalarType(idType)) {
-        return Success(ScalarTypeIdParamReader(paramPrefix, dictionary.requireScalarType(idType)))
+        return ScalarTypeIdParamReader(paramPrefix, dictionary.requireScalarType(idType))
     }
     return ReflectiveIdParamReader.create(paramPrefix, idType, dictionary)
 }
@@ -227,34 +231,32 @@ private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserCo
 private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserContext, Id, Model>.defaultIdType(): KClass<Id> {
     return try {
         val supertype = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource::class)
-            ?: typeError(this::class, "Unable to get IdentifiedResource ID Type")
+            ?: UAPITypeError.thrown(this::class, "Unable to get IdentifiedResource ID Type")
         val idProjection = supertype.arguments[1]
         DarkMagic.getConcreteType(idProjection)
     } catch (ex: DarkMagicException) {
-        typeError(this::class, "Unable to get ID type", ex)
+        UAPITypeError.thrown(this::class, "Unable to get ID type", ex)
     }
 }
 
+@Throws(UAPITypeError::class)
 internal fun <Params : ListParams>
     IdentifiedResource.Listable<*, *, *, Params>.defaultGetListParamReader(
     dictionary: TypeDictionary
-): MaybeTypeFailure<ListParamReader<Params>> {
+): ListParamReader<Params> {
     if (listParamsType == ListParams.Empty::class) {
         @Suppress("UNCHECKED_CAST")
-        return Success(EmptyListParamReader as ListParamReader<Params>)
+        return EmptyListParamReader as ListParamReader<Params>
     }
     if (!listParamsType.isData) {
-        typeError(listParamsType, "List parameter type must be a data class.")
+        UAPITypeError.thrown(listParamsType, "List parameter type must be a data class.")
     }
     val ctor = listParamsType.primaryConstructor
-        ?: typeError(listParamsType, "List parameter type must have a primary constructor.")
+        ?: UAPITypeError.thrown(listParamsType, "List parameter type must have a primary constructor.")
 
     val search = this.takeIfType<IdentifiedResource.Listable.WithSearch<*, *, *, *, *>>()?.getListSearchParamReader(dictionary)
-        ?.useFailure { return it }
     val filter = this.takeIfType<IdentifiedResource.Listable.WithFilters<*, *, *, *, *>>()?.getListFilterParamReader(dictionary)
-        ?.useFailure { return it }
     val sort = this.takeIfType<IdentifiedResource.Listable.WithSort<*, *, *, *, *>>()?.getListSortParamsReader(dictionary)
-        ?.useFailure { return it }
     val subset = this.takeIfType<IdentifiedResource.Listable.WithSubset<*, *, *, *>>()?.let { it ->
         SubsetParamsReader(
             defaultSize = it.listDefaultSubsetSize,
@@ -271,18 +273,17 @@ internal fun <Params : ListParams>
     )
 }
 
-
+@Throws(UAPITypeError::class)
 internal fun <SearchContext : Enum<SearchContext>>
     IdentifiedResource.Listable.WithSearch<*, *, *, *, SearchContext>.defaultListSearchParamReader(
     dictionary: TypeDictionary
-): MaybeTypeFailure<SearchParamsReader<SearchContext>> {
+): SearchParamsReader<SearchContext> {
     val contextType = getListSearchContextType(dictionary)
-        .useFailure { return it }
     val contextClass = contextType.type
     val searchContexts = contextType.enumConstants.map { it to listSearchContexts(it) }.toMap()
 
     if (searchContexts.any { it.value.isEmpty() }) {
-        return typeFailure(contextType.type, "${this::class.simpleName}.listSearchContexts must return a non-empty set for every value of ${contextClass.simpleName}")
+        UAPITypeError.thrown(contextType.type, "${this::class.simpleName}.listSearchContexts must return a non-empty set for every value of ${contextClass.simpleName}")
     }
 
     return DefaultSearchParamsReader.create(
@@ -290,42 +291,44 @@ internal fun <SearchContext : Enum<SearchContext>>
     )
 }
 
+@Throws(UAPITypeError::class)
 internal fun <SearchContext : Enum<SearchContext>>
     IdentifiedResource.Listable.WithSearch<*, *, *, *, SearchContext>.defaultListSearchContextType(
     dictionary: TypeDictionary
-): MaybeTypeFailure<EnumScalarType<SearchContext>> {
+): EnumScalarType<SearchContext> {
     val searchContextType: KClass<SearchContext> = try {
         val withSearch = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable.WithSearch::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = withSearch.arguments[4]
         DarkMagic.getConcreteType(projection)
     } catch (ex: DarkMagicException) {
-        return typeFailure(this::class, "Unable to get search context type", ex)
+        UAPITypeError.thrown(this::class, "Unable to get search context type", ex)
     }
-    return Success(DefaultParameterStyleEnumScalar(searchContextType))
+    return DefaultParameterStyleEnumScalar(searchContextType)
 }
 
+@Throws(UAPITypeError::class)
 internal fun <SortProperty : Enum<SortProperty>>
     IdentifiedResource.Listable.WithSort<*, *, *, *, SortProperty>.defaultListSortPropertyType(
     typeDictionary: TypeDictionary
-): MaybeTypeFailure<EnumScalarType<SortProperty>> {
+): EnumScalarType<SortProperty> {
     val sortPropertyType: KClass<SortProperty> = try {
         val withSearch = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable.WithSort::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = withSearch.arguments[4]
         DarkMagic.getConcreteType(projection)
     } catch (ex: DarkMagicException) {
-        return typeFailure(this::class, "Unable to get search context type", ex)
+        UAPITypeError.thrown(this::class, "Unable to get search context type", ex)
     }
-    return Success(DefaultParameterStyleEnumScalar(sortPropertyType))
+    return DefaultParameterStyleEnumScalar(sortPropertyType)
 }
 
+@Throws(UAPITypeError::class)
 internal fun <SortProperty : Enum<SortProperty>>
     IdentifiedResource.Listable.WithSort<*, *, *, *, SortProperty>.defaultListSortParamsReader(
     typeDictionary: TypeDictionary
-): MaybeTypeFailure<SortParamsReader<SortProperty>> {
+): SortParamsReader<SortProperty> {
     val sortPropType = getListSortPropertyType(typeDictionary)
-        .useFailure { return it }
 
     return DefaultSortParamsReader.create(
         sortPropType,
@@ -335,17 +338,18 @@ internal fun <SortProperty : Enum<SortProperty>>
     )
 }
 
+@Throws(UAPITypeError::class)
 internal fun <Filters : Any>
     IdentifiedResource.Listable.WithFilters<*, *, *, *, Filters>.defaultListFilterParamReader(
     typeDictionary: TypeDictionary
-): MaybeTypeFailure<FilterParamsReader<Filters>> {
+): FilterParamsReader<Filters> {
     val filterType: KClass<Filters> = try {
         val withFilters = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable.WithFilters::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = withFilters.arguments[4]
         DarkMagic.getConcreteType(projection)
     } catch (ex: DarkMagicException) {
-        return typeFailure(this::class, "Unable to get list filter type", ex)
+        UAPITypeError.thrown(this::class, "Unable to get list filter type", ex)
     }
     return ReflectiveFilterParamReader.create(filterType, typeDictionary)
 }

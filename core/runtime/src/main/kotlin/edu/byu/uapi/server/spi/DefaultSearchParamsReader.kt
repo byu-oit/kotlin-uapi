@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.spi
 
-import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
+import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.functional.Failure
 import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.functional.useFailure
@@ -43,11 +43,12 @@ class DefaultSearchParamsReader<SearchContext : Enum<SearchContext>> private con
     override fun describe(): SearchParamsMeta = meta
 
     companion object {
+        @Throws(UAPITypeError::class)
         fun <SearchContext: Enum<SearchContext>> create(
             contextType: ScalarType<SearchContext>,
             searchFields: Map<SearchContext, Collection<String>>
-        ): MaybeTypeFailure<DefaultSearchParamsReader<SearchContext>> {
-            return Success(DefaultSearchParamsReader(contextType, searchFields))
+        ): DefaultSearchParamsReader<SearchContext> {
+            return DefaultSearchParamsReader(contextType, searchFields)
         }
     }
 }

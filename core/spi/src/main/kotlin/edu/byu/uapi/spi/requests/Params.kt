@@ -1,5 +1,6 @@
 package edu.byu.uapi.spi.requests
 
+import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.functional.*
 import edu.byu.uapi.spi.input.ParamReadFailure
 import edu.byu.uapi.spi.input.ParamReadResult
@@ -54,7 +55,12 @@ class StringIdParam(
     override fun asString(): ParamReadResult<String> = Success(value)
 
     override fun <T : Any> asScalar(scalar: ScalarType<T>): ParamReadResult<T> {
-        return scalar.fromString(value).mapFailure { ParamReadFailure(this.name, scalar.type, it.message) }
+//        return scalar.fromString(value).mapFailure { ParamReadFailure(this.name, scalar.type, it.message) }
+        return try {
+            Success(scalar.fromString(value))
+        } catch (ex: UAPITypeError) {
+            return Failure(ParamReadFailure(this.name, scalar.type, ex.typeFailure, ex))
+        }
     }
 }
 
@@ -71,7 +77,11 @@ class StringSetQueryParam(
 
     override fun <T : Any> asScalar(scalar: ScalarType<T>): ParamReadResult<T> {
         val string = asString().useFailure { return it }
-        return scalar.fromString(string).mapFailure { ParamReadFailure(this.name, scalar.type, it.message) }
+        return try {
+            Success(scalar.fromString(string))
+        } catch (ex: UAPITypeError) {
+            return Failure(ParamReadFailure(this.name, scalar.type, ex.typeFailure, ex))
+        }
     }
 
     override fun asStringList(): ParamReadResult<List<String>> {
@@ -81,7 +91,8 @@ class StringSetQueryParam(
     override fun <T : Any> asScalarList(scalar: ScalarType<T>): ParamReadResult<List<T>> {
         return asStringList().map { values ->
             values.map {
-                scalar.fromString(it).onFailure { f -> return Failure(ParamReadFailure(name, scalar.type, f.message)) }
+                scalar.fromString(it)
+                //TODO: catch type errors and convert to param failures
             }
         }
     }

@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.spi
 
 import edu.byu.uapi.server.scalars.EnumScalarType
-import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
+import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.functional.orDefault
 import edu.byu.uapi.spi.functional.useFailure
@@ -40,15 +40,14 @@ class DefaultSortParamsReader<SortProperty : Enum<SortProperty>> private constru
     override fun describe(): SortParamsMeta = meta
 
     companion object {
+        @Throws(UAPITypeError::class)
         fun <SortProperty : Enum<SortProperty>> create(
             propertyType: EnumScalarType<SortProperty>,
             sortOrderType: EnumScalarType<SortOrder>,
             defaultProperties: List<SortProperty>,
             defaultOrder: SortOrder
-        ): MaybeTypeFailure<DefaultSortParamsReader<SortProperty>> {
-            return Success(
-                DefaultSortParamsReader(propertyType, sortOrderType, defaultProperties, defaultOrder)
-            )
+        ): DefaultSortParamsReader<SortProperty> {
+            return DefaultSortParamsReader(propertyType, sortOrderType, defaultProperties, defaultOrder)
         }
     }
 
