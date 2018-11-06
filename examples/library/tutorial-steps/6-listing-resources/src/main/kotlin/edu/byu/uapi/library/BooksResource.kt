@@ -18,7 +18,7 @@ import kotlin.reflect.KClass
 data class BookListParams(
     override val sort: SortParams<BookSortField>,
     override val filter: BookFilters?,
-    override val page: SubsetParams,
+    override val subset: SubsetParams,
     override val search: SearchParams<BookSearchContext>?
 ) : ListParams.Sorting<BookSortField>,
     ListParams.Filtering<BookFilters>,
@@ -67,7 +67,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
     }
 
     override val listParamsType: KClass<BookListParams> = BookListParams::class
-    override val listDefaultSortFields: List<BookSortField> = listOf(BookSortField.title, BookSortField.oclc)
+    override val listDefaultSortProperties: List<BookSortField> = listOf(BookSortField.title, BookSortField.oclc)
     override val listDefaultSortOrder: SortOrder = SortOrder.ASCENDING
     override val listDefaultSubsetSize: Int = 50
     override val listMaxSubsetSize: Int = 100
@@ -77,8 +77,6 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         BookSearchContext.genres -> listOf("genres.code", "genres.name")
         BookSearchContext.control_numbers -> listOf("oclc", "isbn")
     }
-
-    override val idType: KClass<Long> = Long::class
 
     override fun loadModel(
         userContext: LibraryUser,

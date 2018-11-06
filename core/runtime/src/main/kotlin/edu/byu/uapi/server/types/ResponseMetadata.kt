@@ -1,10 +1,16 @@
 package edu.byu.uapi.server.types
 
-import edu.byu.uapi.server.FIELDSET_BASIC
+import edu.byu.uapi.spi.SpecConstants
+import edu.byu.uapi.spi.SpecConstants.Metadata
+import edu.byu.uapi.spi.input.SortOrder
 import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
-import edu.byu.uapi.spi.input.SortOrder
 import java.time.Instant
+import kotlin.Int
+import kotlin.String
+import kotlin.let
+import edu.byu.uapi.spi.SpecConstants.Collections.Metadata as CollectionMeta
+import edu.byu.uapi.spi.SpecConstants.FieldSets.Metadata as FieldSetMeta
 
 sealed class ResponseMetadata : Renderable {
     abstract val validationResponse: ValidationResponse
@@ -12,11 +18,11 @@ sealed class ResponseMetadata : Renderable {
     abstract val cache: CacheMeta?
 
     final override fun render(renderer: Renderer<*>) {
-        renderer.tree("validation_response", validationResponse)
+        renderer.tree(Metadata.ValidationResponse.KEY, validationResponse)
         if (validationInformation.isNotEmpty()) {
-            renderer.valueArray("validation_information", validationInformation)
+            renderer.valueArray(Metadata.KEY_VALIDATION_INFORMATION, validationInformation)
         }
-        cache?.let { renderer.tree("cache", it) }
+        cache?.let { renderer.tree(Metadata.Cache.KEY, it) }
         renderExtras(renderer)
     }
 
@@ -43,7 +49,7 @@ data class CollectionMetadata(
     override val cache: CacheMeta? = null
 ) : ResponseMetadata() {
     override fun renderExtras(renderer: Renderer<*>) {
-        renderer.value("collection_size", collectionSize)
+        renderer.value(CollectionMeta.KEY_COLLECTION_SIZE, collectionSize)
         sortMetadata?.render(renderer)
         searchMetadata?.render(renderer)
         subsetMetadata?.render(renderer)
@@ -57,10 +63,10 @@ data class CollectionSubsetMetadata(
     val maxSubsetSize: Int
 ) : Renderable {
     override fun render(renderer: Renderer<*>) {
-        renderer.value("subset_size", subsetSize)
-        renderer.value("subset_start", subsetStart)
-        renderer.value("default_subset_size", defaultSubsetSize)
-        renderer.value("max_subset_size", maxSubsetSize)
+        renderer.value(CollectionMeta.KEY_SUBSET_SIZE, subsetSize)
+        renderer.value(CollectionMeta.KEY_SUBSET_START, subsetStart)
+        renderer.value(CollectionMeta.KEY_SUBSET_DEFAULT_SIZE, defaultSubsetSize)
+        renderer.value(CollectionMeta.KEY_SUBSET_MAX_SIZE, maxSubsetSize)
     }
 }
 
@@ -70,9 +76,9 @@ data class SortableCollectionMetadata(
     val sortOrderDefault: SortOrder
 ) : Renderable {
     override fun render(renderer: Renderer<*>) {
-        renderer.value("sort_properties_available", sortPropertiesAvailable)
-        renderer.value("sort_properties_default", sortPropertiesDefault)
-        renderer.value("sort_order_default", sortOrderDefault)
+        renderer.value(CollectionMeta.KEY_SORT_PROPERTIES_AVAILABLE, sortPropertiesAvailable)
+        renderer.value(CollectionMeta.KEY_SORT_PROPERTIES_DEFAULT, sortPropertiesDefault)
+        renderer.value(CollectionMeta.KEY_SORT_ORDER_DEFAULT, sortOrderDefault)
     }
 }
 
@@ -80,7 +86,7 @@ data class SearchableCollectionMetadata(
     val searchContextsAvailable: Map<String, Collection<String>>
 ) : Renderable {
     override fun render(renderer: Renderer<*>) {
-        renderer.tree("search_contexts_available") {
+        renderer.tree(CollectionMeta.KEY_SEARCH_CONTEXTS_AVAILABLE) {
             searchContextsAvailable.entries.forEach { e ->
                 valueArray(e.key, e.value)
             }
@@ -102,8 +108,8 @@ data class ValidationResponse(
     val message: String = "OK"
 ) : Renderable {
     override fun render(renderer: Renderer<*>) {
-        renderer.value("code", code)
-        renderer.value("message", message)
+        renderer.value(Metadata.ValidationResponse.KEY_CODE, code)
+        renderer.value(Metadata.ValidationResponse.KEY_MESSAGE, message)
     }
 
     companion object {
@@ -118,14 +124,14 @@ data class CacheMeta(
     val dateTime: Instant
 ) : Renderable {
     override fun render(renderer: Renderer<*>) {
-        renderer.value("date_time", dateTime)
+        renderer.value(Metadata.Cache.KEY_DATE_TIME, dateTime)
     }
 }
 
 data class FieldsetsMetadata(
     val fieldSetsReturned: Set<String>,
     val fieldSetsAvailable: Set<String>,
-    val fieldSetsDefault: Set<String> = setOf(FIELDSET_BASIC),
+    val fieldSetsDefault: Set<String> = setOf(SpecConstants.FieldSets.VALUE_BASIC),
     val contextsAvailable: Map<String, Set<String>> = emptyMap(),
     override val validationResponse: ValidationResponse = ValidationResponse.OK,
     override val validationInformation: List<String> = emptyList(),
@@ -133,10 +139,10 @@ data class FieldsetsMetadata(
 
 ) : ResponseMetadata() {
     override fun renderExtras(renderer: Renderer<*>) {
-        renderer.valueArray("field_sets_returned", fieldSetsReturned)
-        renderer.valueArray("field_sets_available", fieldSetsAvailable)
-        renderer.valueArray("field_sets_default", fieldSetsDefault)
-        renderer.tree("contexts_available") {
+        renderer.valueArray(FieldSetMeta.KEY_FIELD_SETS_RETURNED, fieldSetsReturned)
+        renderer.valueArray(FieldSetMeta.KEY_FIELD_SETS_AVAILABLE, fieldSetsAvailable)
+        renderer.valueArray(FieldSetMeta.KEY_FIELD_SETS_DEFAULT, fieldSetsDefault)
+        renderer.tree(FieldSetMeta.KEY_CONTEXTS_AVAILABLE) {
             contextsAvailable.forEach { k, v -> renderer.valueArray(k, v) }
         }
     }

@@ -1,17 +1,17 @@
 package edu.byu.uapi.spi.input
 
 import edu.byu.uapi.spi.functional.SuccessOrFailure
+import edu.byu.uapi.spi.requests.IdParams
+import edu.byu.uapi.spi.requests.QueryParams
 import edu.byu.uapi.spi.scalars.ScalarFormat
 import kotlin.reflect.KClass
 
-interface ParamReader<ParamType : Any, InputType : Any, MetaType : Any> {
+interface ParamReader<ParamType, InputType : Any, MetaType : Any> {
     fun read(input: InputType): ParamReadResult<ParamType>
     fun describe(): MetaType
 }
 
-typealias QueryParams = Map<String, Set<String>>
-
-interface QueryParamReader<T : Any, Meta : QueryParamMetadata> : ParamReader<T, QueryParams, Meta>
+interface QueryParamReader<T, Meta : QueryParamMetadata> : ParamReader<T, QueryParams, Meta>
 
 interface QueryParamMetadata {
     val queryParams: List<Param>
@@ -23,23 +23,38 @@ interface QueryParamMetadata {
     )
 }
 
+interface IdParamReader<T : Any> : ParamReader<T, IdParams, IdParamMeta>
+
+interface IdParamMeta {
+    val idParams: List<Param>
+
+    data class Param(
+        val name: String,
+        val format: ScalarFormat
+    )
+
+    data class Default(override val idParams: List<Param>): IdParamMeta
+}
+
 typealias ParamReadResult<Type> = SuccessOrFailure<Type, ParamReadFailure>
 
 data class ParamReadFailure(
+    val name: String,
     val type: KClass<*>,
     val message: String,
     val cause: Throwable? = null
 )
 
 class ParamReadException(
+    val name: String,
     val type: KClass<*>,
     message: String,
     cause: Throwable? = null
 ) : Exception(
-    "Error reading parameter of type $type: $message",
+    "Error reading parameter $name of type $type: $message",
     cause
 )
 
 fun ParamReadFailure.thrown(): Nothing {
-    throw ParamReadException(this.type, this.message, this.cause)
+    throw ParamReadException(this.name, this.type, this.message, this.cause)
 }

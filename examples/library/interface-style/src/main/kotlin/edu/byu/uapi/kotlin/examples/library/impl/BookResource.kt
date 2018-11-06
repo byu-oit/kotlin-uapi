@@ -16,8 +16,6 @@ class BookResource : IdentifiedResource<
     Book // model
     > {
 
-    override val idType = Long::class
-
     override fun loadModel(
         userContext: MyUserContext,
         id: Long

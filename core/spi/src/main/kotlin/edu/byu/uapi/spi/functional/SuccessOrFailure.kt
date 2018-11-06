@@ -53,12 +53,28 @@ inline fun <S, F> SuccessOrFailure<S, F>.onFailure(fn: (F) -> S): S {
     return this.resolve({ it }, fn)
 }
 
+inline fun <S, F> SuccessOrFailure<S, F>.useFailure(fn: (Failure<F>) -> S): S {
+    return if (this.success) {
+        (this as Success).value
+    } else {
+        fn(this as Failure)
+    }
+}
+
 inline fun <S1, S2, F> SuccessOrFailure<S1, F>.map(fn: (S1) -> S2): SuccessOrFailure<S2, F> {
     return this.flatMap { Success(fn(it)) }
 }
 
 inline fun <S1, S2, F> SuccessOrFailure<S1, F>.flatMap(fn: (S1) -> SuccessOrFailure<S2, F>): SuccessOrFailure<S2, F> {
     return this.resolve({ fn(it) }, { Failure(it) })
+}
+
+inline fun <S, F1, F2> SuccessOrFailure<S, F1>.mapFailure(fn: (F1) -> F2): SuccessOrFailure<S, F2> {
+    return this.resolve({ Success(it) }, { Failure(fn(it)) })
+}
+
+fun <S, F> SuccessOrFailure<S, F>?.orDefault(defaultValue: S): SuccessOrFailure<S, F> {
+    return this ?: Success(defaultValue)
 }
 
 fun <T : Any> T.asSuccess(): Success<T> = Success(this)

@@ -55,13 +55,7 @@ Next, we need to register your resource with the UAPI Runtime. You can do that i
 You may have noticed that your `BooksResource` doesn't compile. That's because we haven't implemented the vals and methods
 defined in the interface yet! So, let's go back to that file and implement these methods.
 
-First, thanks to the erased nature of generics on the JVM, we have to say again what our ID type is:
-
-```kotlin
-    override val idType = Long::class
-```
-
-Now, we need to have a way to load a Model instance from an ID. We'll call the static `Library` object, which will load
+First, we need to have a way to load a Model instance from an ID. We'll call the static `Library` object, which will load
 a `Book` from the database:
 
 ```kotlin

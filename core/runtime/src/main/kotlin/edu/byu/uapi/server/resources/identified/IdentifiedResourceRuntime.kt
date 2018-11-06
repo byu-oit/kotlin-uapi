@@ -1,14 +1,18 @@
 package edu.byu.uapi.server.resources.identified
 
-import edu.byu.uapi.server.FIELDSET_BASIC
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.schemas.*
-import edu.byu.uapi.server.spi.UAPITypeError
 import edu.byu.uapi.server.spi.asError
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor
+import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.functional.resolve
+import edu.byu.uapi.spi.functional.onFailure
+import edu.byu.uapi.spi.input.*
+import edu.byu.uapi.spi.requests.FetchIdentifiedResource
+import edu.byu.uapi.spi.requests.IdParams
+import edu.byu.uapi.spi.requests.IdentifiedResourceRequest
+import edu.byu.uapi.spi.requests.ListIdentifiedResource
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -29,11 +33,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         private val LOG = loggerFor<IdentifiedResourceRuntime<*, *, *>>()
     }
 
-    @Throws(UAPITypeError::class)
-    fun constructId(params: Map<String, String>): Id {
-        val deser = resource.getIdDeserializer(typeDictionary)
-        return deser.read(params).resolve({it}, {throw it.asError()})
-    }
+    val idReader: IdParamReader<Id> = resource.getIdReader(typeDictionary, this.name + "_").onFailure { throw it.asError() }
 
     init {
         LOG.debug("Initializing runtime")
@@ -43,120 +43,36 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         introspect(this)
     }
 
-    val availableOperations: Set<IdentifiedResourceOperation> by lazy {
-        val ops = EnumSet.of(IdentifiedResourceOperation.FETCH)
-
-        if (resource.createOperation != null) {
-            ops.add(IdentifiedResourceOperation.CREATE)
-        }
-        if (resource.updateOperation != null) {
-            ops.add(IdentifiedResourceOperation.UPDATE)
-        }
-        if (resource.deleteOperation != null) {
-            ops.add(IdentifiedResourceOperation.DELETE)
-        }
-        if (resource.listView != null) {
-            ops.add(IdentifiedResourceOperation.LIST)
+    val availableOperations: Set<IdentifiedResourceRequestHandler<UserContext, Id, Model, *>> by lazy {
+        val ops: MutableSet<IdentifiedResourceRequestHandler<UserContext, Id, Model, *>> = mutableSetOf(IdentifiedResourceFetchHandler(this))
+        resource.listView?.also {
+            ops.add(IdentifiedResourceListHandler(this, it))
         }
 
         Collections.unmodifiableSet(ops)
     }
 
-    internal fun idToBasic(
-        userContext: UserContext,
-        id: Id,
-        validationResponse: ValidationResponse = ValidationResponse.OK
-    ): UAPIPropertiesResponse {
-        val model = resource.loadModel(userContext, id) ?: throw IllegalStateException() //TODO: Prettier error message
-        return modelToBasic(userContext, id, model, validationResponse)
-    }
+//    fun <Input : Any> handleCreate(
+//        userContext: UserContext,
+//        input: Input
+//    ): UAPIResponse<*> {
+//        val op = this.resource.createOperation ?: return UAPIOperationNotImplementedError
+//        if (!op.createInput.isInstance(input)) {
+//            throw IllegalStateException("Illegal input type in resource ${this.name}: expected ${op.createInput}, got ${input::class}")
+//        }
+//        @Suppress("UNCHECKED_CAST")
+//        op as IdentifiedResource.Creatable<UserContext, Id, Model, Input>
+//        if (!op.canUserCreate(userContext)) {
+//            return UAPINotAuthorizedError
+//        }
+//        // TODO: validation
+//        val createdId = op.handleCreate(userContext, input)
+//
+//        return idToBasic(userContext, createdId, ValidationResponse(201))
+//    }
 
-    internal fun modelToBasic(
-        userContext: UserContext,
-        id: Id,
-        model: Model,
-        validationResponse: ValidationResponse = ValidationResponse.OK
-    ): UAPIPropertiesResponse {
-        return UAPIPropertiesResponse(
-            metadata = UAPIResourceMeta(validationResponse = validationResponse),
-            links = generateLinks(userContext, id, model),
-            properties = modelToProperties(userContext, id, model)
-        )
-    }
 
-    internal fun modelToProperties(
-        userContext: UserContext,
-        id: Id,
-        model: Model
-    ): Map<String, UAPIProperty> {
-        return resource.responseFields.map { f ->
-            f.name to f.toProp(userContext, model)
-        }.toMap()
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    internal fun generateLinks(
-        userContext: UserContext,
-        id: Id,
-        model: Model
-    ): UAPILinks {
-        //TODO generate links
-        return emptyMap()
-    }
-
-    fun <Input : Any> handleCreate(
-        userContext: UserContext,
-        input: Input
-    ): UAPIResponse<*> {
-        val op = this.resource.createOperation ?: return UAPIOperationNotImplementedError
-        if (!op.createInput.isInstance(input)) {
-            throw IllegalStateException("Illegal input type in resource ${this.name}: expected ${op.createInput}, got ${input::class}")
-        }
-        @Suppress("UNCHECKED_CAST")
-        op as IdentifiedResource.Creatable<UserContext, Id, Model, Input>
-        if (!op.canUserCreate(userContext)) {
-            return UAPINotAuthorizedError
-        }
-        // TODO: validation
-        val createdId = op.handleCreate(userContext, input)
-
-        return idToBasic(userContext, createdId, ValidationResponse(201))
-    }
-
-    fun handleFetch(
-        userContext: UserContext,
-        id: Id,
-        requestedFieldsets: Set<String> = setOf(FIELDSET_BASIC),
-        requestedContexts: Set<String> = emptySet()
-    ): UAPIResponse<*> {
-        val model = resource.loadModel(userContext, id) ?: return UAPINotFoundError
-        if (!resource.canUserViewModel(userContext, id, model)) {
-            return UAPINotAuthorizedError
-        }
-
-        val loadedFieldsets = loadFieldsets(userContext, id, model, requestedFieldsets, requestedContexts)
-
-        return UAPIFieldsetsResponse(
-            fieldsets = loadedFieldsets,
-            metadata = FieldsetsMetadata(
-                fieldSetsReturned = loadedFieldsets.keys,
-                fieldSetsAvailable = availableFieldsets
-            )
-        )
-    }
-
-    private fun loadFieldsets(
-        userContext: UserContext,
-        id: Id,
-        model: Model,
-        requestedFieldsets: Set<String>,
-        requestedContexts: Set<String>
-    ): Map<String, UAPIResponse<*>> {
-        //TODO(Return fieldsets other than basic)
-        return mapOf(FIELDSET_BASIC to modelToBasic(userContext, id, model))
-    }
-
-    val availableFieldsets = setOf(FIELDSET_BASIC)
+    val availableFieldsets = setOf(SpecConstants.FieldSets.VALUE_BASIC)
     val availableContexts = emptyMap<String, Set<String>>()
 
 }
@@ -260,5 +176,158 @@ private fun scalarTypeFor(type: KClass<out Any>): UAPIScalarType? {
 
         Boolean::class -> UAPIScalarType.BOOLEAN
         else -> null
+    }
+}
+
+sealed class IdentifiedResourceRequestHandler<UserContext : Any, Id : Any, Model : Any, Request : IdentifiedResourceRequest<UserContext>>(
+    val runtime: IdentifiedResourceRuntime<UserContext, Id, Model>
+) {
+    val resource = runtime.resource
+
+    internal fun idToBasic(
+        userContext: UserContext,
+        id: Id,
+        validationResponse: ValidationResponse = ValidationResponse.OK
+    ): UAPIPropertiesResponse {
+        val model = resource.loadModel(userContext, id) ?: throw IllegalStateException() //TODO: Prettier error message
+        return modelToBasic(userContext, id, model, validationResponse)
+    }
+
+    internal fun modelToBasic(
+        userContext: UserContext,
+        id: Id,
+        model: Model,
+        validationResponse: ValidationResponse = ValidationResponse.OK
+    ): UAPIPropertiesResponse {
+        return UAPIPropertiesResponse(
+            metadata = UAPIResourceMeta(validationResponse = validationResponse),
+            links = generateLinks(userContext, id, model),
+            properties = modelToProperties(userContext, id, model)
+        )
+    }
+
+    internal fun modelToProperties(
+        userContext: UserContext,
+        id: Id,
+        model: Model
+    ): Map<String, UAPIProperty> {
+        return resource.responseFields.map { f ->
+            f.name to f.toProp(userContext, model)
+        }.toMap()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    internal fun generateLinks(
+        userContext: UserContext,
+        id: Id,
+        model: Model
+    ): UAPILinks {
+        //TODO generate links
+        return emptyMap()
+    }
+
+    internal fun buildFieldsetResponse(
+        userContext: UserContext,
+        id: Id,
+        model: Model,
+        requestedFieldsets: Set<String>,
+        requestedContexts: Set<String>
+    ): UAPIFieldsetsResponse {
+        val loadedFieldsets = loadFieldsets(userContext, id, model, requestedFieldsets, requestedContexts)
+
+        return UAPIFieldsetsResponse(
+            fieldsets = loadedFieldsets,
+            metadata = FieldsetsMetadata(
+                fieldSetsReturned = loadedFieldsets.keys,
+                fieldSetsAvailable = runtime.availableFieldsets
+            )
+        )
+    }
+
+    internal fun loadFieldsets(
+        userContext: UserContext,
+        id: Id,
+        model: Model,
+        requestedFieldsets: Set<String>,
+        requestedContexts: Set<String>
+    ): Map<String, UAPIResponse<*>> {
+        //TODO(Return fieldsets other than basic)
+        return mapOf(SpecConstants.FieldSets.VALUE_BASIC to modelToBasic(userContext, id, model))
+    }
+
+    fun getId(idParams: IdParams): Id {
+        return runtime.idReader.read(idParams).onFailure { it.thrown() }
+    }
+
+    abstract fun handle(request: Request): UAPIResponse<*>
+}
+
+class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>(
+    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>
+) : IdentifiedResourceRequestHandler<UserContext, Id, Model, FetchIdentifiedResource<UserContext>>(runtime) {
+    override fun handle(
+        request: FetchIdentifiedResource<UserContext>
+    ): UAPIResponse<*> {
+        val id = getId(request.idParams)
+        val userContext = request.userContext
+
+        val model = resource.loadModel(userContext, id) ?: return UAPINotFoundError
+        if (!resource.canUserViewModel(userContext, id, model)) {
+            return UAPINotAuthorizedError
+        }
+        return buildFieldsetResponse(userContext, id, model, runtime.availableFieldsets, setOf()) // TODO: Fieldsets
+    }
+}
+
+class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
+    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
+    private val listView: IdentifiedResource.Listable<UserContext, Id, Model, Params>
+) : IdentifiedResourceRequestHandler<UserContext, Id, Model, ListIdentifiedResource<UserContext>>(runtime) {
+    private val paramReader: ListParamReader<Params> = listView.getListParamReader(runtime.typeDictionary)
+        .onFailure { throw it.asError() }
+
+    override fun handle(request: ListIdentifiedResource<UserContext>): UAPIResponse<*> {
+        val params = paramReader.read(request.queryParams).onFailure {
+            it.thrown()
+        }
+
+        val result = listView.list(request.userContext, params)
+
+        val meta = buildCollectionMetadata(result, params)
+
+        return UAPIFieldsetsCollectionResponse(
+            result.map { buildFieldsetResponse(request.userContext, resource.idFromModel(it), it, runtime.availableFieldsets, setOf()) },
+            meta,
+            emptyMap() //TODO: Links
+        )
+    }
+
+    private fun buildCollectionMetadata(
+        list: List<Model>,
+        params: Params
+    ): CollectionMetadata {
+        val meta = paramReader.describe()
+
+        val size = if (list is ListWithTotal<Model>) list.totalItems else list.size
+
+        val (search, _, sort, subset) = meta
+        val searchMeta = search?.let { SearchableCollectionMetadata(it.contextFields) }
+        val sortMeta = sort?.let { SortableCollectionMetadata(it.properties, it.defaults, it.defaultSortOrder) }
+        val subsetMeta = subset?.let {
+            params as ListParams.SubSetting
+            CollectionSubsetMetadata(
+                list.size,
+                params.subset.subsetStartOffset,
+                it.defaultSize,
+                it.maxSize
+            )
+        }
+
+        return CollectionMetadata(
+            collectionSize = size,
+            searchMetadata = searchMeta,
+            sortMetadata = sortMeta,
+            subsetMetadata = subsetMeta
+        )
     }
 }

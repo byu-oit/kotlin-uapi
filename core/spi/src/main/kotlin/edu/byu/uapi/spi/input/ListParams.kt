@@ -1,22 +1,38 @@
 package edu.byu.uapi.spi.input
 
 interface ListParams {
-    object Empty: ListParams {}
+    object Empty : ListParams {}
 
-    interface Filtering<Filter : Any>: ListParams {
+    interface Filtering<Filter : Any> : ListParams {
         val filter: Filter?
+
+        companion object {
+            const val FIELD_NAME = "filter"
+        }
     }
 
-    interface Sorting<SortableField : Enum<SortableField>>: ListParams {
+    interface Sorting<SortableField : Enum<SortableField>> : ListParams {
         val sort: SortParams<SortableField>
+
+        companion object {
+            const val FIELD_NAME = "sort"
+        }
     }
 
-    interface Searching<SearchContext : Enum<SearchContext>>: ListParams {
+    interface Searching<SearchContext : Enum<SearchContext>> : ListParams {
         val search: SearchParams<SearchContext>?
+
+        companion object {
+            const val FIELD_NAME = "search"
+        }
     }
 
-    interface SubSetting: ListParams {
-        val page: SubsetParams
+    interface SubSetting : ListParams {
+        val subset: SubsetParams
+
+        companion object {
+            const val FIELD_NAME = "subset"
+        }
     }
 
 }
@@ -24,7 +40,7 @@ interface ListParams {
 data class ListWithTotal<T>(
     val totalItems: Int,
     val values: List<T>
-): List<T> by values
+) : List<T> by values
 
 inline fun <T, R> ListWithTotal<T>.map(fn: (T) -> R): ListWithTotal<R> {
     return ListWithTotal(
@@ -67,7 +83,10 @@ data class SearchParams<SearchContext : Enum<SearchContext>>(
 )
 
 enum class SortOrder {
-    ASCENDING, DESCENDING
+    ASCENDING, DESCENDING;
+
+    override fun toString(): String = name.toLowerCase()
+
 }
 //
 //enum class PersonSearchContexts {

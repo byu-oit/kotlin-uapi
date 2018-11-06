@@ -6,11 +6,8 @@ import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
-import kotlin.reflect.KClass
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
-
-    override val idType: KClass<Long> = Long::class
 
     override fun loadModel(
         userContext: LibraryUser,

@@ -2,7 +2,8 @@ package edu.byu.uapi.spi.scalars
 
 data class ScalarFormat(
     val type: JsonValueType,
-    val format: String? = null
+    val format: String? = null,
+    val enumValues: Set<String>? = null
 ) {
     companion object {
         val INTEGER = ScalarFormat(JsonValueType.NUMBER, OpenApiFormats.INT32)
@@ -23,6 +24,14 @@ data class ScalarFormat(
         val UUID = ScalarFormat(JsonValueType.STRING, JsonSchemaFormats.UUID)
 
         val URI = ScalarFormat(JsonValueType.STRING, JsonSchemaFormats.URI)
+    }
+
+    fun asEnum(values: Iterable<String>): ScalarFormat {
+        return ScalarFormat(
+            this.type,
+            this.format,
+            values.toSet()
+        )
     }
 }
 

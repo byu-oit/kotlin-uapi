@@ -2,9 +2,9 @@ package edu.byu.uapi.http
 
 interface HttpRequest {
     val method: HttpMethod
-    val path: PathParams
-    val headers: Headers
-    val query: QueryParams
+    val path: HttpPathParams
+    val headers: HttpHeaders
+    val query: HttpQueryParams
     val rawPath: String
     val body: RequestBody?
 }
@@ -15,6 +15,6 @@ data class StringRequestBody(val body: String): RequestBody {
 
 }
 
-typealias PathParams = Map<String, String>
-typealias Headers = Map<String, Set<String>>
-typealias QueryParams = Map<String, Set<String>>
+typealias HttpPathParams = Map<String, String>
+typealias HttpHeaders = Map<String, Set<String>>
+typealias HttpQueryParams = Map<String, Set<String>>

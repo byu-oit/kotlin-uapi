@@ -4,13 +4,8 @@ import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
-import edu.byu.uapi.server.response.ResponseField
-import edu.byu.uapi.server.response.uapiResponse
-import kotlin.reflect.KClass
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
-
-    override val idType: KClass<Long> = Long::class
 
     override fun loadModel(
         userContext: LibraryUser,

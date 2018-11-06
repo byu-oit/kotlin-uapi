@@ -17,7 +17,7 @@ import java.net.URLConnection
 
 val DEFAULT_USER_INFO_SERVICE = URL("https://api.byu.edu/openid-userinfo/v1/userinfo")
 
-class LocalDevelopmentBearerTokenUserContextFactory<UserContext : Any>(
+class OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory<UserContext : Any>(
     private val wrapped: UserContextFactory<UserContext>,
     private val userInfoServiceUrl: URL = DEFAULT_USER_INFO_SERVICE
 ) : UserContextFactory<UserContext> {
@@ -35,7 +35,7 @@ class LocalDevelopmentBearerTokenUserContextFactory<UserContext : Any>(
     }
 
     companion object {
-        internal val LOG: Logger = LoggerFactory.getLogger(LocalDevelopmentBearerTokenUserContextFactory::class.java)
+        internal val LOG: Logger = LoggerFactory.getLogger(OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory::class.java)
     }
 
     private fun maybeDecorateAuthInfo(authInfo: UserContextAuthnInfo): SuccessOrFailure<UserContextAuthnInfo, UserContextResult.Failure> {
@@ -73,14 +73,14 @@ private const val WSO2_NOT_SUBSCRIBED_ERROR = "900908"
 private fun handleUnauthorized(body: String): UserContextResult.Failure {
     val match = WSO2_ERROR_PATTERN.find(body)
     if (match == null) {
-        LocalDevelopmentBearerTokenUserContextFactory.LOG.error("Unexpected WSO2 Error response body for HTTP 403:\n-------------------\n $body \n-------------------\n")
+        OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory.LOG.error("Unexpected WSO2 Error response body for HTTP 403:\n-------------------\n $body \n-------------------\n")
         return UserContextResult.Failure("Validation of 'Authorization' header failed with HTTP 403 and an unrecognized response body. See server log for details.")
     }
     val code = match.groupValues[1]
     if (code == WSO2_NOT_SUBSCRIBED_ERROR) {
         return UserContextResult.Failure("In development mode, your credentials must be subscribed to the UserInfo API: https://api.byu.edu/store/apis/info?name=OpenID-Userinfo&version=v1&provider=BYU/jmooreoa")
     }
-    LocalDevelopmentBearerTokenUserContextFactory.LOG.error("Unexpected WSO2 Error response code for HTTP 403:\n-------------------\n $body \n-------------------\n")
+    OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory.LOG.error("Unexpected WSO2 Error response code for HTTP 403:\n-------------------\n $body \n-------------------\n")
     return UserContextResult.Failure("Validation of 'Authorization' failed with WSO2 Error code $code. See server log for details.")
 }
 

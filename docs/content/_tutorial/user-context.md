@@ -194,8 +194,8 @@ Getting a valid JWT isn't easy!"
 
 In order to make this easier, we've provided a `UserContextFactory` that can wrap another and will automatically turn
 a valid, WSO2-issued OAuth Bearer Token into a JWT, ready for consumption by your `UserContextFactory`:
-`LocalDevelopmentBearerTokenUserContextFactory`. As its name implies, this is ONLY for use in local development, and
-should not be used in production.
+`OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory`. As its name implies, this is ONLY for use in local,
+on-your-laptop development, and should not be used on any kind of real server.
 
 Let's modify our `LibraryApp` to look for a system property or environment variable called 'ENV' and, if it is equal to 'local', 
 use the bearer token factory:
@@ -210,7 +210,7 @@ fun main(args: Array<String>) {
     val libraryUserFactory = LibraryUserContextFactory()
 
     val actualUserFactory = if (isLocalDevelopment) {
-        LocalDevelopmentBearerTokenUserContextFactory(libraryUserFactory)
+        OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory(libraryUserFactory)
     } else {
         libraryUserFactory
     }

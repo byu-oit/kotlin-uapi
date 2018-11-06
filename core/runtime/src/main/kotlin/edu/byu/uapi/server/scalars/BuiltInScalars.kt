@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.scalars
 
+import com.google.common.collect.ImmutableBiMap
 import edu.byu.uapi.server.inputs.typeFailure
 import edu.byu.uapi.server.types.APIType
 import edu.byu.uapi.spi.dictionary.MaybeTypeFailure
@@ -68,37 +69,51 @@ val builtinScalarTypes: List<ScalarType<*>> = listOf<ScalarType<*>>(
 val builtinScalarTypeMap: Map<KClass<*>, ScalarType<*>> = builtinScalarTypes.map { it.type to it }.toMap()
 
 open class EnumScalarType<E : Enum<E>>(
-    override val type: KClass<E>
+    final override val type: KClass<E>,
+    private val strict: Boolean = false
 ) : ScalarType<E> {
 
     @Suppress("UNCHECKED_CAST")
     constructor(constants: Array<E>) : this(constants.first()::class as KClass<E>)
 
-    override val scalarFormat: ScalarFormat = ScalarFormat.STRING
+    val enumConstants: Set<E> = EnumSet.allOf(type.java)
 
-    private val map: Map<String, E> by lazy {
-        type.java.enumConstants.flatMap { e ->
-            enumNameVariants(e.toString()).map { it to e }
+    private val values: ImmutableBiMap<String, E> =
+        ImmutableBiMap.copyOf(enumConstants.map { renderToString(it) to it }.toMap())
+
+    val enumValues: List<String> = values.keys.asList()
+
+    override val scalarFormat: ScalarFormat = ScalarFormat.STRING.asEnum(enumValues)
+
+    private val variants: Map<String, E> by lazy {
+        values.flatMap { e ->
+            enumNameVariants(e.key).map { it to e.value }
         }.toMap()
     }
 
+    override fun renderToString(value: E): String = value.toString()
+
     override fun fromString(value: String): MaybeTypeFailure<E> {
-        return map[value]?.asSuccess()
-            ?: typeFailure(type, "Invalid " + type.simpleName + " value")
+        val found = values[value]
+        if (found == null && !strict) {
+            val variant = variants[value]
+            if (variant != null) return variant.asSuccess()
+        }
+        if (found != null) {
+            return found.asSuccess()
+        }
+        return typeFailure(type, "Invalid " + type.simpleName + " value")
     }
 
     override fun <S> render(
         value: E,
         renderer: ScalarRenderer<S>
-    ) = renderer.string(value.name)
+    ) = renderer.string(values.inverse()[value]!!)
 }
 
-object ApiTypeScalarType: EnumScalarType<APIType>(APIType::class) {
-    override fun <S> render(
-        value: APIType,
-        renderer: ScalarRenderer<S>
-    ): S {
-        return renderer.string(value.apiValue)
+object ApiTypeScalarType : EnumScalarType<APIType>(type = APIType::class, strict = true) {
+    override fun renderToString(value: APIType): String {
+        return value.apiValue
     }
 }
 

@@ -11,7 +11,7 @@ class SparkRequest(
         get() = TODO("not implemented")
     override val body: RequestBody?
         get() = TODO("not implemented")
-    override val path: PathParams = req.params()
-    override val headers: Headers = req.headers().associate { it to setOf(req.headers(it)) }
-    override val query: QueryParams = req.queryMap().toMap().mapValues { setOf(*it.value) }
+    override val path: HttpPathParams = req.params()
+    override val headers: HttpHeaders = req.headers().associate { it to setOf(req.headers(it)) }
+    override val query: HttpQueryParams = req.queryMap().toMap().mapValues { setOf(*it.value) }
 }

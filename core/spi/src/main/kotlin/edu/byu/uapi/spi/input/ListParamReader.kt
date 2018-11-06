@@ -1,6 +1,8 @@
 package edu.byu.uapi.spi.input
 
+import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.functional.Success
+import edu.byu.uapi.spi.requests.QueryParams
 import edu.byu.uapi.spi.scalars.ScalarFormat
 
 interface ListParamReader<Params : Any> : QueryParamReader<Params, ListParamsMeta>
@@ -12,6 +14,14 @@ object EmptyListParamReader : ListParamReader<ListParams.Empty> {
         return ListParamsMeta(null, null, null, null)
     }
 }
+
+//interface SearchContextReader<SearchContext : Enum<SearchContext>> : ScalarType<SearchContext>
+//interface SortPropertyReader<SortProperty : Enum<SortProperty>> : ScalarType<SortProperty>
+interface FilterParamsReader<FilterParams : Any> : QueryParamReader<FilterParams?, FilterParamsMeta>
+interface SearchParamsReader<SearchContext: Enum<SearchContext>>: QueryParamReader<SearchParams<SearchContext>?, SearchParamsMeta>
+interface SortParamsReader<SortProperty: Enum<SortProperty>>: QueryParamReader<SortParams<SortProperty>, SortParamsMeta>
+
+//class SearchContextReader<SearchContext: Enum<SearchContext>>(): EnumScalar
 
 data class ListParamsMeta(
     val search: SearchParamsMeta?,
@@ -28,17 +38,20 @@ data class ListParamsMeta(
         ).flatten()
 }
 
-sealed class ListParamsMetaType {
-    abstract val queryParams: List<QueryParamMetadata.Param>
+sealed class ListParamsMetaType: QueryParamMetadata {
 }
 
 data class SearchParamsMeta(
-    val contextFields: Map<String, Set<String>>
+    val contextFields: Map<String, Collection<String>>
 ) : ListParamsMetaType() {
     override val queryParams: List<QueryParamMetadata.Param> = listOf(
-        QueryParamMetadata.Param("search_text", ScalarFormat.STRING),
-        QueryParamMetadata.Param("search_context", ScalarFormat.STRING)
+        QueryParamMetadata.Param(SEARCH_TEXT_KEY, ScalarFormat.STRING),
+        QueryParamMetadata.Param(SEARCH_CONTEXT_KEY, ScalarFormat.STRING.asEnum(contextFields.keys))
     )
+    companion object {
+        const val SEARCH_TEXT_KEY = SpecConstants.Collections.Query.KEY_SEARCH_TEXT
+        const val SEARCH_CONTEXT_KEY = SpecConstants.Collections.Query.KEY_SEARCH_CONTEXT
+    }
 }
 
 data class FilterParamsMeta(
@@ -46,13 +59,18 @@ data class FilterParamsMeta(
 ) : ListParamsMetaType()
 
 data class SortParamsMeta(
-    val field: List<String>,
-    val defaults: List<String>
+    val properties: List<String>,
+    val defaults: List<String>,
+    val defaultSortOrder: SortOrder
 ) : ListParamsMetaType() {
     override val queryParams: List<QueryParamMetadata.Param> = listOf(
-        QueryParamMetadata.Param("sort_properties", ScalarFormat.STRING),
-        QueryParamMetadata.Param("sort_order", ScalarFormat.STRING)
+        QueryParamMetadata.Param(SORT_PROPERTIES_KEY, ScalarFormat.STRING),
+        QueryParamMetadata.Param(SORT_ORDER_KEY, ScalarFormat.STRING)
     )
+    companion object {
+        const val SORT_PROPERTIES_KEY = SpecConstants.Collections.Query.KEY_SORT_PROPERTIES
+        const val SORT_ORDER_KEY = SpecConstants.Collections.Query.KEY_SORT_ORDER
+    }
 }
 
 data class SubsetParamsMeta(
@@ -60,7 +78,12 @@ data class SubsetParamsMeta(
     val maxSize: Int
 ) : ListParamsMetaType() {
     override val queryParams: List<QueryParamMetadata.Param> = listOf(
-        QueryParamMetadata.Param("subset_start_offset", ScalarFormat.INTEGER),
-        QueryParamMetadata.Param("subset_size", ScalarFormat.INTEGER)
+        QueryParamMetadata.Param(SUBSET_START_OFFSET_KEY, ScalarFormat.INTEGER),
+        QueryParamMetadata.Param(SUBSET_SIZE_KEY, ScalarFormat.INTEGER)
     )
+
+    companion object {
+        const val SUBSET_START_OFFSET_KEY = SpecConstants.Collections.Query.KEY_SUBSET_START_OFFSET
+        const val SUBSET_SIZE_KEY = SpecConstants.Collections.Query.KEY_SUBSET_SIZE
+    }
 }

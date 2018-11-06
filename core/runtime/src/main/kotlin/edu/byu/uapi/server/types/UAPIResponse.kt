@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.types
 
+import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
 import edu.byu.uapi.spi.rendering.render
@@ -10,8 +11,8 @@ sealed class UAPIResponse<MetaType : ResponseMetadata> : Renderable {
 
     final override fun render(renderer: Renderer<*>) {
         renderExtras(renderer)
-        renderer.tree("links", links)
-        renderer.tree("metadata", metadata)
+        renderer.tree(SpecConstants.Links.KEY, links)
+        renderer.tree(SpecConstants.Metadata.KEY, metadata)
     }
 
     protected open fun renderExtras(renderer: Renderer<*>) {
@@ -24,7 +25,7 @@ data class UAPIFieldsetsCollectionResponse(
     override val links: UAPILinks
 ) : UAPIResponse<CollectionMetadata>() {
     override fun renderExtras(renderer: Renderer<*>) {
-        renderer.treeArray("values", values)
+        renderer.treeArray(SpecConstants.Collections.Response.KEY_VALUES, values)
     }
 }
 
@@ -59,7 +60,7 @@ sealed class UAPIErrorResponse : UAPIResponse<UAPIErrorMetadata>() {
 data class GenericUAPIErrorResponse(
     val statusCode: Int,
     val message: String,
-    val validationInformation: List<String>
+    val validationInformation: List<String> = emptyList()
 ) : UAPIErrorResponse() {
     override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
         ValidationResponse(statusCode, message),

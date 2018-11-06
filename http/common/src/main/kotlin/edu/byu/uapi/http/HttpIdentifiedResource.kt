@@ -5,13 +5,16 @@ import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
-import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.rendering.Renderable
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceOperation
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceOperation.*
+import edu.byu.uapi.server.resources.identified.IdentifiedResourceFetchHandler
+import edu.byu.uapi.server.resources.identified.IdentifiedResourceListHandler
+import edu.byu.uapi.server.resources.identified.IdentifiedResourceRequestHandler
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
 import edu.byu.uapi.server.types.UAPINotAuthenticatedError
 import edu.byu.uapi.server.types.UAPIResponse
+import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.input.IdParamMeta
+import edu.byu.uapi.spi.rendering.Renderable
+import edu.byu.uapi.spi.requests.*
 import java.io.StringWriter
 import java.io.Writer
 import javax.json.Json
@@ -22,26 +25,41 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
 ) {
     val routes: List<HttpRoute> by lazy {
         val rootPath = listOf(StaticPathPart(resource.name))
-        val idPath = rootPath + SimplePathVariablePart("id")
+        val idPath = rootPath + resource.idReader.describe().toPathPart()
 
         resource.availableOperations.map { handlerFor(it, rootPath, idPath) }
     }
 
     private fun handlerFor(
-        op: IdentifiedResourceOperation,
+        op: IdentifiedResourceRequestHandler<UserContext, Id, Model, *>,
         rootPath: List<PathPart>,
         idPath: List<PathPart>
     ): HttpRoute {
+//        return when (op) {
+//            FETCH -> HttpRoute(
+//                idPath, HttpMethod.GET, IdentifiedResourceFetchHandler(
+//                runtime, resource
+//            ))
+//            CREATE -> TODO()
+//            UPDATE -> TODO()
+//            DELETE -> TODO()
+//            LIST -> TODO()
+//        }
         return when (op) {
-            FETCH -> HttpRoute(
-                idPath, HttpMethod.GET, IdentifiedResourceFetchHandler(
-                runtime, resource
-            ))
-            CREATE -> TODO()
-            UPDATE -> TODO()
-            DELETE -> TODO()
-            LIST -> TODO()
+            is IdentifiedResourceFetchHandler -> HttpRoute(
+                idPath, HttpMethod.GET, IdentifiedResourceFetchHttpHandler(runtime, op)
+            )
+            is IdentifiedResourceListHandler<UserContext, Id, Model, *> -> TODO()
         }
+    }
+}
+
+private fun IdParamMeta.toPathPart(): PathPart {
+    val params = this.idParams
+    return if (params.size == 1) {
+        SimplePathVariablePart(params.first().name)
+    } else {
+        CompoundPathVariablePart(params.map { it.name })
     }
 }
 
@@ -53,7 +71,8 @@ abstract class AuthenticatedHandler<UserContext : Any>(
     private val factory: UserContextFactory<UserContext>,
     private val typeDictionary: TypeDictionary
 ) : HttpHandler {
-    constructor(runtime: UAPIRuntime<UserContext>): this(runtime.userContextFactory, runtime.typeDictionary)
+    constructor(runtime: UAPIRuntime<UserContext>) : this(runtime.userContextFactory, runtime.typeDictionary)
+
     override fun handle(request: HttpRequest): HttpResponse {
         val authResult = factory.createUserContext(HttpUserContextAuthnInfo(request))
         return when (authResult) {
@@ -77,7 +96,7 @@ class UAPIHttpResponse(
     typeDictionary: TypeDictionary
 ) : HttpResponse {
     override val status: Int = response.metadata.validationResponse.code
-    override val headers: Headers = emptyMap()
+    override val headers: HttpHeaders = emptyMap()
     override val body: ResponseBody = if (this.status == 404) EmptyResponseBody else RenderableResponseBody(response, typeDictionary)
 }
 
@@ -104,7 +123,7 @@ class RenderableResponseBody(
 
 class EmptyResponse(
     override val status: Int,
-    override val headers: Headers = emptyMap()
+    override val headers: HttpHeaders = emptyMap()
 ) : HttpResponse {
     override val body: ResponseBody = EmptyResponseBody
 }
@@ -121,19 +140,37 @@ class HttpUserContextAuthnInfo(
     override val remoteIp: String
         get() = TODO("not implemented")
 
-
 }
 
-class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>(
+class IdentifiedResourceFetchHttpHandler<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
-    val resource: IdentifiedResourceRuntime<UserContext, Id, Model>
+    val handler: IdentifiedResourceFetchHandler<UserContext, Id, Model>
 ) : AuthenticatedHandler<UserContext>(runtime) {
     override fun handleAuthenticated(
         request: HttpRequest,
         userContext: UserContext
     ): HttpResponse {
-        val id = resource.constructId(request.path)
-        val resp = resource.handleFetch(userContext, id)
-        return resp.toHttpResponse(runtime.typeDictionary)
+        val response = handler.handle(FetchIdentifiedResource(
+            request.asRequestContext(),
+            userContext,
+            request.path.asIdParams(),
+            request.query.asQueryParams()
+        ))
+        return response.toHttpResponse(runtime.typeDictionary)
     }
+}
+
+private fun HttpPathParams.asIdParams(): IdParams {
+    return this.mapValues { StringIdParam(it.key, it.value) }
+}
+
+private fun HttpQueryParams.asQueryParams(): QueryParams {
+    return this.mapValues { StringSetQueryParam(it.key, it.value) }
+}
+
+fun HttpRequest.asRequestContext() = HttpRequestContext(this)
+
+data class HttpRequestContext(val request: HttpRequest) : RequestContext {
+    override val baseUri: String = ""
+    override val headers: Map<String, Set<String>> = request.headers
 }

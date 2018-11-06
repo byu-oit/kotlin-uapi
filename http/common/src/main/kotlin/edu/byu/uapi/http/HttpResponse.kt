@@ -5,7 +5,7 @@ import java.io.Writer
 interface HttpResponse {
 
     val status: Int
-    val headers: Headers
+    val headers: HttpHeaders
     val body: ResponseBody
 
 }

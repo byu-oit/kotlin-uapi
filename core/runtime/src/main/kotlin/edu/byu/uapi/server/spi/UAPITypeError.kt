@@ -15,6 +15,8 @@ class UAPITypeError(
         message: String,
         cause: Throwable? = null
     ) : this(type.createType(), message, cause)
+
+    fun toFailure(): TypeFailure = TypeFailure(type, typeFailure, cause)
 }
 
 fun TypeFailure.asError(): UAPITypeError = UAPITypeError(type, message, cause)
