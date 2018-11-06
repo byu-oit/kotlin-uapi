@@ -20,7 +20,7 @@
             <dependency>
                 <groupId>edu.byu.uapi.kotlin</groupId>
                 <artifactId>uapi-bom</artifactId>
-                <version>1.0.0-M1</version>
+                <version>1.0.0-SNAPSHOT</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>edu.byu.uapi.kotlin.examples</groupId>
             <artifactId>library-example-common</artifactId>
-            <version>1.0.0-M1</version>
+            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
