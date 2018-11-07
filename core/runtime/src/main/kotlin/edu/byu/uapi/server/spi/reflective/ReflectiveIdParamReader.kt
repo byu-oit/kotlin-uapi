@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.spi.reflective
 
-import edu.byu.uapi.server.inputs.thrown
+import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.spi.requireScalarType
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.dictionary.TypeDictionary
@@ -50,14 +50,14 @@ internal fun <Id : Any> analyzeIdParams(
     paramPrefix: String
 ): AnalyzedIdParams<Id> {
     if (!idType.isData) {
-        UAPITypeError.thrown(idType, "Complex ID type must be a data class")
+        throw UAPITypeError.create(idType, "Complex ID type must be a data class")
     }
-    val ctor = idType.primaryConstructor ?: UAPITypeError.thrown(idType, "Unable to find primary constructor.")
+    val ctor = idType.primaryConstructor ?: throw UAPITypeError.create(idType, "Unable to find primary constructor.")
     val params: List<AnalyzedIdParam> = ctor.parameters.map { p ->
-        val name = p.name ?: UAPITypeError.thrown(idType, "Constructor must have parameter names")
-        val classifier = p.type.classifier ?: UAPITypeError.thrown(p.type, "Type must be representable in Kotlin")
+        val name = p.name ?: throw UAPITypeError.create(idType, "Constructor must have parameter names")
+        val classifier = p.type.classifier ?: throw UAPITypeError.create(p.type, "Type must be representable in Kotlin")
         if (classifier !is KClass<*>) {
-            UAPITypeError.thrown(classifier, "Type must be a concrete type")
+            throw UAPITypeError.create(classifier, "Type must be a concrete type")
         }
         val scalarType = typeDictionary.requireScalarType(classifier)
 

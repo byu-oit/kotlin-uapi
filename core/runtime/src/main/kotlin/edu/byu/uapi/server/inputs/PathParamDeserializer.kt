@@ -7,7 +7,3 @@ import kotlin.reflect.full.createType
 fun UAPITypeError.Companion.create(type: KClassifier, message: String, cause: Throwable? = null): UAPITypeError {
     return UAPITypeError.create(type.createType(), message, cause)
 }
-
-fun UAPITypeError.Companion.thrown(type: KClassifier, message: String, cause: Throwable? = null): Nothing {
-    throw UAPITypeError.create(type, message, cause)
-}

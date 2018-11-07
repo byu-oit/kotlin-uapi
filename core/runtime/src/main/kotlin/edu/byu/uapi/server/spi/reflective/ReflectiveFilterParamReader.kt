@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.spi.reflective
 
-import edu.byu.uapi.server.inputs.thrown
+import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.spi.requireScalarType
 import edu.byu.uapi.server.util.toSnakeCase
 import edu.byu.uapi.spi.UAPITypeError
@@ -54,10 +54,10 @@ internal fun <T : Any> analyzeFilterParams(
     dictionary: TypeDictionary
 ): AnalyzedFilterParams<T> {
     if (!toAnalyze.isData) {
-        UAPITypeError.thrown(toAnalyze, "Filter type must be a data class")
+        throw UAPITypeError.create(toAnalyze, "Filter type must be a data class")
     }
     val ctor = toAnalyze.primaryConstructor
-        ?: UAPITypeError.thrown(toAnalyze, "Missing primary constructor. As this is a data class, this shouldn't be possible?!")
+        ?: throw UAPITypeError.create(toAnalyze, "Missing primary constructor. As this is a data class, this shouldn't be possible?!")
     val params = ctor.parameters
     val analyzedParams = params.map { p ->
         analyzeFilterParam(p, dictionary)
@@ -164,7 +164,7 @@ internal fun analyzeFilterParam(
     if (param.type.withNullability(false).isSubtypeOf(collectionStar)) {
         return analyzeCollectionFilter(param, dictionary)
     }
-    val classifier = param.type.classifier ?: UAPITypeError.thrown(param.type, "Type must be representable in Kotlin")
+    val classifier = param.type.classifier ?: throw UAPITypeError.create(param.type, "Type must be representable in Kotlin")
     if (classifier is KClass<*> && dictionary.isScalarType(classifier)) {
         return analyzeValueParam(param, classifier, dictionary)
     }
@@ -179,12 +179,12 @@ internal fun analyzeComplexFilter(
     val type = param.type.classifier!!
 
     if (type !is KClass<*>) {
-        UAPITypeError.thrown(type, "Expected a concrete type for ${param.name}")
+        throw UAPITypeError.create(type, "Expected a concrete type for ${param.name}")
     }
     if (!type.isData) {
-        UAPITypeError.thrown(type, "Expected a data class for ${param.name}")
+        throw UAPITypeError.create(type, "Expected a data class for ${param.name}")
     }
-    val ctor = type.primaryConstructor ?: UAPITypeError.thrown(type, "Expected a primary constructor")
+    val ctor = type.primaryConstructor ?: throw UAPITypeError.create(type, "Expected a primary constructor")
     val params = ctor.parameters.map { p ->
         analyzeFilterParam(p, dictionary)
     }
@@ -205,7 +205,7 @@ internal fun analyzeValueParam(
 ): AnalyzedSimpleFilterField {
     val required = !param.type.isMarkedNullable && !param.isOptional
     if (required) {
-        UAPITypeError.thrown(param.type, "Parameter ${param.name} must be nullable or have a default value")
+        throw UAPITypeError.create(param.type, "Parameter ${param.name} must be nullable or have a default value")
     }
     return AnalyzedSimpleFilterField(
         param,
@@ -227,17 +227,17 @@ private fun analyzeCollectionFilter(
         Set::class -> { it -> it.toSet() } //TODO(someday) optimize this for Enums using EnumSet
         Collection::class -> { it -> it.toSet() }
         else -> {
-            UAPITypeError.thrown(parameter.type, "Invalid collection type for ${parameter.name}. Must be a List, Set, or Collection")
+            throw UAPITypeError.create(parameter.type, "Invalid collection type for ${parameter.name}. Must be a List, Set, or Collection")
         }
     }
 
     val itemProjection = parameter.type.arguments.first()
     val itemType = itemProjection.type
-        ?: UAPITypeError.thrown(parameter.type, "Type for ${parameter.name} must not be a '*' projection")
+        ?: throw UAPITypeError.create(parameter.type, "Type for ${parameter.name} must not be a '*' projection")
     val item = itemType.classifier!!
 
     if (item !is KClass<*>) {
-        UAPITypeError.thrown(item, "Expected a concrete type for ${parameter.name}")
+        throw UAPITypeError.create(item, "Expected a concrete type for ${parameter.name}")
     }
     val scalar = dictionary.requireScalarType(item)
     return AnalyzedRepeatableFilterField(

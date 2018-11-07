@@ -10,9 +10,6 @@ class UAPITypeError private constructor(
 
     companion object {
         fun create(type: KType, typeFailure: String, cause: Throwable? = null): UAPITypeError = UAPITypeError(type, typeFailure, cause)
-        fun thrown(type: KType, typeFailure: String, cause: Throwable? = null): Nothing {
-            throw create(type, typeFailure, cause)
-        }
     }
 }
 

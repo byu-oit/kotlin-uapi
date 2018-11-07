@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.scalars
 
 import com.google.common.collect.ImmutableBiMap
-import edu.byu.uapi.server.inputs.thrown
+import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.types.APIType
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.rendering.ScalarRenderer
@@ -100,7 +100,7 @@ open class EnumScalarType<E : Enum<E>>(
         if (found != null) {
             return found
         }
-        UAPITypeError.thrown(type, "Invalid " + type.simpleName + " value")
+        throw UAPITypeError.create(type, "Invalid " + type.simpleName + " value")
     }
 
     override fun <S> render(
@@ -164,7 +164,7 @@ object BooleanScalarType : ScalarType<Boolean> {
         return when (value.toLowerCase()) {
             "true" -> true
             "false" -> false
-            else -> UAPITypeError.thrown(Boolean::class, "Invalid boolean value")
+            else -> throw UAPITypeError.create(Boolean::class, "Invalid boolean value")
         }
     }
 
@@ -179,7 +179,7 @@ object CharScalarType : ScalarType<Char> {
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING
     override fun fromString(value: String): Char {
         if (value.length != 1) {
-            UAPITypeError.thrown(Char::class, "Expected an input with a length of 1, got a length of ${value.length}")
+            throw UAPITypeError.create(Char::class, "Expected an input with a length of 1, got a length of ${value.length}")
         }
         return value[0]
     }
@@ -194,7 +194,7 @@ object ByteScalarType : ScalarType<Byte> {
     override val type = Byte::class
     override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
     override fun fromString(value: String): Byte {
-        return value.toByteOrNull() ?: UAPITypeError.thrown(Byte::class, "Invalid byte value")
+        return value.toByteOrNull() ?: throw UAPITypeError.create(Byte::class, "Invalid byte value")
     }
 
     override fun <S> render(
@@ -207,7 +207,7 @@ object ShortScalarType : ScalarType<Short> {
     override val type = Short::class
     override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
     override fun fromString(value: String): Short {
-        return value.toShortOrNull() ?: UAPITypeError.thrown(Short::class, "Invalid short integer value")
+        return value.toShortOrNull() ?: throw UAPITypeError.create(Short::class, "Invalid short integer value")
     }
 
     override fun <S> render(
@@ -220,7 +220,7 @@ object IntScalarType : ScalarType<Int> {
     override val type = Int::class
     override val scalarFormat: ScalarFormat = ScalarFormat.INTEGER
     override fun fromString(value: String): Int {
-        return value.toIntOrNull() ?: UAPITypeError.thrown(Int::class, "Invalid integer value")
+        return value.toIntOrNull() ?: throw UAPITypeError.create(Int::class, "Invalid integer value")
     }
 
     override fun <S> render(
@@ -233,7 +233,7 @@ object FloatScalarType : ScalarType<Float> {
     override val type = Float::class
     override val scalarFormat: ScalarFormat = ScalarFormat.FLOAT
     override fun fromString(value: String): Float {
-        return value.toFloatOrNull() ?: UAPITypeError.thrown(Float::class, "Invalid decimal value")
+        return value.toFloatOrNull() ?: throw UAPITypeError.create(Float::class, "Invalid decimal value")
     }
 
     override fun <S> render(
@@ -246,7 +246,7 @@ object LongScalarType : ScalarType<Long> {
     override val type = Long::class
     override val scalarFormat: ScalarFormat = ScalarFormat.LONG
     override fun fromString(value: String): Long {
-        return value.toLongOrNull() ?: UAPITypeError.thrown(Long::class, "Invalid long integer value")
+        return value.toLongOrNull() ?: throw UAPITypeError.create(Long::class, "Invalid long integer value")
     }
 
     override fun <S> render(
@@ -259,7 +259,7 @@ object DoubleScalarType : ScalarType<Double> {
     override val type = Double::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DOUBLE
     override fun fromString(value: String): Double {
-        return value.toDoubleOrNull() ?: UAPITypeError.thrown(Double::class, "Invalid long decimal value")
+        return value.toDoubleOrNull() ?: throw UAPITypeError.create(Double::class, "Invalid long decimal value")
     }
 
     override fun <S> render(
@@ -272,7 +272,7 @@ object BigIntegerScalarType : ScalarType<BigInteger> {
     override val type = BigInteger::class
     override val scalarFormat: ScalarFormat = ScalarFormat.LONG
     override fun fromString(value: String): BigInteger {
-        return value.toBigIntegerOrNull() ?: UAPITypeError.thrown(BigInteger::class, "Invalid integer")
+        return value.toBigIntegerOrNull() ?: throw UAPITypeError.create(BigInteger::class, "Invalid integer")
     }
 
     override fun <S> render(
@@ -285,7 +285,7 @@ object BigDecimalScalarType : ScalarType<BigDecimal> {
     override val type = BigDecimal::class
     override val scalarFormat: ScalarFormat = ScalarFormat.DOUBLE
     override fun fromString(value: String): BigDecimal {
-        return value.toBigDecimalOrNull() ?: UAPITypeError.thrown(BigDecimal::class, "Invalid decimal")
+        return value.toBigDecimalOrNull() ?: throw UAPITypeError.create(BigDecimal::class, "Invalid decimal")
     }
 
     override fun <S> render(
@@ -301,7 +301,7 @@ object InstantScalarType : ScalarType<Instant> {
         return try {
             Instant.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(Instant::class, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(Instant::class, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -318,7 +318,7 @@ object LocalDateScalarType : ScalarType<LocalDate> {
         return try {
             LocalDate.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(LocalDate::class, "Invalid timestamp. Must be a valid RFC-3339 'full-date' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(LocalDate::class, "Invalid timestamp. Must be a valid RFC-3339 'full-date' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -335,7 +335,7 @@ object LocalDateTimeScalarType : ScalarType<LocalDateTime> {
         return try {
             LocalDateTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(LocalDateTime::class, "Invalid date/time. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(LocalDateTime::class, "Invalid date/time. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -352,7 +352,7 @@ object ZonedDateTimeScalarType : ScalarType<ZonedDateTime> {
         return try {
             ZonedDateTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(ZonedDateTime::class, "Invalid date/time with time zone. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(ZonedDateTime::class, "Invalid date/time with time zone. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -369,7 +369,7 @@ object OffsetDateTimeScalarType : ScalarType<OffsetDateTime> {
         return try {
             OffsetDateTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(OffsetDateTime::class, "Invalid date/time with zone offset. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(OffsetDateTime::class, "Invalid date/time with zone offset. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -386,7 +386,7 @@ object OffsetTimeScalarType : ScalarType<OffsetTime> {
         return try {
             OffsetTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(OffsetTime::class, "Invalid time with zone offset. Must be a valid RFC-3339 'full-time' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(OffsetTime::class, "Invalid time with zone offset. Must be a valid RFC-3339 'full-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -403,7 +403,7 @@ object LocalTimeScalarType : ScalarType<LocalTime> {
         return try {
             LocalTime.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(LocalTime::class, "Invalid time value. Must be a valid RFC-3339 'partial-time' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(LocalTime::class, "Invalid time value. Must be a valid RFC-3339 'partial-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 
@@ -420,7 +420,7 @@ object YearMonthScalarType : ScalarType<YearMonth> {
         return try {
             YearMonth.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(YearMonth::class, "Invalid year/month value. Must be formatted like 'yyyy-MM'.")
+            throw UAPITypeError.create(YearMonth::class, "Invalid year/month value. Must be formatted like 'yyyy-MM'.")
         }
     }
 
@@ -437,7 +437,7 @@ object MonthDayScalarType : ScalarType<MonthDay> {
         return try {
             MonthDay.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(MonthDay::class, "Invalid year/month value. Must be formatted like '--MM-dd', per ISO-8601.")
+            throw UAPITypeError.create(MonthDay::class, "Invalid year/month value. Must be formatted like '--MM-dd', per ISO-8601.")
         }
     }
 
@@ -454,7 +454,7 @@ object DurationScalarType : ScalarType<Duration> {
         return try {
             Duration.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(Duration::class, "Invalid duration. Must be formatted as an ISO-8601 duration (PnDTnHnMn.nS).")
+            throw UAPITypeError.create(Duration::class, "Invalid duration. Must be formatted as an ISO-8601 duration (PnDTnHnMn.nS).")
         }
     }
 
@@ -471,7 +471,7 @@ object PeriodScalarType : ScalarType<Period> {
         return try {
             Period.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(Period::class, "Invalid duration. Must be formatted as an ISO-8601 period (PnYnMnD or PnW).")
+            throw UAPITypeError.create(Period::class, "Invalid duration. Must be formatted as an ISO-8601 period (PnYnMnD or PnW).")
         }
     }
 
@@ -488,7 +488,7 @@ object YearScalarType : ScalarType<Year> {
         return try {
             Year.parse(value)
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(Year::class, "Invalid year value.")
+            throw UAPITypeError.create(Year::class, "Invalid year value.")
         }
     }
 
@@ -505,7 +505,7 @@ object UUIDScalarType : ScalarType<UUID> {
         return try {
             UUID.fromString(value)
         } catch (ex: IllegalArgumentException) {
-            UAPITypeError.thrown(UUID::class, "Invalid UUID value.")
+            throw UAPITypeError.create(UUID::class, "Invalid UUID value.")
         }
     }
 
@@ -520,12 +520,12 @@ object ByteArrayScalarType : ScalarType<ByteArray> {
     override val scalarFormat: ScalarFormat = ScalarFormat.BYTE_ARRAY
     override fun fromString(value: String): ByteArray {
         val decoder = decoderFor(value)
-            ?: UAPITypeError.thrown(ByteArray::class, "Invalid base64-encoded bytes.")
+            ?: throw UAPITypeError.create(ByteArray::class, "Invalid base64-encoded bytes.")
 
         return try {
             decoder.decode(value)
         } catch (er: IllegalArgumentException) {
-            UAPITypeError.thrown(ByteArray::class, "Invalid base64-encoded bytes.")
+            throw UAPITypeError.create(ByteArray::class, "Invalid base64-encoded bytes.")
         }
     }
 
@@ -542,12 +542,12 @@ object ByteBufferScalarType : ScalarType<ByteBuffer> {
     override val scalarFormat: ScalarFormat = ScalarFormat.BYTE_ARRAY
     override fun fromString(value: String): ByteBuffer {
         val decoder = decoderFor(value)
-            ?: UAPITypeError.thrown(ByteBuffer::class, "Invalid base64-encoded bytes.")
+            ?: throw UAPITypeError.create(ByteBuffer::class, "Invalid base64-encoded bytes.")
 
         return try {
             ByteBuffer.wrap(decoder.decode(value))
         } catch (er: IllegalArgumentException) {
-            UAPITypeError.thrown(ByteBuffer::class, "Invalid base64-encoded bytes.")
+            throw UAPITypeError.create(ByteBuffer::class, "Invalid base64-encoded bytes.")
         }
     }
 
@@ -567,7 +567,7 @@ object URLScalarType : ScalarType<URL> {
         return try {
             URL(value)
         } catch (ex: MalformedURLException) {
-            UAPITypeError.thrown(URL::class, "Malformed URL")
+            throw UAPITypeError.create(URL::class, "Malformed URL")
         }
     }
 
@@ -585,7 +585,7 @@ object URIScalarType : ScalarType<URI> {
         return try {
             URI(value)
         } catch (ex: URISyntaxException) {
-            UAPITypeError.thrown(URI::class, "Invalid URI")
+            throw UAPITypeError.create(URI::class, "Invalid URI")
         }
     }
 
@@ -604,7 +604,7 @@ abstract class PreJavaTimeScalarTypeBase<T : java.util.Date>
             val instant = Instant.parse(value)
             fromEpochMillis(instant.toEpochMilli())
         } catch (ex: DateTimeParseException) {
-            UAPITypeError.thrown(this.type, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
+            throw UAPITypeError.create(this.type, "Invalid timestamp. Must be a valid RFC-3339 'date-time' (https://tools.ietf.org/html/rfc3339).")
         }
     }
 

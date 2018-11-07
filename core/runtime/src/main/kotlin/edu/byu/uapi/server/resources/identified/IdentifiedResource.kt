@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.resources.identified
 
-import edu.byu.uapi.server.inputs.thrown
+import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit
 import edu.byu.uapi.server.response.uapiResponse
@@ -231,11 +231,11 @@ private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserCo
 private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserContext, Id, Model>.defaultIdType(): KClass<Id> {
     return try {
         val supertype = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource::class)
-            ?: UAPITypeError.thrown(this::class, "Unable to get IdentifiedResource ID Type")
+            ?: throw UAPITypeError.create(this::class, "Unable to get IdentifiedResource ID Type")
         val idProjection = supertype.arguments[1]
         DarkMagic.getConcreteType(idProjection)
     } catch (ex: DarkMagicException) {
-        UAPITypeError.thrown(this::class, "Unable to get ID type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get ID type", ex)
     }
 }
 
@@ -249,10 +249,10 @@ internal fun <Params : ListParams>
         return EmptyListParamReader as ListParamReader<Params>
     }
     if (!listParamsType.isData) {
-        UAPITypeError.thrown(listParamsType, "List parameter type must be a data class.")
+        throw UAPITypeError.create(listParamsType, "List parameter type must be a data class.")
     }
     val ctor = listParamsType.primaryConstructor
-        ?: UAPITypeError.thrown(listParamsType, "List parameter type must have a primary constructor.")
+        ?: throw UAPITypeError.create(listParamsType, "List parameter type must have a primary constructor.")
 
     val search = this.takeIfType<IdentifiedResource.Listable.WithSearch<*, *, *, *, *>>()?.getListSearchParamReader(dictionary)
     val filter = this.takeIfType<IdentifiedResource.Listable.WithFilters<*, *, *, *, *>>()?.getListFilterParamReader(dictionary)
@@ -283,7 +283,7 @@ internal fun <SearchContext : Enum<SearchContext>>
     val searchContexts = contextType.enumConstants.map { it to listSearchContexts(it) }.toMap()
 
     if (searchContexts.any { it.value.isEmpty() }) {
-        UAPITypeError.thrown(contextType.type, "${this::class.simpleName}.listSearchContexts must return a non-empty set for every value of ${contextClass.simpleName}")
+        throw UAPITypeError.create(contextType.type, "${this::class.simpleName}.listSearchContexts must return a non-empty set for every value of ${contextClass.simpleName}")
     }
 
     return DefaultSearchParamsReader.create(
@@ -302,7 +302,7 @@ internal fun <SearchContext : Enum<SearchContext>>
         val projection = withSearch.arguments[4]
         DarkMagic.getConcreteType(projection)
     } catch (ex: DarkMagicException) {
-        UAPITypeError.thrown(this::class, "Unable to get search context type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
     }
     return DefaultParameterStyleEnumScalar(searchContextType)
 }
@@ -318,7 +318,7 @@ internal fun <SortProperty : Enum<SortProperty>>
         val projection = withSearch.arguments[4]
         DarkMagic.getConcreteType(projection)
     } catch (ex: DarkMagicException) {
-        UAPITypeError.thrown(this::class, "Unable to get search context type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
     }
     return DefaultParameterStyleEnumScalar(sortPropertyType)
 }
@@ -349,7 +349,7 @@ internal fun <Filters : Any>
         val projection = withFilters.arguments[4]
         DarkMagic.getConcreteType(projection)
     } catch (ex: DarkMagicException) {
-        UAPITypeError.thrown(this::class, "Unable to get list filter type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get list filter type", ex)
     }
     return ReflectiveFilterParamReader.create(filterType, typeDictionary)
 }
