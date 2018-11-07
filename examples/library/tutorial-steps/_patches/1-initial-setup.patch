@@ -1,6 +1,6 @@
 diff -urN -x '*.iml' -x 'target/*' __blank/pom.xml 1-initial-setup/pom.xml
 --- __blank/pom.xml	1969-12-31 17:00:00.000000000 -0700
-+++ 1-initial-setup/pom.xml	2018-11-06 13:32:32.000000000 -0700
++++ 1-initial-setup/pom.xml	2018-11-07 14:42:35.000000000 -0700
 @@ -0,0 +1,85 @@
 +<?xml version="1.0" encoding="UTF-8"?>
 +<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">

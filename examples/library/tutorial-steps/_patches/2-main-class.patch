@@ -1,6 +1,6 @@
 diff -urN -x '*.iml' -x 'target/*' 1-initial-setup/pom.xml 2-main-class/pom.xml
---- 1-initial-setup/pom.xml	2018-11-06 13:32:32.000000000 -0700
-+++ 2-main-class/pom.xml	2018-11-06 13:32:32.000000000 -0700
+--- 1-initial-setup/pom.xml	2018-11-07 14:42:35.000000000 -0700
++++ 2-main-class/pom.xml	2018-11-07 14:42:35.000000000 -0700
 @@ -4,12 +4,11 @@
      <modelVersion>4.0.0</modelVersion>
  
@@ -33,7 +33,7 @@ diff -urN -x '*.iml' -x 'target/*' 1-initial-setup/pom.xml 2-main-class/pom.xml
  
 diff -urN -x '*.iml' -x 'target/*' 1-initial-setup/src/main/kotlin/LibraryApp.kt 2-main-class/src/main/kotlin/LibraryApp.kt
 --- 1-initial-setup/src/main/kotlin/LibraryApp.kt	1969-12-31 17:00:00.000000000 -0700
-+++ 2-main-class/src/main/kotlin/LibraryApp.kt	2018-09-18 12:17:37.000000000 -0600
++++ 2-main-class/src/main/kotlin/LibraryApp.kt	2018-11-07 14:42:35.000000000 -0700
 @@ -0,0 +1,13 @@
 +import edu.byu.uapi.http.spark.startSpark
 +import edu.byu.uapi.library.LibraryUserContextFactory
@@ -50,7 +50,7 @@ diff -urN -x '*.iml' -x 'target/*' 1-initial-setup/src/main/kotlin/LibraryApp.kt
 +}
 diff -urN -x '*.iml' -x 'target/*' 1-initial-setup/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt 2-main-class/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt
 --- 1-initial-setup/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	1969-12-31 17:00:00.000000000 -0700
-+++ 2-main-class/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-09-18 12:05:27.000000000 -0600
++++ 2-main-class/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-11-07 14:42:35.000000000 -0700
 @@ -0,0 +1,13 @@
 +package edu.byu.uapi.library
 +
