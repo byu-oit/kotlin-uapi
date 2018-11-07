@@ -1,6 +1,7 @@
 package edu.byu.uapi.library
 
 import edu.byu.jwt.ByuJwt
+import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextResult
@@ -12,6 +13,11 @@ class LibraryUser(
   val isLibrarian: Boolean
 ) {
     val isCardholder = cardholderId != null
+    val canViewRestrictedBooks = isLibrarian
+
+    fun canViewBook(model: Book): Boolean {
+        return !model.restricted || this.canViewRestrictedBooks
+    }
 }
 
 private val librarianNetIds = setOf("{your NetId here}")

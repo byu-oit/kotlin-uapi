@@ -107,7 +107,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             return defaultGetListParamReader(dictionary)
         }
 
-        interface NoParams<UserContext : Any, Id : Any, Model : Any> : Listable<UserContext, Id, Model, ListParams.Empty> {
+        interface Simple<UserContext : Any, Id : Any, Model : Any> : Listable<UserContext, Id, Model, ListParams.Empty> {
             override val listParamsType: KClass<ListParams.Empty>
                 get() = ListParams.Empty::class
         }

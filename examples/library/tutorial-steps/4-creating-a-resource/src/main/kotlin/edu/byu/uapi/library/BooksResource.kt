@@ -23,7 +23,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
         id: Long,
         model: Book
     ): Boolean {
-        return true
+        return userContext.canViewBook(model)
     }
 
     override val responseFields = fields {

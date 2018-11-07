@@ -37,31 +37,38 @@ object Library {
         return DB.querySingle(sql, { setLong(1, byOclc) }, this::convertResultSetToBook)
     }
 
+    private val BASIC_BOOK_SELECT = """
+        select b.book_id, b.oclc, b.isbn, b.title, b.published_year, p.publisher_id, p.name, b.restricted
+        from library.book b
+        left join library.publisher p on b.publisher_id = p.publisher_id
+        """.trimIndent()
+
     fun searchForBooks(byTitle: String): List<Book> {
-        return DB.queryList("select b.book_id, b.oclc, b.isbn, b.title, b.published_year, p.publisher_id, p.name " +
-                                "from library.BOOK b " +
-                                "left join library.publisher p on b.publisher_id = p.publisher_id " +
-                                "where b.title like ?",
-                                   { setString(1, "%$byTitle%") },
-                                   this::convertResultSetToBook)
+        return DB.queryList("$BASIC_BOOK_SELECT where b.title like ?",
+                            { setString(1, "%$byTitle%") },
+                            this::convertResultSetToBook)
+    }
+
+    fun listAllBooks(): List<Book> {
+        return DB.queryList(BASIC_BOOK_SELECT, this::convertResultSetToBook)
     }
 
     fun getPublisher(byPublisherId: Int): Publisher? {
         return DB.querySingle("select * from library.publisher where publisher_id = ?",
-                                     { setInt(1, byPublisherId) }) {
+                              { setInt(1, byPublisherId) }) {
             Publisher(getInt("publisher_id"), getString("common_name"), getString("full_name"))
         }
     }
 
     fun getAuthors(bookId: Long): List<Author> =
         DB.queryList("select a.*, ba.author_order from library.author a, library.book_authors ba where ba.author_id = a.author_id and ba.book_id = ? order by ba.author_order",
-                            { setLong(1, bookId) }) {
+                     { setLong(1, bookId) }) {
             Author(getInt("author_id"), getString("name"), getInt("author_order"))
         }
 
     fun getGenres(bookId: Long): List<Genre> =
         DB.queryList("select g.* from library.genre g, library.book_genres bg where bg.genre_code = g.genre_code and bg.book_id = ?",
-                            { setLong(1, bookId) }) {
+                     { setLong(1, bookId) }) {
             Genre(getString("genre_code"), getString("name"))
         }
 //
@@ -90,8 +97,8 @@ object Library {
 
     fun getCardholderIdForNetId(netId: String): Int? =
         DB.querySingle("select cardholder_id from library.CARDHOLDER where net_id = ?",
-                              { setString(1, netId) },
-                              { getInt(1) }
+                       { setString(1, netId) },
+                       { getInt(1) }
         )
 
     private fun convertResultSetToBook(rs: ResultSet): Book {
@@ -106,7 +113,8 @@ object Library {
                     publisher!!,
                     getAuthors(id),
                     getGenres(id),
-                    availableCopiesOf(id)
+                    availableCopiesOf(id),
+                    rs.getBoolean("restricted")
         )
     }
 
@@ -123,7 +131,7 @@ object Library {
 
     fun listBooks(): List<Book> =
         DB.queryList("select * from library.book order by book_id",
-                            this::convertResultSetToBook
+                     this::convertResultSetToBook
         )
 
     private fun getSubtitles(bookId: Long): List<String> {

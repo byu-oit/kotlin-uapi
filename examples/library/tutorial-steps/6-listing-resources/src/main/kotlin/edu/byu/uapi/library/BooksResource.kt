@@ -67,6 +67,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         userContext: LibraryUser,
         params: BookListParams
     ): ListWithTotal<Book> {
+        //TODO: enforce permissions
         println(params)
         return ListWithTotal(0, emptyList<Book>())
     }
@@ -99,7 +100,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         id: Long,
         model: Book
     ): Boolean {
-        return true
+        return userContext.canViewBook(model)
     }
 
     override val responseFields = fields {
@@ -148,6 +149,11 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         value(Book::publishedYear) {
             displayLabel = "Publication Year"
             doc = "The year the book was published"
+            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
+        }
+        value(Book::restricted) {
+            displayLabel = "Is Restricted"
+            doc = "Whether the book is shelved in the Restricted Section"
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
         }
     }

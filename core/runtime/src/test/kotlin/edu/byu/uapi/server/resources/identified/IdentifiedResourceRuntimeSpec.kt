@@ -18,7 +18,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     private lateinit var create: IdentifiedResource.Creatable<User, String, Foo, NewFoo>
     private lateinit var update: IdentifiedResource.Updatable<User, String, Foo, Foo>
     private lateinit var delete: IdentifiedResource.Deletable<User, String, Foo>
-    private lateinit var list: IdentifiedResource.Listable.NoParams<User, String, Foo>
+    private lateinit var list: IdentifiedResource.Listable.Simple<User, String, Foo>
     private lateinit var idReader: IdParamReader<String>
 
     private lateinit var fixture: IdentifiedResourceRuntime<User, String, Foo>

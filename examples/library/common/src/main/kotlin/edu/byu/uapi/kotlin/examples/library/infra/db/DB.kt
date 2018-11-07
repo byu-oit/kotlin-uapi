@@ -2,7 +2,6 @@ package edu.byu.uapi.kotlin.examples.library.infra.db
 
 import com.zaxxer.hikari.HikariDataSource
 import java.nio.file.Files
-import java.nio.file.Path
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -13,6 +12,7 @@ class DB(val dbPath: String) {
     private var initialized = false
 
     private val pool by lazy {
+        println("Opening DB at $dbPath (working dir: ${System.getProperty("user.dir")}")
         val ds = HikariDataSource()
         ds.jdbcUrl = "jdbc:h2:$dbPath"
         ds.username = "sa"

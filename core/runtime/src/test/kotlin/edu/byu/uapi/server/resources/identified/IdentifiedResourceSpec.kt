@@ -186,7 +186,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private class WithListable : Base(),
-                                 IdentifiedResource.Listable.NoParams<String, String, String> {
+                                 IdentifiedResource.Listable.Simple<String, String, String> {
         override fun list(
             userContext: String,
             params: ListParams.Empty

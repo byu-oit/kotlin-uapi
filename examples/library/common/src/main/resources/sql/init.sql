@@ -16,6 +16,7 @@ create table if not exists book (
   title varchar(255) not null,
   published_year smallint not null,
   publisher_id bigint not null references publisher(publisher_id),
+  restricted boolean not null
 );
 
 create table if not exists book_subtitles(
@@ -80,20 +81,22 @@ values (1, 'Simon & Schuster', null),
        (6, 'Signet', 'Signet Books'),
        (7, 'HarperCollins', 'HarperCollins Publishers'),
        (8, 'Oxford', 'Oxford University Press'),
-       (9, 'Workman', 'Workman Publishing')
+       (9, 'Workman', 'Workman Publishing'),
+       (10, 'Hogwarts', 'Flourish & Blotts Publishers')
        ;
 
-insert into book (book_id, oclc, isbn, title, published_year, publisher_id)
-values (1, 733291011, '978-0451530653', 'The War of the Worlds', 1898, 6),
-       (2, 35231812, '0-684-83339-5', 'Catch-22', 1961, 1),
-       (3, 799352269, '978-0-7653-2635-5', 'The Way of Kings', 2010, 3),
-       (4, 889161015, '978-0-7653-2636-2', 'Words of Radiance', 2014, 3),
-       (5, 969863614, '978-0-7653-2637-9', 'Oathbringer', 2018, 3),
-       (6, 53896777, '0-553-29335-4', 'Foundation', 1951, 4),
-       (7, 890303755, '0-333-47110-5', 'The Player of Games', 1988, 5),
-       (8, 23033258, null, 'Mere Christianity', 1952, 7),
-       (9, 71126670, '0-199-55397-1', 'The Life and Strange Surprizing Adventures of Robinson Crusoe, Of York, Mariner', 1719, 8),
-       (10, 26811595, '0-575-04800-X', 'Good Omens', 1990, 9)
+insert into book (book_id, oclc, isbn, title, published_year, publisher_id, restricted)
+values (1, 733291011, '978-0451530653', 'The War of the Worlds', 1898, 6, false),
+       (2, 35231812, '0-684-83339-5', 'Catch-22', 1961, 1, false),
+       (3, 799352269, '978-0-7653-2635-5', 'The Way of Kings', 2010, 3, false),
+       (4, 889161015, '978-0-7653-2636-2', 'Words of Radiance', 2014, 3, false),
+       (5, 969863614, '978-0-7653-2637-9', 'Oathbringer', 2018, 3, false),
+       (6, 53896777, '0-553-29335-4', 'Foundation', 1951, 4, false),
+       (7, 890303755, '0-333-47110-5', 'The Player of Games', 1988, 5, false),
+       (8, 23033258, null, 'Mere Christianity', 1952, 7, false),
+       (9, 71126670, '0-199-55397-1', 'The Life and Strange Surprizing Adventures of Robinson Crusoe, Of York, Mariner', 1719, 8, false),
+       (10, 26811595, '0-575-04800-X', 'Good Omens', 1990, 9, false),
+       (11, 1166611, null, 'Moste Potente Potions', 1729, 10, true)
        ;
 
 insert into book_subtitles (book_id, subtitle_order, subtitle)
@@ -115,7 +118,8 @@ values (1, 'H. G. Wells'),
        (6, 'C. S. Lewis'),
        (7, 'Daniel Defoe'),
        (8, 'Terry Pratchett'),
-       (9, 'Neil Gaiman')
+       (9, 'Neil Gaiman'),
+       (10, 'Phineas Bourne')
        ;
 
 insert into book_authors (book_id, author_id, author_order)
@@ -129,7 +133,8 @@ insert into book_authors (book_id, author_id, author_order)
         (8, 6, 1),
         (9, 7, 1),
         (10, 8, 1),
-        (10, 9, 2)
+        (10, 9, 2),
+        (11, 10, 1)
         ;
 
 insert into genre (genre_code, name)
@@ -139,7 +144,9 @@ values ('FI', 'Fiction'),
        ('THEO', 'Theology'),
        ('LOL', 'Humor'),
        ('ADV', 'Adventure'),
-       ('HFI', 'Historical Fiction')
+       ('HFI', 'Historical Fiction'),
+       ('POT', 'Potions'),
+       ('NF', 'Non-Fiction')
 ;
 
 insert into book_genres (book_id, GENRE_CODE)
@@ -157,7 +164,9 @@ values (1, 'SFI'),
        (9, 'HFI'),
        (10, 'FI'),
        (10, 'FAN'),
-       (10, 'LOL')
+       (10, 'LOL'),
+       (11, 'POT'),
+       (11, 'NF')
         ;
 
 insert into book_copy(copy_id, book_id)
@@ -180,14 +189,16 @@ values (1, 1),
        (17, 8),
        (18, 9),
        (19, 10),
-       (20, 10)
+       (20, 10),
+       (21, 11)
 ;
 
 insert into cardholder (CARDHOLDER_ID, net_id, name)
 values (1, 'jstudent', 'Joe Student'),
        (2, 'cosmo', 'Cosmo Cougar'),
        (3, 'realshallan', 'Shallan Davar'),
-       (4, 'thevaliant', 'Lucy Pevensie')
+       (4, 'thevaliant', 'Lucy Pevensie'),
+       (5, 'gonnareademall', 'Hermione Granger')
 ;
 
 insert into loans (copy_id, CARDHOLDER_ID, checked_out_datetime, due_date, returned_datetime, reshelved)
@@ -203,7 +214,8 @@ values (1,  1, TIMESTAMP '2010-01-01 00:00:00', date '2010-01-15', timestamp '20
        (16, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (20, 3, timestamp '2018-08-30 12:48:03', date '2018-09-13', null, false),
        (17, 4, timestamp '2018-08-28 17:43:12', date '2018-09-11', null, false),
-       (18, 4, timestamp '2018-08-28 17:43:12', date '2018-09-11', null, false)
+       (18, 4, timestamp '2018-08-28 17:43:12', date '2018-09-11', null, false),
+       (21, 5, timestamp '1992-11-21 13:21:57', date '1992-12-21', timestamp '1992-12-21 07:36:01', true)
 ;
 
 commit;

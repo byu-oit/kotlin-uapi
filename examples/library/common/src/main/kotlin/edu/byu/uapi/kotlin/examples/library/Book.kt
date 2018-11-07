@@ -1,6 +1,6 @@
 package edu.byu.uapi.kotlin.examples.library
 
-class Book(
+data class Book(
     val id: Long,
     val oclc: Long,
     val isbn: String? = null,
@@ -10,12 +10,6 @@ class Book(
     val publisher: Publisher,
     val authors: List<Author>,
     val genres: List<Genre>,
-    val availableCopies: Int
-) {
-
-    override fun toString(): String {
-        return "Book(id=$id, oclc=$oclc, isbn=$isbn, title='$title', subtitles=$subtitles, publishedYear=$publishedYear, publisher=$publisher, authors=$authors, genres=$genres, availableCopies=$availableCopies)"
-    }
-
-
-}
+    val availableCopies: Int,
+    val restricted: Boolean
+)
