@@ -4,10 +4,6 @@ import edu.byu.jwt.validate.ByuJwtValidator
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
-import edu.byu.uapi.spi.functional.Failure
-import edu.byu.uapi.spi.functional.Success
-import edu.byu.uapi.spi.functional.SuccessOrFailure
-import edu.byu.uapi.spi.functional.resolve
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -28,22 +24,22 @@ class OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory<UserContext :
     override fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext> {
         LOG.debug("Creating user context")
         val authnInfo = maybeDecorateAuthInfo(authenticationInfo)
-        return authnInfo.resolve(
-            { wrapped.createUserContext(it) },
-            { it }
-        )
+        return when(authnInfo) {
+            is UserContextResult.Success -> wrapped.createUserContext(authnInfo.result)
+            is UserContextResult.Failure -> authnInfo
+        }
     }
 
     companion object {
         internal val LOG: Logger = LoggerFactory.getLogger(OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory::class.java)
     }
 
-    private fun maybeDecorateAuthInfo(authInfo: UserContextAuthnInfo): SuccessOrFailure<UserContextAuthnInfo, UserContextResult.Failure> {
+    private fun maybeDecorateAuthInfo(authInfo: UserContextAuthnInfo): UserContextResult<UserContextAuthnInfo> {
         val auth: String? = authInfo.headers["Authorization"]?.firstOrNull()
 
         if (auth == null || !auth.startsWith("Bearer ")) {
             LOG.debug("No bearer token; not decorating")
-            return Success(authInfo)
+            return UserContextResult.Success(authInfo)
         }
 
         LOG.debug("Calling userinfo service with bearer token")
@@ -51,16 +47,16 @@ class OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory<UserContext :
 
         LOG.debug("Got response code $code")
         return when (code) {
-            401 -> Failure(UserContextResult.Failure("Invalid bearer token in 'Authorization' header."))
-            403 -> Failure(handleUnauthorized(body))
+            401 -> UserContextResult.Failure("Invalid bearer token in 'Authorization' header.")
+            403 -> handleUnauthorized(body)
             200 -> {
-                Success(ExtraHeaderUserContextAuthnInfo(authInfo, mapOf(
+                UserContextResult.Success(ExtraHeaderUserContextAuthnInfo(authInfo, mapOf(
                     ByuJwtValidator.BYU_JWT_HEADER_CURRENT to setOf(body)
                 )))
             }
             else -> {
                 LOG.error("Unrecognized token validation error: HTTP $code\n-------------------\n $body \n-------------------\n")
-                Failure(UserContextResult.Failure("Error validating bearer token: HTTP $code. See server log for details."))
+                UserContextResult.Failure("Error validating bearer token: HTTP $code. See server log for details.")
             }
         }
     }

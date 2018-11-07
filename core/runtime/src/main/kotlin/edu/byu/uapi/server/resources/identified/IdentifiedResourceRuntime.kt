@@ -6,8 +6,10 @@ import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.functional.onFailure
-import edu.byu.uapi.spi.input.*
+import edu.byu.uapi.spi.input.IdParamReader
+import edu.byu.uapi.spi.input.ListParamReader
+import edu.byu.uapi.spi.input.ListParams
+import edu.byu.uapi.spi.input.ListWithTotal
 import edu.byu.uapi.spi.requests.FetchIdentifiedResource
 import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.requests.IdentifiedResourceRequest
@@ -255,7 +257,7 @@ sealed class IdentifiedResourceRequestHandler<UserContext : Any, Id : Any, Model
     }
 
     fun getId(idParams: IdParams): Id {
-        return runtime.idReader.read(idParams).onFailure { it.thrown() }
+        return runtime.idReader.read(idParams)
     }
 
     abstract fun handle(request: Request): UAPIResponse<*>
@@ -285,9 +287,7 @@ class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Pa
     private val paramReader: ListParamReader<Params> = listView.getListParamReader(runtime.typeDictionary)
 
     override fun handle(request: ListIdentifiedResource<UserContext>): UAPIResponse<*> {
-        val params = paramReader.read(request.queryParams).onFailure {
-            it.thrown()
-        }
+        val params = paramReader.read(request.queryParams)
 
         val result = listView.list(request.userContext, params)
 

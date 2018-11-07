@@ -1,11 +1,7 @@
 package edu.byu.uapi.server.inputs
 
 import edu.byu.uapi.spi.UAPITypeError
-import edu.byu.uapi.spi.dictionary.TypeFailure
-import edu.byu.uapi.spi.functional.Failure
-import edu.byu.uapi.spi.functional.asFailure
 import kotlin.reflect.KClassifier
-import kotlin.reflect.KType
 import kotlin.reflect.full.createType
 
 fun UAPITypeError.Companion.create(type: KClassifier, message: String, cause: Throwable? = null): UAPITypeError {

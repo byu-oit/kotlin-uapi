@@ -4,12 +4,9 @@ import edu.byu.uapi.server.inputs.thrown
 import edu.byu.uapi.server.spi.requireScalarType
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.functional.Failure
-import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.input.IdParamMeta
 import edu.byu.uapi.spi.input.IdParamReader
 import edu.byu.uapi.spi.input.ParamReadFailure
-import edu.byu.uapi.spi.input.ParamReadResult
 import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.scalars.ScalarType
 import kotlin.reflect.KClass
@@ -22,13 +19,13 @@ class ReflectiveIdParamReader<Id : Any> private constructor(
     private val analyzed: AnalyzedIdParams<Id>
 ) : IdParamReader<Id> {
 
-    override fun read(input: IdParams): ParamReadResult<Id> {
+    override fun read(input: IdParams): Id {
         val params = analyzed.params.map {
             val value = input[it.name]?.asScalar(it.scalarType)
-                ?: return Failure(ParamReadFailure(it.name, idType, "Missing parameter value"))
+                ?: throw ParamReadFailure(it.name, idType, "Missing parameter value")
             it.param to value
         }.toMap()
-        return Success(analyzed.constructor.callBy(params))
+        return analyzed.constructor.callBy(params)
     }
 
     override fun describe(): IdParamMeta = analyzed

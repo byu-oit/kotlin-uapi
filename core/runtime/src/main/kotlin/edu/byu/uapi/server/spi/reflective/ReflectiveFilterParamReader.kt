@@ -5,11 +5,8 @@ import edu.byu.uapi.server.spi.requireScalarType
 import edu.byu.uapi.server.util.toSnakeCase
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.functional.Success
-import edu.byu.uapi.spi.functional.useFailure
 import edu.byu.uapi.spi.input.FilterParamsMeta
 import edu.byu.uapi.spi.input.FilterParamsReader
-import edu.byu.uapi.spi.input.ParamReadResult
 import edu.byu.uapi.spi.input.QueryParamMetadata
 import edu.byu.uapi.spi.requests.QueryParams
 import edu.byu.uapi.spi.requests.withPrefix
@@ -28,13 +25,13 @@ class ReflectiveFilterParamReader<Filters : Any> internal constructor(
 
     private val meta = analyzed.toMeta()
 
-    override fun read(input: QueryParams): ParamReadResult<Filters?> {
+    override fun read(input: QueryParams): Filters? {
         val hasAny = analyzed.fieldNames.any { input.containsKey(it) }
         if (!hasAny) {
-            return Success(null)
+            return null
         }
-        val values = analyzed.fields.map { it.parameter to it.read(input).useFailure { f -> return f } }.toMap()
-        return Success(analyzed.constructor.callBy(values))
+        val values = analyzed.fields.map { it.parameter to it.read(input) }.toMap()
+        return analyzed.constructor.callBy(values)
     }
 
     override fun describe(): FilterParamsMeta = meta
@@ -93,7 +90,7 @@ internal sealed class AnalyzedFilterField {
     abstract val type: KClass<*>
 
     abstract fun getParams(prefix: String): List<QueryParamMetadata.Param>
-    abstract fun read(queryParams: QueryParams): ParamReadResult<Any?>
+    abstract fun read(queryParams: QueryParams): Any?
 }
 
 internal data class AnalyzedSimpleFilterField(
@@ -106,7 +103,7 @@ internal data class AnalyzedSimpleFilterField(
         prefix + name, scalarType.scalarFormat, false
     ))
 
-    override fun read(queryParams: QueryParams): ParamReadResult<Any?> = queryParams[name]?.asScalar(scalarType) ?: Success(null)
+    override fun read(queryParams: QueryParams): Any? = queryParams[name]?.asScalar(scalarType)
 }
 
 typealias ContainerCreator<Item, Container> = (Iterable<Item>) -> Container
@@ -122,9 +119,9 @@ internal data class AnalyzedRepeatableFilterField(
         prefix + name, scalarType.scalarFormat, true
     ))
 
-    override fun read(queryParams: QueryParams): ParamReadResult<Any?> {
-        val values = queryParams[name]?.asScalarList(scalarType)?.useFailure { return it }.orEmpty()
-        return Success(containerCreator(values))
+    override fun read(queryParams: QueryParams): Any? {
+        val values = queryParams[name]?.asScalarList(scalarType).orEmpty()
+        return containerCreator(values)
     }
 }
 
@@ -143,17 +140,17 @@ internal data class AnalyzedComplexFilterField(
         return fields.flatMap { it.getParams(newPrefix) }
     }
 
-    override fun read(queryParams: QueryParams): ParamReadResult<Any?> {
+    override fun read(queryParams: QueryParams): Any? {
         val nested = queryParams.withPrefix("$name.")
         if (nested.isEmpty()) {
-            return Success(null)
+            return null
         }
         val hasAny = this.fieldNames.any { nested.containsKey(it) }
         if (!hasAny) {
-            return Success(null)
+            return null
         }
-        val values = this.fields.map { it.parameter to it.read(nested).useFailure { f -> return f } }.toMap()
-        return Success(constructor.callBy(values))
+        val values = this.fields.map { it.parameter to it.read(nested) }.toMap()
+        return constructor.callBy(values)
     }
 }
 

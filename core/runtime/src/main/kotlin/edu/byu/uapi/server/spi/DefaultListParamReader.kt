@@ -1,8 +1,6 @@
 package edu.byu.uapi.server.spi
 
 import edu.byu.uapi.spi.UAPITypeError
-import edu.byu.uapi.spi.functional.Success
-import edu.byu.uapi.spi.functional.useFailure
 import edu.byu.uapi.spi.input.*
 import edu.byu.uapi.spi.requests.QueryParams
 import kotlin.reflect.KFunction
@@ -19,11 +17,11 @@ class DefaultListParamReader<Params : ListParams> private constructor(
     private val constructor: KFunction<Params>,
     private val parameterMap: Map<KParameter, QueryParamReader<*, *>>
 ) : ListParamReader<Params> {
-    override fun read(input: QueryParams): ParamReadResult<Params> {
+    override fun read(input: QueryParams): Params {
         val args = parameterMap.mapValues {
-            it.value.read(input).useFailure { f -> return f }
+            it.value.read(input)
         }
-        return Success(this.constructor.callBy(args))
+        return this.constructor.callBy(args)
     }
 
     private val meta = ListParamsMeta(

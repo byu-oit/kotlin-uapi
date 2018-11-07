@@ -2,11 +2,7 @@ package edu.byu.uapi.server.spi.reflective
 
 import edu.byu.uapi.server.scalars.EnumScalarType
 import edu.byu.uapi.spi.SpecConstants.Collections.Query.KEY_SORT_PROPERTIES
-import edu.byu.uapi.spi.functional.Failure
-import edu.byu.uapi.spi.functional.asSuccess
-import edu.byu.uapi.spi.functional.useFailure
 import edu.byu.uapi.spi.input.ParamReadFailure
-import edu.byu.uapi.spi.input.ParamReadResult
 import edu.byu.uapi.spi.input.QueryParamMetadata
 import edu.byu.uapi.spi.input.QueryParamReader
 import edu.byu.uapi.spi.requests.QueryParams
@@ -21,19 +17,17 @@ class SortFieldQueryParamReader<T : Enum<T>>(
     private val valueMap: Map<String, T> = values.map { it.queryParamValue to it.constant }.toMap()
     private val metadata = SortFieldQueryParamMetadata(values)
 
-    override fun read(input: QueryParams): ParamReadResult<List<T>> {
+    override fun read(input: QueryParams): List<T> {
         val param = input[KEY_SORT_PROPERTIES]
             ?.asStringList()
-            ?.useFailure { return it }
         if (param.isNullOrEmpty()) {
-            return defaultValue.asSuccess()
+            return defaultValue
         }
-        return param.map { this.valueMap[it] ?: return@read failInvalidValue() }.asSuccess()
+        return param.map { this.valueMap[it] ?: throw failInvalidValue() }
     }
 
-    private fun failInvalidValue(): Failure<ParamReadFailure> = Failure(
+    private fun failInvalidValue(): ParamReadFailure =
         ParamReadFailure(KEY_SORT_PROPERTIES, enumType.type, "Invalid sort property. Must be one of ${valueMap.keys}.")
-    )
 
     override fun describe(): SortFieldQueryParamMetadata<T> = metadata
 }

@@ -1,14 +1,13 @@
 package edu.byu.uapi.spi.input
 
 import edu.byu.uapi.spi.SpecConstants
-import edu.byu.uapi.spi.functional.Success
 import edu.byu.uapi.spi.requests.QueryParams
 import edu.byu.uapi.spi.scalars.ScalarFormat
 
 interface ListParamReader<Params : Any> : QueryParamReader<Params, ListParamsMeta>
 
 object EmptyListParamReader : ListParamReader<ListParams.Empty> {
-    override fun read(input: QueryParams): ParamReadResult<ListParams.Empty> = Success(ListParams.Empty)
+    override fun read(input: QueryParams): ListParams.Empty = ListParams.Empty
 
     override fun describe(): ListParamsMeta {
         return ListParamsMeta(null, null, null, null)

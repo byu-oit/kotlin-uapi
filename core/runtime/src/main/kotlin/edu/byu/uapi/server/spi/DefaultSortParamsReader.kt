@@ -2,10 +2,10 @@ package edu.byu.uapi.server.spi
 
 import edu.byu.uapi.server.scalars.EnumScalarType
 import edu.byu.uapi.spi.UAPITypeError
-import edu.byu.uapi.spi.functional.Success
-import edu.byu.uapi.spi.functional.orDefault
-import edu.byu.uapi.spi.functional.useFailure
-import edu.byu.uapi.spi.input.*
+import edu.byu.uapi.spi.input.SortOrder
+import edu.byu.uapi.spi.input.SortParams
+import edu.byu.uapi.spi.input.SortParamsMeta
+import edu.byu.uapi.spi.input.SortParamsReader
 import edu.byu.uapi.spi.requests.QueryParams
 
 class DefaultSortParamsReader<SortProperty : Enum<SortProperty>> private constructor(
@@ -15,20 +15,18 @@ class DefaultSortParamsReader<SortProperty : Enum<SortProperty>> private constru
     private val defaultOrder: SortOrder
 ) : SortParamsReader<SortProperty> {
 
-    override fun read(input: QueryParams): ParamReadResult<SortParams<SortProperty>> {
+    override fun read(input: QueryParams): SortParams<SortProperty> {
         val props = input[SortParamsMeta.SORT_PROPERTIES_KEY]
             ?.asScalarList(propertyType)
-            .orDefault(defaultProperties)
-            .useFailure { return it }
+            ?: defaultProperties
         val order = input[SortParamsMeta.SORT_ORDER_KEY]
             ?.asScalar(sortOrderType)
-            .orDefault(defaultOrder)
-            .useFailure { return it }
+            ?: defaultOrder
 
-        return Success(SortParams(
+        return SortParams(
             fields = props,
             order = order
-        ))
+        )
     }
 
     private val meta: SortParamsMeta = SortParamsMeta(
