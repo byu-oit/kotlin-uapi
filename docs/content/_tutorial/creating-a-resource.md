@@ -4,12 +4,18 @@ order: 4
 tutorial_source: https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/4-creating-a-resource
 ---
 
+# Contents
+{:.no_toc}
+
+* This will become the Table of Contents
+{:toc}
+
 It's finally time to create an actual API endpoint!
 
 A Resource is created by implementing one of two interfaces: `IdentifiedResource` or `SingletonResource`. Singleton
 resources are rarely used, so we'll just implement an `IdentifiedResource`.
 
-## Stubbing out a Resource
+# Stubbing out a Resource
 
 Create a file named `BooksResource.kt`. You will probably want to put it in the same directory as your `User` classes,
 `src/main/kotlin/edu/byu/uapi/library/`.
@@ -50,7 +56,7 @@ Next, we need to register your resource with the UAPI Runtime. You can do that i
   
 ```
 
-## Making it compile
+# Making it compile
 
 You may have noticed that your `BooksResource` doesn't compile. That's because we haven't implemented the vals and methods
 defined in the interface yet! So, let's go back to that file and implement these methods.
@@ -110,6 +116,8 @@ This defines two fields for our response, "oclc" and "title". It also specifies 
 field from an instance of `Book`.
 
 {% include callouts/code.html content="Your completed resource should look like [this](https://github.com/byu-oit/kotlin-uapi/blob/master/examples/library/tutorial-steps/4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt)." %}
+
+# Let's make an API call!
 
 Now, if you run your API, it should start! You should be able to use WSO2 OAuth credentials to to call your API.
 Our library database comes with a pre-loaded list of Books; try loading these and see what they are!

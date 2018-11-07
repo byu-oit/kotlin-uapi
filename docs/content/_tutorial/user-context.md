@@ -5,7 +5,15 @@ order: 3
 tutorial_source: https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps/3-user-context
 ---
 
-The UAPI Runtime tries to bake authorization and permissions-checking into all levels of the application.
+# Contents
+{:.no_toc}
+
+* This will become the Table of Contents
+{:toc}
+
+# Introduction
+
+The UAPI Runtime tries to help you bake authorization and permissions-checking into all levels of the application.
 This allows us to make things easier both for you and those who call your API. For example, the
 user can know that, if we send back a link to an operation, the logged-in user is authorized to follow that link.
 We can also make enforcing these rules easy for you.
@@ -17,7 +25,7 @@ A 'User Context' can be any class you want - you can decide what works best for 
 how to construct one. You do this by passing an instance of `UserContextFactory` to the runtime when you create it.
 
 
-## The User Context object
+# The User Context object
 
 Your user context class can contain anything you want. Ideally, you should be able to determine if a user is authorized
 to perform an action on a record using nothing but data contained in the user context and in the record itself.
@@ -69,7 +77,7 @@ single request.
 {% endcapture %}
 {% include callouts/protip.html content=context_perf_protip %}
 
-## UserContextFactory
+# UserContextFactory
 
 `UserContextFactory` defines one method: `createUserContext`. This accepts a `UserContextAuthnInfo` object which contains
 details about the incoming request:
@@ -97,7 +105,7 @@ Be careful not to include any user inputs (such as the value of a header) in the
 {% endcapture %}
 {% include callouts/warning.html content=input_warning %}
 
-## Implementing a UserContextFactory
+# Implementing a UserContextFactory
 
 Let's move on to actually implementing a simple factory!
 
@@ -187,7 +195,7 @@ for the cardholder ID associated with that netId and check our `librarianNetIds`
 
 Now, we have a `UserContextFactory` that can actually create a user context!
 
-## Local Testing
+# Local Testing
 
 If you've developed APIs that consume JWTs before, you may be thinking to yourself "But what about running this locally!
 Getting a valid JWT isn't easy!"

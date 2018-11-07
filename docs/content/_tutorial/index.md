@@ -2,6 +2,14 @@
 title: Tutorial
 ---
 
+# Contents
+{:.no_toc}
+
+* This will become the Table of Contents
+{:toc}
+
+# Introduction
+
 This tutorial will walk you through creating an API that is compatible with the University API Standard, using the
 BYU UAPI Kotlin Runtime.
 
@@ -13,7 +21,7 @@ The code for each step of the tutorial can be viewed
 {% endcapture %}
 {% include callouts/code.html content=code_on_github %}
 
-## Library API
+# Library API
 
 The API we will be creating represents the Terminus Public Library & Encyclopedia Repository. 
 The library only has books, as it is run by members of the Most Pure and Undefiled Order of Librarians.
