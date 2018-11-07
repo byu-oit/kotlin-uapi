@@ -14,7 +14,7 @@ class LibraryUser(
     val isCardholder = cardholderId != null
 }
 
-private val librarianNetIds = setOf("{your NetId here}")
+private val librarianNetIds = setOf("jmooreoa", "{your NetId here}")
 
 class LibraryUserContextFactory: JwtUserContextFactory<LibraryUser>() {
     override fun createUserContext(

@@ -1,0 +1,103 @@
+diff -urN -x '*.iml' -x 'target/*' 4-creating-a-resource/pom.xml 5-response-body/pom.xml
+--- 4-creating-a-resource/pom.xml	2018-11-06 13:32:32.000000000 -0700
++++ 5-response-body/pom.xml	2018-11-06 13:32:32.000000000 -0700
+@@ -4,11 +4,11 @@
+     <modelVersion>4.0.0</modelVersion>
+ 
+     <groupId>edu.byu.uapi.library</groupId>
+-    <artifactId>tutorial-4-creating-a-resource</artifactId>
++    <artifactId>tutorial-5-response-body</artifactId>
+     <version>1.0-SNAPSHOT</version>
+     <packaging>jar</packaging>
+ 
+-    <name>library-tutorial-api 4-creating-a-resource</name>
++    <name>library-tutorial-api 5-response-body</name>
+     <properties>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <kotlin.version>1.3.0</kotlin.version>
+diff -urN -x '*.iml' -x 'target/*' 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt 5-response-body/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt
+--- 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-11-07 13:03:55.000000000 -0700
++++ 5-response-body/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-11-07 13:11:05.000000000 -0700
+@@ -1,6 +1,8 @@
+ package edu.byu.uapi.library
+ 
++import edu.byu.uapi.kotlin.examples.library.Author
+ import edu.byu.uapi.kotlin.examples.library.Book
++import edu.byu.uapi.kotlin.examples.library.Genre
+ import edu.byu.uapi.kotlin.examples.library.Library
+ import edu.byu.uapi.server.resources.identified.IdentifiedResource
+ import edu.byu.uapi.server.resources.identified.fields
+@@ -27,12 +29,57 @@
+     }
+ 
+     override val responseFields = fields {
+-        value<Long>("oclc") {
+-            getValue { book -> book.oclc }
++        value(Book::oclc) {
++            key = true
++            displayLabel = "OCLC Control Number"
++            doc = "Control number assigned to this title by the [Online Computer Library Center](www.oclc.org)."
+         }
+-        value<String>("title") {
+-            getValue { book -> book.title }
++        value(Book::title) {
++            displayLabel = "Title"
++            doc = "The main title of the book"
++            modifiable { libraryUser, book, title -> libraryUser.canModifyBooks }
+         }
+-    }
++        value<Int>("publisher_id") {
++            getValue { book -> book.publisher.publisherId }
++            displayLabel = "Publisher"
++            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
+ 
++            description { book, publisherId -> book.publisher.commonName }
++            longDescription { book, publisherId -> book.publisher.fullName }
++        }
++        value(Book::availableCopies) {
++            isDerived = true
++            displayLabel = "Available Copies"
++        }
++        nullableValue(Book::isbn) {
++            isSystem = true
++            displayLabel = "ISBN"
++            doc = "International Standard Book Number"
++        }
++        valueArray(Book::subtitles) {
++            displayLabel = "Subtitles"
++            doc = "The book's subtitles, if any"
++            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
++        }
++        mappedValueArray("author_ids", Book::authors, Author::authorId) {
++            description(Author::name)
++            displayLabel = "Author(s)"
++            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
++        }
++        mappedValueArray(Book::genres, Genre::code) {
++            displayLabel = "Genre(s)"
++            description(Genre::name)
++            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
++        }
++        value(Book::publishedYear) {
++            displayLabel = "Publication Year"
++            doc = "The year the book was published"
++            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
++        }
++        value(Book::restricted) {
++            displayLabel = "Is Restricted"
++            doc = "Whether the book is shelved in the Restricted Section"
++            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
++        }
++    }
+ }
+diff -urN -x '*.iml' -x 'target/*' 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt 5-response-body/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt
+--- 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-11-07 14:32:41.000000000 -0700
++++ 5-response-body/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-11-07 13:13:51.000000000 -0700
+@@ -13,6 +13,7 @@
+   val isLibrarian: Boolean
+ ) {
+     val isCardholder = cardholderId != null
++    val canModifyBooks: Boolean = isLibrarian
+     val canViewRestrictedBooks = isLibrarian
+ 
+     fun canViewBook(model: Book): Boolean {
