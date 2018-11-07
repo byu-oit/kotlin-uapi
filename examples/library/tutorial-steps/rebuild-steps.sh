@@ -19,13 +19,17 @@ do
   filename=$(basename ${path})
   base=${filename%.*}
   newsrc="$dest/$base"
-#  cp -R ${src} ${newsrc}
 
-  rsync -a ${src}/ ${newsrc}/
+  working="$newsrc-working"
 
-  echo "Applying $base to $src in $newsrc"
+  cp -R ${src} ${working}
+
+  echo "Applying $base to $src in $working"
   src=${newsrc}
-  patch -p1 -d ${src} -i "${here}/${path}"
+  patch -p1 -N -d ${working} -i "${here}/${path}"
+
+  rsync -a ${working}/ ${newsrc}/
+  rm -rf ${working}
 done
 
 echo "Done"
