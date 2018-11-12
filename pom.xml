@@ -83,7 +83,7 @@
         <plugins.compiler.version>3.8.0</plugins.compiler.version>
         <plugins.surefire.version>2.22.1</plugins.surefire.version>
         <plugins.dependency.version>3.1.1</plugins.dependency.version>
-        <plugins.shade.version>3.2.0</plugins.shade.version>
+        <plugins.shade.version>3.2.1</plugins.shade.version>
 
         <!-- Set to `false` in a sub-pom to disable unused dependency checking. You probably shouldn't do that. -->
         <dependencies.checkUnused>true</dependencies.checkUnused>
