@@ -85,8 +85,23 @@ Next, we need to have a way to extract a resource's identifier from its Model. A
     }
 ```
 
-Now, we need to check to see if the user can view a resource. At our library, we allow anyone to see the list of books
-in our catalog. We'll cover authorizations for modifying a `Book` when we add modification methods.
+Now, we need to check to see if the user can view a resource. At our library, the only rule about viewing books is that
+one must be a librarian to view books which are in the Restricted section (we absolutely do NOT allow access to troublemakers
+named Harry who just happen to have an invisibility cloak).
+
+Let's add the logic for this rule to our `LibraryUser` class:
+
+```diff
+     val isCardholder = cardholderId != null
++    val canViewRestrictedBooks = isLibrarian
++
++    fun canViewBook(model: Book): Boolean {
++        return !model.restricted || this.canViewRestrictedBooks
++    }
+ }
+```
+
+Now, in `BooksResource`, add this method:
 
 ```kotlin
     override fun canUserViewModel(
@@ -94,9 +109,11 @@ in our catalog. We'll cover authorizations for modifying a `Book` when we add mo
         id: Long,
         model: Book
     ): Boolean {
-        return true // Anybody can view our basic catalog information
+      return userContext.canViewBook(model)
     }
 ```
+
+We'll cover authorizations for modifying a `Book` when we add modification methods.
 
 We also need to describe the responses we send when someone loads our resource. We'll cover the details in the 
 [next chapter](./response-bodies.md); for now, just copy the following stub:
@@ -115,7 +132,9 @@ We also need to describe the responses we send when someone loads our resource. 
 This defines two fields for our response, "oclc" and "title". It also specifies (in `getValue`) how to get the value of each
 field from an instance of `Book`.
 
-{% include callouts/code.html content="Your completed resource should look like [this](https://github.com/byu-oit/kotlin-uapi/blob/master/examples/library/tutorial-steps/4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt)." %}
+> Your completed resource should look like 
+> [this](https://github.com/byu-oit/kotlin-uapi/blob/master/examples/library/tutorial-steps/4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt).
+{: .callout-code }
 
 # Let's make an API call!
 

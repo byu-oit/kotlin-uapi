@@ -60,7 +60,7 @@ data class FilterParamsMeta(
 data class SortParamsMeta(
     val properties: List<String>,
     val defaults: List<String>,
-    val defaultSortOrder: SortOrder
+    val defaultSortOrder: UAPISortOrder
 ) : ListParamsMetaType() {
     override val queryParams: List<QueryParamMetadata.Param> = listOf(
         QueryParamMetadata.Param(SORT_PROPERTIES_KEY, ScalarFormat.STRING),

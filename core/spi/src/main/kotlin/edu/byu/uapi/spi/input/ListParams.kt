@@ -3,15 +3,15 @@ package edu.byu.uapi.spi.input
 interface ListParams {
     object Empty : ListParams {}
 
-    interface Filtering<Filter : Any> : ListParams {
-        val filter: Filter?
+    interface WithFilters<Filter : Any> : ListParams {
+        val filters: Filter?
 
         companion object {
-            const val FIELD_NAME = "filter"
+            const val FIELD_NAME = "filters"
         }
     }
 
-    interface Sorting<SortableField : Enum<SortableField>> : ListParams {
+    interface WithSort<SortableField : Enum<SortableField>> : ListParams {
         val sort: SortParams<SortableField>
 
         companion object {
@@ -19,7 +19,7 @@ interface ListParams {
         }
     }
 
-    interface Searching<SearchContext : Enum<SearchContext>> : ListParams {
+    interface WithSearch<SearchContext : Enum<SearchContext>> : ListParams {
         val search: SearchParams<SearchContext>?
 
         companion object {
@@ -27,7 +27,7 @@ interface ListParams {
         }
     }
 
-    interface SubSetting : ListParams {
+    interface WithSubset : ListParams {
         val subset: SubsetParams
 
         companion object {
@@ -73,8 +73,8 @@ interface BetweenExclusive<Type> {
 }
 
 data class SortParams<SortableFields : Enum<SortableFields>>(
-    val fields: List<SortableFields>,
-    val order: SortOrder
+    val properties: List<SortableFields>,
+    val order: UAPISortOrder
 )
 
 data class SearchParams<SearchContext : Enum<SearchContext>>(
@@ -82,7 +82,7 @@ data class SearchParams<SearchContext : Enum<SearchContext>>(
     val text: String
 )
 
-enum class SortOrder {
+enum class UAPISortOrder {
     ASCENDING, DESCENDING;
 
     override fun toString(): String = name.toLowerCase()
@@ -108,14 +108,14 @@ enum class SortOrder {
 //    override val filter: PersonSearchFilters?,
 //    override val sort: SortParams<PersonSortParams>,
 //    override val search: SearchParams<PersonSearchContexts>?
-//) : Filtering<PersonSearchFilters>,
-//    Searching<PersonSearchContexts>,
-//    Sorting<PersonSortParams> {
+//) : WithFilters<PersonSearchFilters>,
+//    WithSearch<PersonSearchContexts>,
+//    WithSort<PersonSortParams> {
 //
 //    companion object :
-//        Filtering.Companion<PersonSearchFilters>,
-//        Searching.Companion<PersonSearchContexts>,
-//        Sorting.Companion<PersonSortParams> {
+//        WithFilters.Companion<PersonSearchFilters>,
+//        WithSearch.Companion<PersonSearchContexts>,
+//        WithSort.Companion<PersonSortParams> {
 //        override val filterType: KClass<PersonSearchFilters> = PersonSearchFilters::class
 //        override val defaultSortFields: List<PersonSortParams> = listOf(PersonSortParams.BYU_ID)
 //        override val searchContextFields: Map<PersonSearchContexts, Collection<String>> = mapOf(

@@ -30,7 +30,7 @@ how to construct one. You do this by passing an instance of `UserContextFactory`
 Your user context class can contain anything you want. Ideally, you should be able to determine if a user is authorized
 to perform an action on a record using nothing but data contained in the user context and in the record itself.
 
-Let's make your Library User class contain a few simple values:
+Let's make your Library User class contain a few simple rules:
 
 ```kotlin
 
@@ -50,32 +50,26 @@ or they can be neither.
 As we further develop our application, we'll be returning to this class to add methods which actually make authentication
 decisions based on the information we've included.
 
-{% capture context_perf_protip %}
-
-Authorization decisions often include I/O calls, either to a database or an API. If there are such calls that are slow
-or computationally expensive, you may want to delay making those calls until the first time you need the result. 
-One easy way to do so is to use the Kotlin `lazy` property delegate:
-
-```kotlin
-
-class MyUserContext(
-  val userId: String,
-  slowClient: SlowApiClient
-) {
-  val isAdmin: Boolean by lazy {
-    slowClient.isAdmin(this.userId)
-  }
-}
-
-```
-
-This will ensure that the expensive call only happens when needed, and only happens once.
-
-You may also need to explore keeping a longer-duration cache in place, so that we don't have to make this call on every
-single request.
-
-{% endcapture %}
-{% include callouts/protip.html content=context_perf_protip %}
+> Authorization decisions often include I/O calls, either to a database or an API. If there are such calls that are slow
+> or computationally expensive, you may want to delay making those calls until the first time you need the result. 
+> One easy way to do so is to use the Kotlin `lazy` property delegate:
+> 
+> ```kotlin
+> class MyUserContext(
+>   val userId: String,
+>   slowClient: SlowApiClient
+> ) {
+>   val isAdmin: Boolean by lazy {
+>     slowClient.isAdmin(this.userId)
+>   }
+> }
+> ```
+> 
+> This will ensure that the expensive call only happens when needed, and only happens once.
+> 
+> You may also need to explore keeping a longer-duration cache in place, so that we don't have to make this call on every
+> single request.
+{: .callout-protip }
 
 # UserContextFactory
 
@@ -100,10 +94,9 @@ If you are performing any operations inside of your factory that might throw an 
 and wrap it in a `Failure` object. This allows the UAPI Runtime to construct a well-formatted error body to send to the
 client.
 
-{% capture input_warning %}
-Be careful not to include any user inputs (such as the value of a header) in the `Failure` messages! Doing so has been the root cause of high-profile security breaches.
-{% endcapture %}
-{% include callouts/warning.html content=input_warning %}
+> Be careful not to include any user inputs (such as the value of a header) in the `Failure` messages! Doing so has been 
+> the root cause of high-profile security breaches.
+{: .callout-warning }
 
 # Implementing a UserContextFactory
 
@@ -146,19 +139,15 @@ The `currentJwt` contains the JWT that was passed to your service from WSO2. The
 is optional, and contains the 'original' JWT that is passed to you from the client. For an explanation
 of the difference between the two, read the TODO: Docs Link
 
-{% capture validator_protip %}
-If you need to customize how the JWT validation happens (for example, to accept JWTs from
-an issuer besides WSO2), you can pass an instance of [`ByuJwtValidator`](https://byu-oit.github.io/byu-jwt-java/) to 
-the `JwtUserContextFactory`.
-{% endcapture %}
-{% include callouts/protip.html content=validator_protip %}
+> If you need to customize how the JWT validation happens (for example, to accept JWTs from
+> an issuer besides WSO2), you can pass an instance of [`ByuJwtValidator`](https://byu-oit.github.io/byu-jwt-java/) to 
+> the `JwtUserContextFactory`.
+{: .callout-protip }
 
-{% capture librarian_list %}
-To make things easy for you, we're going to cheat a bit and make your list of Librarian users be a simple hard-coded list,
-so that you can access your API without having to figure out how to modify the database. This is definitely *NOT* something
-you should do in a real application.
-{% endcapture %}
-{% include callouts/demo.html content=librarian_list %}
+> To make things easy for you, we're going to cheat a bit and make your list of Librarian users be a simple hard-coded list,
+> so that you can access your API without having to figure out how to modify the database. This is definitely *NOT* something
+> you should do in a real application.
+{: .callout-demo }
 
 Put your NetId into a set called `librarianNetIds`:
 
@@ -258,17 +247,13 @@ If you're using IntelliJ to run your app, you'll need to add the environment var
 
 ![Location of environment variable button in IntelliJ run configuration](./img/intellij-run-env-vars.png)
 
-{% capture oid_workaround %}
-
-At the time of writing, WSO2's built-in User Info endpoint doesn't include the information contained in our normal JWT.
-Until we can update to a version which allows us to customize the User Info endpoint, we have published an endpoint 
-which contains the data we need. In order to use the `LocalDevelopmentBearerTokenUserContextFactory`,
-you'll need to subscribe your application to the 
-[Temporary UserInfo API](https://api.byu.edu/store/apis/info?name=OpenID-Userinfo&version=v1&provider=BYU/jmooreoa).
-
-If you don't, the User Context Factory will send an error telling you to do so.
-
-{% endcapture %}
-{% include callouts/workaround.html content=oid_workaround %}
+> At the time of writing, WSO2's built-in User Info endpoint doesn't include the information contained in our normal JWT.
+> Until we can update to a version which allows us to customize the User Info endpoint, we have published an endpoint 
+> which contains the data we need. In order to use the `LocalDevelopmentBearerTokenUserContextFactory`,
+> you'll need to subscribe your application to the 
+> [Temporary UserInfo API](https://api.byu.edu/store/apis/info?name=OpenID-Userinfo&version=v1&provider=BYU/jmooreoa).
+> 
+> If you don't, the User Context Factory will send an error telling you to do so.
+{: .callout-workaround }
 
 Now, let's implement a resource!

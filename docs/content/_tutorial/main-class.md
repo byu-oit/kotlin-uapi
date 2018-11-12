@@ -87,7 +87,8 @@ Now, let's make it so that Maven can run our application.  Add the follwing to t
 Now, you can run your application with `mvn compile exec:java`. Right now, it will fail to run, as the runtime
 will detect that you haven't defined any resources and raise an error (as opposed to failing silently).
 
-{% include callouts/in-progress.html content='Up-front resource validation hasn\'t been implemented yet, so this won\'t actually throw an error.' %}
+> Up-front resource validation hasn't been implemented yet, so this won't actually throw an error yet.
+{: .callout-in-progress }
 
 You can also set up a run configuration in your IDE. If you're using IntelliJ, look for the 'run' icon
 in your main class:

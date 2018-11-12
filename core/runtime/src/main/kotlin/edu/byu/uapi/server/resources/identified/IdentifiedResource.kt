@@ -44,7 +44,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
     }
 
     // TODO: Maybe it would be better to have a map of types to properties definitions/renderers? That'll especially help with trees of objects.
-    //   Then again, it's not THAT hard to share around a list representing the fields for a given type...
+    //   Then again, it's not THAT hard to share around a list representing the properties for a given type...
     val responseFields: List<ResponseField<UserContext, Model, *>>
 
     val createOperation: Creatable<UserContext, Id, Model, *>?
@@ -101,6 +101,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         ): List<Model>
 
         val listParamsType: KClass<Params>
+            get() = defaultListParamsType()
 
         @Throws(UAPITypeError::class)
         fun getListParamReader(dictionary: TypeDictionary): ListParamReader<Params> {
@@ -112,7 +113,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
                 get() = ListParams.Empty::class
         }
 
-        interface WithSubset<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.SubSetting> :
+        interface WithSubset<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :
             Listable<UserContext, Id, Model, CollectionParams> {
 
             override fun list(
@@ -124,7 +125,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             val listMaxSubsetSize: Int
         }
 
-        interface WithSearch<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.Searching<SearchContext>, SearchContext : Enum<SearchContext>>
+        interface WithSearch<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSearch<SearchContext>, SearchContext : Enum<SearchContext>>
             : Listable<UserContext, Id, Model, CollectionParams> {
 
             fun listSearchContexts(value: SearchContext): Collection<String>
@@ -140,11 +141,11 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             }
         }
 
-        interface WithSort<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.Sorting<SortProperty>, SortProperty : Enum<SortProperty>>
+        interface WithSort<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSort<SortProperty>, SortProperty : Enum<SortProperty>>
             : Listable<UserContext, Id, Model, CollectionParams> {
 
             val listDefaultSortProperties: List<SortProperty>
-            val listDefaultSortOrder: SortOrder
+            val listDefaultSortOrder: UAPISortOrder
 
             @Throws(UAPITypeError::class)
             fun getListSortPropertyType(typeDictionary: TypeDictionary): EnumScalarType<SortProperty> {
@@ -157,7 +158,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             }
         }
 
-        interface WithFilters<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.Filtering<Filters>, Filters : Any>
+        interface WithFilters<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
             : Listable<UserContext, Id, Model, CollectionParams> {
             @Throws(UAPITypeError::class)
             fun getListFilterParamReader(typeDictionary: TypeDictionary): FilterParamsReader<Filters> {
@@ -236,6 +237,18 @@ private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserCo
         DarkMagic.getConcreteType(idProjection)
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get ID type", ex)
+    }
+}
+
+internal fun <Params: ListParams>
+    IdentifiedResource.Listable<*, *, *, Params>.defaultListParamsType(): KClass<Params> {
+    return try {
+        val listable = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable::class)
+            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
+        val projection = listable.arguments[3]
+        DarkMagic.getConcreteType(projection)
+    } catch (ex: DarkMagicException) {
+        throw UAPITypeError.create(this::class, "Unable to get list params type", ex)
     }
 }
 
@@ -332,7 +345,7 @@ internal fun <SortProperty : Enum<SortProperty>>
 
     return DefaultSortParamsReader.create(
         sortPropType,
-        EnumScalarType(SortOrder::class),
+        EnumScalarType(UAPISortOrder::class),
         listDefaultSortProperties,
         listDefaultSortOrder
     )
@@ -349,7 +362,7 @@ internal fun <Filters : Any>
         val projection = withFilters.arguments[4]
         DarkMagic.getConcreteType(projection)
     } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get list filter type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get list filters type", ex)
     }
     return ReflectiveFilterParamReader.create(filterType, typeDictionary)
 }

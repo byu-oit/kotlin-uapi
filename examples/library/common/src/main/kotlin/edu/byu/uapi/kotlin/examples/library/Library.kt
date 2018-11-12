@@ -1,9 +1,6 @@
 package edu.byu.uapi.kotlin.examples.library
 
-import edu.byu.uapi.kotlin.examples.library.infra.db.DefaultDB
-import edu.byu.uapi.kotlin.examples.library.infra.db.queryAlwaysSingle
-import edu.byu.uapi.kotlin.examples.library.infra.db.queryList
-import edu.byu.uapi.kotlin.examples.library.infra.db.querySingle
+import edu.byu.uapi.kotlin.examples.library.infra.db.*
 import java.sql.ResultSet
 
 /**
@@ -38,19 +35,14 @@ object Library {
     }
 
     private val BASIC_BOOK_SELECT = """
-        select b.book_id, b.oclc, b.isbn, b.title, b.published_year, p.publisher_id, p.name, b.restricted
+        select b.*
         from library.book b
-        left join library.publisher p on b.publisher_id = p.publisher_id
         """.trimIndent()
 
     fun searchForBooks(byTitle: String): List<Book> {
         return DB.queryList("$BASIC_BOOK_SELECT where b.title like ?",
                             { setString(1, "%$byTitle%") },
                             this::convertResultSetToBook)
-    }
-
-    fun listAllBooks(): List<Book> {
-        return DB.queryList(BASIC_BOOK_SELECT, this::convertResultSetToBook)
     }
 
     fun getPublisher(byPublisherId: Int): Publisher? {
@@ -129,10 +121,47 @@ object Library {
             { getInt(1) }
         )
 
-    fun listBooks(): List<Book> =
-        DB.queryList("select * from library.book order by book_id",
-                     this::convertResultSetToBook
+    fun listBooks(
+        includeRestricted: Boolean = false,
+        subsetStart: Int = 0,
+        subsetSize: Int = Integer.MIN_VALUE,
+        sortColumns: List<BookSortableColumns> = emptyList(),
+        sortAscending: Boolean = true
+    ): ListResult<Book> {
+        val sortOrder = if (sortAscending) "asc" else "desc"
+        val sorts = if (sortColumns.isNotEmpty()) {
+            sortColumns.joinToString(", ") { "${getBookSort(it, "b")} $sortOrder" }
+        } else {
+            "b.book_id asc"
+        }
+        val where = if (includeRestricted) "(1 = 1)" else "where restricted = false"
+
+        return DB.queryWithTotal(
+            select = "b.*",
+            tableIsh = "library.book b",
+            where = where,
+            order = sorts,
+            limit = subsetSize,
+            offset = subsetStart,
+            prepare = {},
+            process = this::convertResultSetToBook
         )
+    }
+
+    private fun getBookSort(
+        col: BookSortableColumns,
+        alias: String
+    ): String = when (col) {
+        // The subselects in here are normally a Bad Idea. But this is a toy app, so it's a lot easier
+        //  to do this very non-performant sorting.
+        BookSortableColumns.OCLC -> "b.oclc"
+        BookSortableColumns.TITLE -> "b.title"
+        BookSortableColumns.PUBLISHER_NAME -> "(select p.name from library.publisher p where p.publisher_id = b.publisher_id)"
+        //Oh my this query is a terrible idea. I beg you, do what I say, not what I do!
+        BookSortableColumns.FIRST_AUTHOR_NAME -> "(select a.name from library.author a where exists(select 1 from library.BOOK_AUTHORS ba where a.AUTHOR_ID = ba.AUTHOR_ID and b.book_id = ba.book_id and ba.author_order = 1))"
+        BookSortableColumns.ISBN -> "b.isbn"
+        BookSortableColumns.PUBLISHED_YEAR -> "b.published_year"
+    }
 
     private fun getSubtitles(bookId: Long): List<String> {
         return DB.queryList(

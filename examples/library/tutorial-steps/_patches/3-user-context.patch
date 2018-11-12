@@ -1,6 +1,6 @@
 diff -urN -x '*.iml' -x 'target/*' 2-main-class/pom.xml 3-user-context/pom.xml
---- 2-main-class/pom.xml	2018-11-07 14:42:35.000000000 -0700
-+++ 3-user-context/pom.xml	2018-11-07 14:42:35.000000000 -0700
+--- 2-main-class/pom.xml	2018-11-07 15:10:34.000000000 -0700
++++ 3-user-context/pom.xml	2018-11-07 15:10:34.000000000 -0700
 @@ -4,11 +4,11 @@
      <modelVersion>4.0.0</modelVersion>
  
@@ -42,8 +42,8 @@ diff -urN -x '*.iml' -x 'target/*' 2-main-class/pom.xml 3-user-context/pom.xml
              </plugin>
          </plugins>
 diff -urN -x '*.iml' -x 'target/*' 2-main-class/src/main/kotlin/LibraryApp.kt 3-user-context/src/main/kotlin/LibraryApp.kt
---- 2-main-class/src/main/kotlin/LibraryApp.kt	2018-11-07 14:42:35.000000000 -0700
-+++ 3-user-context/src/main/kotlin/LibraryApp.kt	2018-11-07 14:42:35.000000000 -0700
+--- 2-main-class/src/main/kotlin/LibraryApp.kt	2018-11-07 15:10:34.000000000 -0700
++++ 3-user-context/src/main/kotlin/LibraryApp.kt	2018-11-07 15:10:34.000000000 -0700
 @@ -1,9 +1,22 @@
  import edu.byu.uapi.http.spark.startSpark
  import edu.byu.uapi.library.LibraryUserContextFactory
@@ -69,8 +69,8 @@ diff -urN -x '*.iml' -x 'target/*' 2-main-class/src/main/kotlin/LibraryApp.kt 3-
      // All of our configuration is going to go here
  
 diff -urN -x '*.iml' -x 'target/*' 2-main-class/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt 3-user-context/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt
---- 2-main-class/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-11-07 14:42:35.000000000 -0700
-+++ 3-user-context/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-11-07 14:42:35.000000000 -0700
+--- 2-main-class/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-11-07 15:10:34.000000000 -0700
++++ 3-user-context/src/main/kotlin/edu/byu/uapi/library/LibraryUser.kt	2018-11-07 15:35:11.000000000 -0700
 @@ -1,13 +1,39 @@
  package edu.byu.uapi.library
  

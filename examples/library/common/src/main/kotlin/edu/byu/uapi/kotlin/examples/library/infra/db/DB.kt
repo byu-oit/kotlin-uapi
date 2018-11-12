@@ -1,6 +1,7 @@
 package edu.byu.uapi.kotlin.examples.library.infra.db
 
 import com.zaxxer.hikari.HikariDataSource
+import edu.byu.uapi.kotlin.examples.library.ListResult
 import java.nio.file.Files
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -51,6 +52,7 @@ class DB(val dbPath: String) {
 val DefaultDB = DB("./target/library/library-db")
 
 inline fun <T> DB.query(sql: String, prepare: PreparedStatement.() -> Unit, process: ResultSet.() -> T ): T {
+    println("Executing SQL Query [$sql]")
     return DefaultDB.openConnection().use { conn ->
         conn.prepareStatement(sql).use { ps ->
             ps.prepare()
@@ -90,6 +92,17 @@ inline fun <T: Any> DB.queryAlwaysSingle(sql: String, prepare: PreparedStatement
         first()
             process()
     }
+}
+
+inline fun <T: Any> DB.queryWithTotal(select: String, tableIsh: String, where: String, order: String, limit: Int = Integer.MIN_VALUE, offset: Int = 0,
+                                      prepare: PreparedStatement.() -> Unit,
+                                      process: ResultSet.() -> T
+                                      ): ListResult<T> {
+    //THIS IS BAD! Never concatenate SQL strings together, ever, ever, ever, ever!
+    val total = queryAlwaysSingle("select count(*) from $tableIsh where $where", {}, {getInt(1)})
+    val paging = if (limit != Integer.MIN_VALUE) "limit $limit offset $offset" else ""
+    val list = queryList("select $select from $tableIsh where $where order by $order $paging", prepare, process)
+    return ListResult(list, total)
 }
 
 fun main(args: Array<String>) {

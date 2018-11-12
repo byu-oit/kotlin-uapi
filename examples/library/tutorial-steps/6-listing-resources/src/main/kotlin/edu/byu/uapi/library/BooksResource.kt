@@ -6,83 +6,49 @@ import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
-import edu.byu.uapi.spi.input.*
-import kotlin.reflect.KClass
-
-//interface BookListParams
-//    ListParams.Filtering<BookFilters>,
-//    ListParams.Searching<BookSearchContext>,
-//    ListParams.Sorting<BookSortField>
-
-data class BookListParams(
-    override val sort: SortParams<BookSortField>,
-    override val filter: BookFilters?,
-    override val subset: SubsetParams,
-    override val search: SearchParams<BookSearchContext>?
-) : ListParams.Sorting<BookSortField>,
-    ListParams.Filtering<BookFilters>,
-    ListParams.SubSetting,
-    ListParams.Searching<BookSearchContext>
-
-enum class BookSearchContext {
-    titles,
-    authors,
-    genres,
-    control_numbers;
-}
-
-enum class BookSortField {
-    oclc,
-    title,
-    publisher_id,
-    publisher_name,
-    isbn,
-    published_year,
-    GENRES__NAME
-}
-
-data class BookFilters (
-    val isbn: String?,
-    val title: String?,
-    val subtitle: String?,
-    val publisherId: Set<Int>,
-    val hasAvailableCopies: Boolean?,
-    val authorId: Set<Int>,
-    val genre: Set<String>,
-    val nested: Nested?
-)
-
-data class Nested(
-    val string: String?
-)
+import edu.byu.uapi.spi.input.ListWithTotal
+import edu.byu.uapi.spi.input.UAPISortOrder
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
-                      IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortField>,
-                      IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
-                      IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>,
-                      IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>
+                      IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
+                      IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>
 {
+
+
+
+    //,
+//                      IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>
+//                      IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>
+//                      ,
+//                      IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
 
     override fun list(
         userContext: LibraryUser,
         params: BookListParams
-    ): ListWithTotal<Book> {
-        //TODO: enforce permissions
-        println(params)
-        return ListWithTotal(0, emptyList<Book>())
+        ): ListWithTotal<Book> {
+        val result = Library.listBooks(
+            includeRestricted = userContext.canViewRestrictedBooks,
+            sortColumns = params.sort.properties.map { it.domain },
+            sortAscending = params.sort.order == UAPISortOrder.ASCENDING,
+            subsetSize = params.subset.subsetSize,
+            subsetStart = params.subset.subsetStartOffset
+        )
+        return ListWithTotal(
+            totalItems = result.totalItems,
+            values = result.list
+        )
     }
 
-    override val listParamsType: KClass<BookListParams> = BookListParams::class
-    override val listDefaultSortProperties: List<BookSortField> = listOf(BookSortField.title, BookSortField.oclc)
-    override val listDefaultSortOrder: SortOrder = SortOrder.ASCENDING
+    override val listDefaultSortProperties: List<BookSortProperty> = listOf(BookSortProperty.TITLE, BookSortProperty.OCLC)
+    override val listDefaultSortOrder: UAPISortOrder = UAPISortOrder.ASCENDING
     override val listDefaultSubsetSize: Int = 50
     override val listMaxSubsetSize: Int = 100
-    override fun listSearchContexts(value: BookSearchContext): Collection<String> = when(value) {
-        BookSearchContext.titles -> listOf("title", "subtitles")
-        BookSearchContext.authors -> listOf("authors.name")
-        BookSearchContext.genres -> listOf("genres.code", "genres.name")
-        BookSearchContext.control_numbers -> listOf("oclc", "isbn")
-    }
+//    override fun listSearchContexts(value: BookSearchContext): Collection<String> = when(value) {
+//        BookSearchContext.TITLES -> listOf("title", "subtitles")
+//        BookSearchContext.AUTHORS -> listOf("authors.name")
+//        BookSearchContext.GENRES -> listOf("genres.code", "genres.name")
+//        BookSearchContext.CONTROL_NUMBERS -> listOf("oclc", "isbn")
+//    }
 
     override fun loadModel(
         userContext: LibraryUser,
@@ -107,7 +73,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         value(Book::oclc) {
             key = true
             displayLabel = "OCLC Control Number"
-            doc = "Control number assigned to this title by the [Online Computer Library Center](www.oclc.org)."
+            doc = "Control number assigned to this title by the [Online Computer Library Center](www.OCLC.org)."
         }
         value(Book::title) {
             displayLabel = "Title"

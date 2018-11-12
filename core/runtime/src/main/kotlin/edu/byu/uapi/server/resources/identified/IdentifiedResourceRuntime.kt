@@ -312,7 +312,7 @@ class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Pa
         val searchMeta = search?.let { SearchableCollectionMetadata(it.contextFields) }
         val sortMeta = sort?.let { SortableCollectionMetadata(it.properties, it.defaults, it.defaultSortOrder) }
         val subsetMeta = subset?.let {
-            params as ListParams.SubSetting
+            params as ListParams.WithSubset
             CollectionSubsetMetadata(
                 list.size,
                 params.subset.subsetStartOffset,

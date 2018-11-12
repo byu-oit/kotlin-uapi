@@ -28,7 +28,7 @@ do
   src=${newsrc}
   patch -p1 -N -d ${working} -i "${here}/${path}"
 
-  rsync -a ${working}/ ${newsrc}/
+  rsync -a --exclude '*.iml' ${working}/ ${newsrc}/
   rm -rf ${working}
 done
 

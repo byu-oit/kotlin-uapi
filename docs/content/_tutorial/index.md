@@ -15,11 +15,9 @@ BYU UAPI Kotlin Runtime.
 
 Before working through this tutorial, you should familiarize yourself with the [UAPI Key Concepts](../_reference/key-concepts.md).
 
-{% capture code_on_github %}
-The code for each step of the tutorial can be viewed 
-[on GitHub](https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps).
-{% endcapture %}
-{% include callouts/code.html content=code_on_github %}
+> The code for each step of the tutorial can be viewed 
+> [on GitHub](https://github.com/byu-oit/kotlin-uapi/tree/master/examples/library/tutorial-steps).
+{: .callout-code }
 
 # Library API
 
@@ -60,11 +58,9 @@ Our final path structure will look like this:
     * `/openapi2.{yml, json}`
     * `/openapi3.{yml, json}`
 
-{% capture better_ways %}
-There may be better ways to represent some of the data in this API. However, the model has been chosen to better demonstrate
-the features of the UAPI Runtime.
-{% endcapture %}
-{% include callouts/demo.html content=better_ways %}
+> There may be better ways to represent some of the data in this API. However, the model has been chosen to better demonstrate
+> the features of the UAPI Runtime.
+{: .callout-demo }
 
 ## Library Backend
 

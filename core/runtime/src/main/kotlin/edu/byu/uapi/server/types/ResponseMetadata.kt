@@ -2,7 +2,7 @@ package edu.byu.uapi.server.types
 
 import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.SpecConstants.Metadata
-import edu.byu.uapi.spi.input.SortOrder
+import edu.byu.uapi.spi.input.UAPISortOrder
 import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
 import java.time.Instant
@@ -73,7 +73,7 @@ data class CollectionSubsetMetadata(
 data class SortableCollectionMetadata(
     val sortPropertiesAvailable: List<String>,
     val sortPropertiesDefault: List<String>,
-    val sortOrderDefault: SortOrder
+    val sortOrderDefault: UAPISortOrder
 ) : Renderable {
     override fun render(renderer: Renderer<*>) {
         renderer.valueArray(CollectionMeta.KEY_SORT_PROPERTIES_AVAILABLE, sortPropertiesAvailable)

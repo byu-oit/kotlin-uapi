@@ -45,19 +45,19 @@ class DefaultListParamReader<Params : ListParams> private constructor(
             val map = mutableMapOf<KParameter, QueryParamReader<*, *>>()
 
             search?.also {
-                val searchParam = constructor.expectParam<SearchParams<*>>(ListParams.Searching.FIELD_NAME)
+                val searchParam = constructor.expectParam<SearchParams<*>>(ListParams.WithSearch.FIELD_NAME)
                 map[searchParam] = it
             }
             filter?.also {
-                val filterParam = constructor.expectParam<Any>(ListParams.Filtering.FIELD_NAME)
+                val filterParam = constructor.expectParam<Any>(ListParams.WithFilters.FIELD_NAME)
                 map[filterParam] = it
             }
             sort?.also {
-                val param = constructor.expectParam<SortParams<*>>(ListParams.Sorting.FIELD_NAME)
+                val param = constructor.expectParam<SortParams<*>>(ListParams.WithSort.FIELD_NAME)
                 map[param] = it
             }
             subset?.also {
-                val param = constructor.expectParam<SubsetParams>(ListParams.SubSetting.FIELD_NAME)
+                val param = constructor.expectParam<SubsetParams>(ListParams.WithSubset.FIELD_NAME)
                 map[param] = it
             }
 
