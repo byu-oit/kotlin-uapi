@@ -122,7 +122,9 @@ object Library {
         )
 
     fun listBooks(
-        includeRestricted: Boolean = false,
+        includeRestricted: Boolean,
+        filters: BookQueryFilters? = null,
+        search: BookSearch? = null,
         subsetStart: Int = 0,
         subsetSize: Int = Integer.MIN_VALUE,
         sortColumns: List<BookSortableColumns> = emptyList(),
@@ -134,19 +136,28 @@ object Library {
         } else {
             "b.book_id asc"
         }
-        val where = if (includeRestricted) "(1 = 1)" else "where restricted = false"
+        val whereClauses = mutableListOf<WhereClause>()
+        if (!includeRestricted) {
+            whereClauses + WhereClause("restricted = false")
+        }
+        if (filters != null) {
+            whereClauses += filters.toWhereClauses("b")
+        }
+        if (search != null) {
+            whereClauses += search.toWhereClauses("b")
+        }
 
         return DB.queryWithTotal(
             select = "b.*",
             tableIsh = "library.book b",
-            where = where,
+            where = whereClauses,
             order = sorts,
             limit = subsetSize,
             offset = subsetStart,
-            prepare = {},
             process = this::convertResultSetToBook
         )
     }
+
 
     private fun getBookSort(
         col: BookSortableColumns,
@@ -173,8 +184,9 @@ object Library {
     }
 }
 
+
 fun main(args: Array<String>) {
-    println(Library.listBooks())
-    val books = Library.searchForBooks("Way")
-    println(books)
+    println(Library.listBooks(includeRestricted = true, filters = BookQueryFilters(
+        title = "The Player of Games"
+    )))
 }

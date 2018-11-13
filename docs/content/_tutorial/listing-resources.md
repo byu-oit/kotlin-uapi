@@ -373,68 +373,7 @@ curl -H "Authorization: Bearer {your OAuth token here}" http://localhost:8080/bo
           "api_type":"modifiable",
           "display_label":"Title"
         },
-        "publisher_id":{
-          "value":1,
-          "description":"Simon & Schuster",
-          "long_description":null,
-          "api_type":"modifiable",
-          "display_label":"Publisher"
-        },
-        "available_copies":{
-          "value":3,
-          "api_type":"derived",
-          "display_label":"Available Copies"
-        },
-        "isbn":{
-          "value":"0-684-83339-5",
-          "api_type":"system",
-          "display_label":"ISBN"
-        },
-        "subtitles":{
-          "values":[
-
-          ],
-          "api_type":"modifiable",
-          "display_label":"Subtitles"
-        },
-        "author_ids":{
-          "values":[
-            {
-              "value":2,
-              "description":"Joseph Heller"
-            }
-          ],
-          "api_type":"modifiable",
-          "display_label":"Author(s)"
-        },
-        "genres":{
-          "values":[
-            {
-              "value":"FI",
-              "description":"Fiction"
-            },
-            {
-              "value":"HFI",
-              "description":"Historical Fiction"
-            },
-            {
-              "value":"LOL",
-              "description":"Humor"
-            }
-          ],
-          "api_type":"modifiable",
-          "display_label":"Genre(s)"
-        },
-        "published_year":{
-          "value":1961,
-          "api_type":"modifiable",
-          "display_label":"Publication Year"
-        },
-        "restricted":{
-          "value":false,
-          "api_type":"modifiable",
-          "display_label":"Is Restricted"
-        },
+        // ... we've omitted a bunch of properties, because they're REALLY LONG.
         "links":{
 
         },
@@ -625,25 +564,6 @@ curl -H "Authorization: Bearer {your OAuth token here}" http://localhost:8080/bo
           "api_type":"modifiable",
           "display_label":"Publisher"
         },
-        "available_copies":{
-          "value":1,
-          "api_type":"derived",
-          "display_label":"Available Copies"
-        },
-        "isbn":{
-          "value":"0-575-04800-X",
-          "api_type":"system",
-          "display_label":"ISBN"
-        },
-        "subtitles":{
-          "values":[
-            {
-              "value":"The Nice and Accurate Prophecies of Agnes Nutter, Witch"
-            }
-          ],
-          "api_type":"modifiable",
-          "display_label":"Subtitles"
-        },
         "author_ids":{
           "values":[
             {
@@ -658,34 +578,8 @@ curl -H "Authorization: Bearer {your OAuth token here}" http://localhost:8080/bo
           "api_type":"modifiable",
           "display_label":"Author(s)"
         },
-        "genres":{
-          "values":[
-            {
-              "value":"FAN",
-              "description":"Fantasy"
-            },
-            {
-              "value":"FI",
-              "description":"Fiction"
-            },
-            {
-              "value":"LOL",
-              "description":"Humor"
-            }
-          ],
-          "api_type":"modifiable",
-          "display_label":"Genre(s)"
-        },
-        "published_year":{
-          "value":1990,
-          "api_type":"modifiable",
-          "display_label":"Publication Year"
-        },
-        "restricted":{
-          "value":false,
-          "api_type":"modifiable",
-          "display_label":"Is Restricted"
-        },
+        
+        // ... we've omitted a bunch of properties, because they're REALLY LONG.
         "links":{
 
         },
@@ -762,15 +656,544 @@ how to customize this behavior [later](#custom-sort-parsing).
 
 ## Filtering
 
+Now that we can get smaller, ordered lists, let's make it so that the client can control which items are included in the
+response. One way we can do that is by filtering based the values of specific properties.
 
+The way that we implement this is by allowing you to specify a *filter class*. A filter class is a data class that follows
+some specific rules:
+
+* All values must be nullable, collections (i.e `Set<String>`, `List<String>`), or have a default value.
+* All values must be either a [Simple Type](../_reference/data-types.md), collection of simple types, or another *filter class* that follows these same rules.
+
+The properties in a filter class should generally match the names of properties in the resource. When using a nested
+filter class, it should correspond with the name and properties of a [Subresource](./subresources.md), and allows the
+client to filter our base resource by values that are part of a subresource.
+
+When processing filter parameters, you should follow these rules:
+
+* If a parameter receives a collection of values, the returned items should all contain *at least one* of the values, similar to a SQL `IN` clause.
+* All specified parameters are joined together by an implicit *AND*. For example, if the client specifies `foo=bar&baz=zop`, each item returned should have 'foo' set to 'bar' AND 'baz' set to 'zop'.
+
+Let's build a filter class for books. For convenience, let's cram it into our existing `BookListParams.kt`.
+
+```kotlin
+data class BookFilters(
+    val isbns: Set<String>,
+    val title: String?,
+    val subtitle: String?,
+    val publisherIds: Set<Int>,
+    val publisherNames: Set<String>,
+    val publicationYear: Int?,
+    val restricted: Boolean?,
+    val authors: AuthorFilters?,
+    val genres: GenreFilters?
+)
+
+data class AuthorFilters(
+    val ids: Set<Int>,
+    val names: Set<String>
+)
+
+data class GenreFilters(
+    val codes: Set<String>,
+    val names: Set<String>
+)
+```
+
+This will translate to the following query parameters:
+
+Name | Type | Example | Description
+-----|------|---------|------------
+`isbns` | comma-separated strings | `978-0451530653,0-684-83339-5` | Find books that have one of these ISBN numbers
+`title` | string | `The+Player+of+Games` | Find titles that exactly match this value
+`subtitle` | string | `Book+One+of+the+Stormlight+Archive` | Find books with a subtitle that exactly matches this value
+`publisher_ids` | comma-separated integers | `1,4,5` | The book must have one of these publisher IDs
+`publisher_names` | comma-separated strings | `Tor,Oxford` | The book must be from one of these publishers
+`publication_year` | integer | `1990` | The book must have been published in this year
+`authors.ids` | comma-separated integers | `1,3` | The book must have an author with one of these IDs
+`authors.names` | comma-separated strings | `Joseph+Heller,Isaac+Asimov` | The book must have an author with one of these names
+`genres.codes` | comma-separated strings | `FAN,LOL` | Must have a genre with one of these codes
+`genres.names` | comma-separated strings | `Fantasy,Humor` | Must have a genre with one of these names
+
+Field names are mapped to parameter names by turning the camelCase names to snake_case. Where there are nested values,
+the name is comprised of the outer field name, a dot, and the nested field name.
+
+When a collection of values is specified, your code should interpret the values as "this property should have one of
+these values," much like the `IN` operator in SQL. In addition, the value name should be plural (ending in 's').
+
+> Some things we'd like to add here:
+> 
+> * A type that says "this string can contain wildcards like '*' and '?'"
+> * A type that says "this value can have operators applied, like 'less than' or 'greater than'"
+{: .callout-in-progress }
+
+Our domain layer has some corresponding classes. We'll need to translate between them, so let's add some 'toDomain'
+methods.
+
+```kotlin
+data class BookFilters(
+    val isbns: Set<String>,
+    val title: String?,
+    val subtitle: String?,
+    val publisherIds: Set<Int>,
+    val publisherNames: Set<String>,
+    val publicationYear: Int?,
+    val restricted: Boolean?,
+    val authors: AuthorFilters?,
+    val genres: GenreFilters?
+) {
+    fun toDomain() = if (hasAnyValues) {
+        BookQueryFilters(
+            isbn = isbns,
+            title = title,
+            subtitle = subtitle,
+            publisherId = publisherIds,
+            publisherNames = publisherNames,
+            publicationYear = publicationYear,
+            restricted = restricted,
+            authors = authors?.toDomain(),
+            genres = genres?.toDomain()
+        )
+    } else {
+        null
+    }
+
+    val hasAnyValues =
+        isbns.isNotEmpty()
+            || title != null
+            || subtitle != null
+            || publisherIds.isNotEmpty()
+            || publisherNames.isNotEmpty()
+            || publicationYear != null
+            || restricted != null
+            || (authors == null || authors.hasAnyValues)
+            || (genres == null || genres.hasAnyValues)
+}
+
+data class AuthorFilters(
+    val ids: Set<Int>,
+    val names: Set<String>
+) {
+    fun toDomain() = if (hasAnyValues) {
+        AuthorQueryFilters(
+            id = ids,
+            name = names
+        )
+    } else {
+        null
+    }
+
+    val hasAnyValues = ids.isNotEmpty() || names.isNotEmpty()
+}
+
+data class GenreFilters(
+    val codes: Set<String>,
+    val names: Set<String>
+) {
+    fun toDomain() = if (hasAnyValues) {
+        GenreQueryFilters(
+            code = codes,
+            name = names
+        )
+    } else {
+        null
+    }
+
+    val hasAnyValues = codes.isNotEmpty() || names.isNotEmpty()
+}
+```
+
+> It might feel wasteful to do these conversions, but, just like with `BookSortProperties`, this separation of concerns
+> (api queries vs. database queries) makes it harder to accidentally break our API's consumers by isolating changes
+> in the higher and lower layers of the application from each other.
+{: .callout-protip }
+
+Next, we need to add our filters to our parameter class:
+
+```diff
+  data class BookListParams(
+    override val sort: SortParams<BookSortProperty>,
++   override val filters: BookFilters?,
+    override val subset: SubsetParams
+  ) : ListParams.WithSort<BookSortProperty>,
++     ListParams.WithFilters<BookFilters>,
+      ListParams.WithSubset
+```
+
+Finally, let's add support to our resource class.
+
+```diff
+  class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
+                        IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
++                       IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
+                        IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>
+  {
+
+    override fun list(
+      userContext: LibraryUser,
+      params: BookListParams
+    ): ListWithTotal<Book> {
+      val result = Library.listBooks(
+        includeRestricted = userContext.canViewRestrictedBooks,
+        sortColumns = params.sort.properties.map { it.domain },
+        sortAscending = params.sort.order == UAPISortOrder.ASCENDING,
++       filters = params.filters?.toDomain(),
+        subsetSize = params.subset.subsetSize,
+        subsetStart = params.subset.subsetStartOffset
+      )
+      return ListWithTotal(
+        totalItems = result.totalItems,
+        values = result.list
+      )
+    }
+
+    override val listDefaultSortProperties: List<BookSortProperty> = listOf(BookSortProperty.TITLE, BookSortProperty.OCLC)
+    override val listDefaultSortOrder: UAPISortOrder = UAPISortOrder.ASCENDING
+    override val listDefaultSubsetSize: Int = 50
+    override val listMaxSubsetSize: Int = 100
+```
+
+Finally, we can filter our API requests!  Let's get every book in the 'Humor' genre:
+
+```bash
+curl -H "Authorization: Bearer {your OAuth token here}" http://localhost:8080/books?genres.names=Humor&subset_size=1
+```
+
+```json
+{
+  "values":[
+    {
+      "basic":{
+        "oclc":{
+          "value":35231812,
+          "api_type":"read-only",
+          "key":true,
+          "display_label":"OCLC Control Number"
+        },
+        "title":{
+          "value":"Catch-22",
+          "api_type":"modifiable",
+          "display_label":"Title"
+        },
+        "genres":{
+          "values":[
+            {
+              "value":"FI",
+              "description":"Fiction"
+            },
+            {
+              "value":"HFI",
+              "description":"Historical Fiction"
+            },
+            {
+              "value":"LOL",
+              "description":"Humor"
+            }
+          ],
+          "api_type":"modifiable",
+          "display_label":"Genre(s)"
+        }
+        // ... we've omitted a bunch of properties, because they're REALLY LONG.
+      }
+    }
+  ],
+  "links":{
+
+  },
+  "metadata":{
+    "validation_response":{
+      "code":200,
+      "message":"OK"
+    },
+    "collection_size":2,
+    "sort_properties_available":[
+      "oclc",
+      "title",
+      "publisher_name",
+      "isbn",
+      "published_year",
+      "author_name"
+    ],
+    "sort_properties_default":[
+      "title",
+      "oclc"
+    ],
+    "sort_order_default":"ascending",
+    "subset_size":1,
+    "subset_start":0,
+    "default_subset_size":50,
+    "max_subset_size":100
+  }
+}
+```
 
 ## Searching
 
+Filters are great, but they can't solve everything. Users are increasingly used to being able to do a full-text, fuzzy-match
+search, like they can with a search engine. But, because all filters are implicitly joined with *AND*, you can't
+build a query like "give me every book with the word 'Foundation' in either its title or subtitle."
+
+That's where searching comes in. Searching is treated separately from filtering because it has very different semantics.
+
+Search queries in the UAPI must specify both the text to search for and a *search context*. This search context is a name
+for a collection of related fields, all of which will be searched for the search text. For example, a 'persons' API
+might have a search context of 'names', which would search 'surnames', 'given_names', and 'preferred_name'.
+
+Searching can be used many different ways. We'll show two different ways of using them - full-text search and filtering
+across multiple fields.
+
+> If you implement full-text search with a fancy search backend, like ElasticSearch, you can often have the search
+> backend tell you the 'relevance' of a result. In such cases, it can be very helpful to clients to provide a
+> `SEARCH_RELEVANCE` sort 'property.' Just make sure you send back an [error](./errors.md) if the client doesn't ask
+> for a search and it doesn't make sense to sort by relevance without it!
+{: .callout-protip }
+
+> Searching is something that should be carefully planned before implementing. Naive search implementations (like the
+> one in our example application) can give end users a less-than-desirable experience and can have major performance
+> implications on the API. It's best to move slowly and carefully when choosing to allow search or adding new search
+> contexts.
+{: .callout-warning }
+
+
+Search support adds the following query parameters and metadata values:
+
+Query Parameter | Type | Description
+----------------|------|------------
+search_text	| string | text to search for
+search_context | enum value | The context in which to perform the search
+
+Metadata Value | Description
+---------------|------------
+search_contexts_available | A map of valid `search_context` values to a list of the properties they each search.
+
+Like with sorting, in order to specify our search contexts, we use an enum class.  This enum class will be serialized
+using the same rules as a sort property enum (by turning it into lowercase snake_case).
+
+Once again, we have a separate search construct in the domain layer. Our domain layer accepts search queries via a
+'search' property in `BookQueryFilters`.
+
+> Yeah, we're hitting you hard with the "separate your domain and API layer concerns" stick. Deal with it.
+
+Let's start off by defining our search contexts. Once again, we'll shove it in `BookListParams.kt`:
+
+```kotlin
+enum class BookSearchContext {
+    TITLES,
+    AUTHORS,
+    GENRES,
+    CONTROL_NUMBERS;
+}
+```
+
+We'll also add a function to take a search context and search text and turn it into one of our domain's search representations:
+
+```kotlin
+fun BookSearchContext.toDomain(searchText: String) = when(this) {
+    BookSearchContext.TITLES -> BookTitleSearch(searchText)
+    BookSearchContext.AUTHORS -> BookAuthorSearch(searchText)
+    BookSearchContext.GENRES -> BookGenreSearch(searchText)
+    BookSearchContext.CONTROL_NUMBERS -> BookControlNumbersSearch(searchText)
+}
+```
+
+> This uses a Kotlin 'when' expression. They're like `switch`, but better! For example, if you add a new value to
+> `BookSearchContext` but forget to add it here, the code will not compile. Neat!
+> 
+> The domain layer here is using 'sealed classes', which are like super-powered enums. You should definitely check them
+> out. They're very powerful, especially when coupled with `when`
+{: .callout-kotlin }
+
+This will allow full-text search on titles and subtitles, author names, and genre codes and names. In addition, given
+an unknown type of control number (ISBN or OCLC), we can get back any matching books, no matter which type of control number
+it is.
+
+Now, we need to update `BookListParams`.
+
+```diff
+  data class BookListParams(
+    override val sort: SortParams<BookSortProperty>,
+    override val filters: BookFilters?,
++   override val search: SearchParams<BookSearchContext>?,
+    override val subset: SubsetParams
+  ) : ListParams.WithSort<BookSortProperty>,
+      ListParams.WithFilters<BookFilters>,
++     ListParams.WithSearch<BookSearchContext>,
+      ListParams.WithSubset
+```
+
+To finish it off, let's add our implementation to our resource.
+
+```diff
+
+  class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
+                        IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
+                        IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
++                       IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
+                        IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>
+  {
+    override fun list(
+        userContext: LibraryUser,
+        params: BookListParams
+        ): ListWithTotal<Book> {
++       val search = params.search?.run { context.toDomain(text) }
+        val result = Library.listBooks(
+            includeRestricted = userContext.canViewRestrictedBooks,
+            sortColumns = params.sort.properties.map { it.domain },
+            sortAscending = params.sort.order == UAPISortOrder.ASCENDING,
+            filters = params.filters?.toDomain(),
++           search = search,
+            subsetSize = params.subset.subsetSize,
+            subsetStart = params.subset.subsetStartOffset
+        )
+        return ListWithTotal(
+            totalItems = result.totalItems,
+            values = result.list
+        )
+    }
+
+    override val listDefaultSortProperties: List<BookSortProperty> = listOf(BookSortProperty.TITLE, BookSortProperty.OCLC)
+    override val listDefaultSortOrder: UAPISortOrder = UAPISortOrder.ASCENDING
+    override val listDefaultSubsetSize: Int = 50
+    override val listMaxSubsetSize: Int = 100
++   override fun listSearchContexts(value: BookSearchContext) = when(value) {
++       BookSearchContext.TITLES -> listOf("title", "subtitles")
++       BookSearchContext.AUTHORS -> listOf("authors.name")
++       BookSearchContext.GENRES -> listOf("genres.codes", "genres.name")
++       BookSearchContext.CONTROL_NUMBERS -> listOf("oclc", "isbn")
++   }
+```
+
+`listSearchContexts` is a method we must implement in order to give the runtime the knowledge it needs to construct our
+metadata for us. It maps search context names to the list of properties that they search. This can include properties 
+on sub-resources, as you can see in the example (authors.name, genres.name, etc.).
+It is purely informational, and doesn't affect the actual implementation of your searching. That means
+that the UAPI runtime can't enforce that this information is valid and up-to-date, but please, do your clients a favor
+and maintain this list.
+
+> `listSearchContexts` will only be called once, and could normally be a `val`. However, in order to let you rely on
+> the compiler to make sure that you don't forget a value, we made it a function so you can use `when` and it's superpowers.
+{: .callout-kotlin }
+
+To make sure we've got everything right, let's search for books which have an author with 'isaac' in their name.
+
+```bash
+curl -H "Authorization: Bearer {your OAuth token here}" http://localhost:8080/books?search_text=isaac&search_context=authors
+```
+
+```json
+{
+  "values":[
+    {
+      "basic":{
+        "oclc":{
+          "value":53896777,
+          "api_type":"read-only",
+          "key":true,
+          "display_label":"OCLC Control Number"
+        },
+        "title":{
+          "value":"Foundation",
+          "api_type":"modifiable",
+          "display_label":"Title"
+        },
+        "author_ids":{
+          "values":[
+            {
+              "value":4,
+              "description":"Isaac Asimov"
+            }
+          ],
+          "api_type":"modifiable",
+          "display_label":"Author(s)"
+        }
+        // ... we've omitted a bunch of properties, because they're REALLY LONG.
+        
+      }
+    }
+  ],
+  "links":{
+
+  },
+  "metadata":{
+    "validation_response":{
+      "code":200,
+      "message":"OK"
+    },
+    "collection_size":1,
+    "sort_properties_available":[
+      "oclc",
+      "title",
+      "publisher_name",
+      "isbn",
+      "published_year",
+      "author_name"
+    ],
+    "sort_properties_default":[
+      "title",
+      "oclc"
+    ],
+    "sort_order_default":"ascending",
+    "search_contexts_available":{
+      "titles":[
+        "title",
+        "subtitles"
+      ],
+      "authors":[
+        "authors.name"
+      ],
+      "genres":[
+        "genres.codes",
+        "genres.name"
+      ],
+      "control_numbers":[
+        "oclc",
+        "isbn"
+      ]
+    },
+    "subset_size":1,
+    "subset_start":0,
+    "default_subset_size":50,
+    "max_subset_size":100
+  }
+}
+```
+
+Look! We got back our one and only book by the great Isaac Asimov!
+
 # Customizing List Features
+
+> To be written
+{: .callout-in-progress }
 
 ## Custom Sort Parsing
 
+> To be written
+{: .callout-in-progress }
+
 ## Custom Filter Parsing
+
+> To be written
+{: .callout-in-progress }
 
 ## Custom Search Parsing
 
+> To be written
+{: .callout-in-progress }
+
+# Best Practices
+
+> To be written
+{: .callout-in-progress }
+
+# Summary
+
+Well, we've learned how to list resources. Things got a little weird there, but you made it through! Here's a picture
+of a dancing Ron Swanson as a reward:
+
+![Dancing Ron Swanson](https://media.giphy.com/media/zyin7TYoGmLAs/giphy.gif)
+
+Next up, we'll learn about how to expose your resources to radioactive spider bites and see what happens!
+
+![Spider-man makes his entrance](https://media.giphy.com/media/3o7abooVPgeGpknXpu/giphy.gif)
+
+Oh, we're not talking about that kind of mutation? Oh well. Onward ho!

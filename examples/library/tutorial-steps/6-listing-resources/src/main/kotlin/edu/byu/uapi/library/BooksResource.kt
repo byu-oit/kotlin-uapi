@@ -11,25 +11,22 @@ import edu.byu.uapi.spi.input.UAPISortOrder
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
                       IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
+                      IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
+                      IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
                       IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>
 {
-
-
-
-    //,
-//                      IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>
-//                      IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>
-//                      ,
-//                      IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
 
     override fun list(
         userContext: LibraryUser,
         params: BookListParams
         ): ListWithTotal<Book> {
+        val search = params.search?.run { context.toDomain(text) }
         val result = Library.listBooks(
             includeRestricted = userContext.canViewRestrictedBooks,
             sortColumns = params.sort.properties.map { it.domain },
             sortAscending = params.sort.order == UAPISortOrder.ASCENDING,
+            filters = params.filters?.toDomain(),
+            search = search,
             subsetSize = params.subset.subsetSize,
             subsetStart = params.subset.subsetStartOffset
         )
@@ -43,12 +40,12 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
     override val listDefaultSortOrder: UAPISortOrder = UAPISortOrder.ASCENDING
     override val listDefaultSubsetSize: Int = 50
     override val listMaxSubsetSize: Int = 100
-//    override fun listSearchContexts(value: BookSearchContext): Collection<String> = when(value) {
-//        BookSearchContext.TITLES -> listOf("title", "subtitles")
-//        BookSearchContext.AUTHORS -> listOf("authors.name")
-//        BookSearchContext.GENRES -> listOf("genres.code", "genres.name")
-//        BookSearchContext.CONTROL_NUMBERS -> listOf("oclc", "isbn")
-//    }
+    override fun listSearchContexts(value: BookSearchContext) = when(value) {
+        BookSearchContext.TITLES -> listOf("title", "subtitles")
+        BookSearchContext.AUTHORS -> listOf("authors.name")
+        BookSearchContext.GENRES -> listOf("genres.codes", "genres.name")
+        BookSearchContext.CONTROL_NUMBERS -> listOf("oclc", "isbn")
+    }
 
     override fun loadModel(
         userContext: LibraryUser,

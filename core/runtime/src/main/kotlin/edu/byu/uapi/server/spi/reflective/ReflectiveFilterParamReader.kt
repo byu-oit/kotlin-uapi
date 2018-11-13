@@ -23,7 +23,7 @@ class ReflectiveFilterParamReader<Filters : Any> internal constructor(
     private val analyzed: AnalyzedFilterParams<Filters>
 ) : FilterParamsReader<Filters> {
 
-    private val meta = analyzed.toMeta()
+    private val meta = analyzed.meta
 
     override fun read(input: QueryParams): Filters? {
         val hasAny = analyzed.fieldNames.any { input.containsKey(it) }
@@ -38,7 +38,7 @@ class ReflectiveFilterParamReader<Filters : Any> internal constructor(
 
     companion object {
         @Throws(UAPITypeError::class)
-        fun <Filters: Any> create(
+        fun <Filters : Any> create(
             filterType: KClass<Filters>,
             typeDictionary: TypeDictionary
         ): ReflectiveFilterParamReader<Filters> {
@@ -75,13 +75,11 @@ internal data class AnalyzedFilterParams<T : Any>(
     val fields: List<AnalyzedFilterField>, //In constructor order
     val constructor: KFunction<T>
 ) {
-    fun toMeta(): FilterParamsMeta {
-        return FilterParamsMeta(
-            fields.flatMap { f -> f.getParams("") }
-        )
-    }
+    val meta: FilterParamsMeta = FilterParamsMeta(
+        fields.flatMap { f -> f.getParams("") }
+    )
 
-    val fieldNames by lazy { fields.map { it.name } }
+    val fieldNames = meta.queryParams.map { it.name }
 }
 
 internal sealed class AnalyzedFilterField {
@@ -164,7 +162,8 @@ internal fun analyzeFilterParam(
     if (param.type.withNullability(false).isSubtypeOf(collectionStar)) {
         return analyzeCollectionFilter(param, dictionary)
     }
-    val classifier = param.type.classifier ?: throw UAPITypeError.create(param.type, "Type must be representable in Kotlin")
+    val classifier = param.type.classifier
+        ?: throw UAPITypeError.create(param.type, "Type must be representable in Kotlin")
     if (classifier is KClass<*> && dictionary.isScalarType(classifier)) {
         return analyzeValueParam(param, classifier, dictionary)
     }
