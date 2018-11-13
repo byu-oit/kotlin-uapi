@@ -13,7 +13,7 @@
     <parent>
         <groupId>edu.byu.uapi.kotlin.utilities</groupId>
         <artifactId>kotlin-uapi-utilities-pom</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0-M2</version>
     </parent>
 
     <properties>
