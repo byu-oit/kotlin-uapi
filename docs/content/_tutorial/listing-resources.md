@@ -1192,7 +1192,7 @@ of a dancing Ron Swanson as a reward:
 
 ![Dancing Ron Swanson](https://media.giphy.com/media/zyin7TYoGmLAs/giphy.gif)
 
-Next up, we'll learn about how to expose your resources to radioactive spider bites and see what happens!
+Next up, we'll learn about how to mutate your resources by exposing them to radioactive spider bites! I can't wait to see what happens!
 
 ![Spider-man makes his entrance](https://media.giphy.com/media/3o7abooVPgeGpknXpu/giphy.gif)
 
