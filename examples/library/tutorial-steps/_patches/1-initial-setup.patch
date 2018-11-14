@@ -16,7 +16,7 @@ diff -urN -x '*.iml' -x 'target/*' __blank/pom.xml 1-initial-setup/pom.xml
 +
 +    <properties>
 +        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-+        <kotlin.version>1.3.0</kotlin.version>
++        <kotlin.version>1.3.10</kotlin.version>
 +    </properties>
 +
 +    <dependencyManagement>

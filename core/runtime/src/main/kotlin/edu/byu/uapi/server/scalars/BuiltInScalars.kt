@@ -1,6 +1,5 @@
 package edu.byu.uapi.server.scalars
 
-import com.google.common.collect.ImmutableBiMap
 import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.types.APIType
 import edu.byu.uapi.spi.UAPITypeError
@@ -76,15 +75,15 @@ open class EnumScalarType<E : Enum<E>>(
 
     val enumConstants: Set<E> = EnumSet.allOf(type.java)
 
-    private val values: ImmutableBiMap<String, E> =
-        ImmutableBiMap.copyOf(enumConstants.map { renderToString(it) to it }.toMap())
+    private val valuesToEnums: Map<String, E> = enumConstants.map { renderToString(it) to it }.toMap()
+    private val enumsToValues: Map<E, String> = EnumMap(valuesToEnums.map { it.value to it.key }.toMap())
 
-    val enumValues: List<String> = values.keys.asList()
+    val enumValues: List<String> = valuesToEnums.keys.toList()
 
     override val scalarFormat: ScalarFormat = ScalarFormat.STRING.asEnum(enumValues)
 
     private val variants: Map<String, E> by lazy {
-        values.flatMap { e ->
+        valuesToEnums.flatMap { e ->
             enumNameVariants(e.key).map { it to e.value }
         }.toMap()
     }
@@ -92,7 +91,7 @@ open class EnumScalarType<E : Enum<E>>(
     override fun renderToString(value: E): String = value.toString()
 
     override fun fromString(value: String): E {
-        val found = values[value]
+        val found = valuesToEnums[value]
         if (found == null && !strict) {
             val variant = variants[value]
             if (variant != null) return variant
@@ -106,7 +105,7 @@ open class EnumScalarType<E : Enum<E>>(
     override fun <S> render(
         value: E,
         renderer: ScalarRenderer<S>
-    ) = renderer.string(values.inverse()[value]!!)
+    ) = renderer.string(enumsToValues[value]!!)
 }
 
 object ApiTypeScalarType : EnumScalarType<APIType>(type = APIType::class, strict = true) {
