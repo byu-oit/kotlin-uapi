@@ -10,13 +10,17 @@ class DefaultTypeDictionary: TypeDictionary {
 
     private val explicitScalarConverters = mapOf<KClass<*>, ScalarType<*>>() + builtinScalarTypeMap
 
+    private val enumScalarCache = mutableMapOf<KClass<*>, ScalarType<*>>()
+
+    @Suppress("UNCHECKED_CAST")
     override fun <Type : Any> scalarType(type: KClass<Type>): ScalarType<Type>? {
         if (explicitScalarConverters.containsKey(type)) {
-            @Suppress("UNCHECKED_CAST")
             return explicitScalarConverters[type] as ScalarType<Type>
         }
         if (type.isEnum()) {
-            return EnumScalarConverterHelper.getEnumScalarConverter(type)
+            return enumScalarCache.getOrPut(type) {
+                EnumScalarConverterHelper.getEnumScalarConverter(type)
+            } as ScalarType<Type>
         }
         return null
     }

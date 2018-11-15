@@ -1,4 +1,5 @@
 import edu.byu.uapi.http.spark.startSpark
+import edu.byu.uapi.library.BigResource
 import edu.byu.uapi.library.BooksResource
 import edu.byu.uapi.library.LibraryUserContextFactory
 import edu.byu.uapi.server.UAPIRuntime
@@ -21,6 +22,7 @@ fun main(args: Array<String>) {
 
     // All of our configuration is going to go here
     runtime.register("books", BooksResource())
+    runtime.register("big", BigResource())
 
     runtime.startSpark(
         port = 8080

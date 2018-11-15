@@ -5,17 +5,17 @@ import edu.byu.uapi.spi.rendering.RendererBase
 import edu.byu.uapi.spi.rendering.ScalarRenderer
 import java.math.BigDecimal
 import java.math.BigInteger
-import javax.json.Json
 import javax.json.JsonObject
 import javax.json.JsonObjectBuilder
 import javax.json.JsonValue
+import javax.json.spi.JsonProvider
 
-class JsonRenderer(override val typeDictionary: TypeDictionary) : RendererBase<JsonRenderer, JsonObject, JsonValue>() {
-    override fun newRenderer() = JsonRenderer(typeDictionary)
+class JavaxJsonTreeRenderer(override val typeDictionary: TypeDictionary, private val jsonProvider: JsonProvider) : RendererBase<JavaxJsonTreeRenderer, JsonObject, JsonValue>() {
+    override fun newRenderer() = JavaxJsonTreeRenderer(typeDictionary, jsonProvider)
 
-    override val scalarRenderer = JsonValueScalarRenderer
+    override val scalarRenderer = JsonValueScalarRenderer(jsonProvider)
 
-    private val root: JsonObjectBuilder = Json.createObjectBuilder()
+    private val root: JsonObjectBuilder = jsonProvider.createObjectBuilder()
 
     override fun addScalar(
         key: String,
@@ -28,12 +28,12 @@ class JsonRenderer(override val typeDictionary: TypeDictionary) : RendererBase<J
         key: String,
         items: Collection<JsonValue>
     ) {
-        root.add(key, Json.createArrayBuilder().apply { items.forEach { add(it) } })
+        root.add(key, jsonProvider.createArrayBuilder().apply { items.forEach { add(it) } })
     }
 
     override fun addTree(
         key: String,
-        renderer: JsonRenderer
+        renderer: JavaxJsonTreeRenderer
     ) {
         root.add(key, renderer.root)
     }
@@ -44,24 +44,24 @@ class JsonRenderer(override val typeDictionary: TypeDictionary) : RendererBase<J
 
     override fun addTreeArray(
         key: String,
-        array: Collection<JsonRenderer>
+        array: Collection<JavaxJsonTreeRenderer>
     ) {
-        root.add(key, Json.createArrayBuilder().apply { array.forEach { add(it.root) } })
+        root.add(key, jsonProvider.createArrayBuilder().apply { array.forEach { add(it.root) } })
     }
 
     override fun render(): JsonObject = root.build()
 }
 
-object JsonValueScalarRenderer : ScalarRenderer<JsonValue> {
-    override fun string(value: String): JsonValue = Json.createValue(value)
+class JsonValueScalarRenderer(private val jsonProvider: JsonProvider) : ScalarRenderer<JsonValue> {
+    override fun string(value: String): JsonValue = jsonProvider.createValue(value)
 
-    override fun number(value: Int): JsonValue = Json.createValue(value)
+    override fun number(value: Int): JsonValue = jsonProvider.createValue(value)
 
-    override fun number(value: Long): JsonValue = Json.createValue(value)
+    override fun number(value: Long): JsonValue = jsonProvider.createValue(value)
 
-    override fun number(value: Float): JsonValue = Json.createValue(value.toDouble())
+    override fun number(value: Float): JsonValue = jsonProvider.createValue(value.toDouble())
 
-    override fun number(value: Double): JsonValue = Json.createValue(value)
+    override fun number(value: Double): JsonValue = jsonProvider.createValue(value)
 
     override fun number(value: Number): JsonValue {
         return when (value) {

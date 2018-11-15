@@ -1,6 +1,6 @@
 package edu.byu.uapi.http
 
-import edu.byu.uapi.http.json.JsonRenderer
+import edu.byu.uapi.http.json.JavaxJsonTreeRenderer
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
@@ -17,7 +17,7 @@ import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.requests.*
 import java.io.StringWriter
 import java.io.Writer
-import javax.json.Json
+import javax.json.spi.JsonProvider
 
 class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
@@ -102,6 +102,8 @@ class UAPIHttpResponse(
     override val body: ResponseBody = if (this.status == 404) EmptyResponseBody else RenderableResponseBody(response, typeDictionary)
 }
 
+val jsonProvider: JsonProvider = JsonProvider.provider()
+
 class RenderableResponseBody(
     private val wrapped: Renderable,
     private val typeDictionary: TypeDictionary
@@ -114,10 +116,10 @@ class RenderableResponseBody(
     }
 
     override fun toWriter(writer: Writer) {
-        val json = JsonRenderer(typeDictionary)
+        val json = JavaxJsonTreeRenderer(typeDictionary, jsonProvider)
         wrapped.render(json)
         val obj = json.render()
-        Json.createWriter(writer).use {
+        jsonProvider.createWriter(writer).use {
             it.write(obj)
         }
     }

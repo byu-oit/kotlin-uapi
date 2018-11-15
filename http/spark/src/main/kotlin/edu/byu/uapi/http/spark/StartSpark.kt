@@ -5,6 +5,8 @@ import edu.byu.uapi.server.UAPIRuntime
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import spark.*
+import java.io.InputStream
+import java.nio.file.Files
 
 private val LOG: Logger = LoggerFactory.getLogger("edu.byu.uapi.http.spark.StartSpark")
 
@@ -50,10 +52,62 @@ class SparkHttpRoute(val handler: HttpHandler): Route {
     override fun handle(
         request: Request,
         response: Response
-    ): String {
+    ): InputStream {
         val resp = handler.handle(SparkRequest(request))
         response.type("application/json")
-        return resp.body.asString()
+        val temp = Files.createTempFile("uapi-runtime-response-buffer", ".json")
+        val file = temp.toFile()
+        file.writer().buffered().use { resp.body.toWriter(it) }
+
+        return file.inputStream().buffered().afterClose { temp.toFile().delete() }
+    }
+}
+
+fun InputStream.afterClose(afterClose: () -> Unit): InputStream {
+    return CloseActionInputStream(this, afterClose)
+}
+
+class CloseActionInputStream(val wrapped: InputStream, val afterClose: () -> Unit): InputStream() {
+
+    override fun skip(n: Long): Long {
+        return wrapped.skip(n)
+    }
+
+    override fun available(): Int {
+        return wrapped.available()
+    }
+
+    override fun reset() {
+        wrapped.reset()
+    }
+
+    override fun close() {
+        wrapped.close()
+        afterClose()
+    }
+
+    override fun mark(readlimit: Int) {
+        wrapped.mark(readlimit)
+    }
+
+    override fun markSupported(): Boolean {
+        return wrapped.markSupported()
+    }
+
+    override fun read(): Int {
+        return wrapped.read()
+    }
+
+    override fun read(b: ByteArray?): Int {
+        return wrapped.read(b)
+    }
+
+    override fun read(
+        b: ByteArray?,
+        off: Int,
+        len: Int
+    ): Int {
+        return wrapped.read(b, off, len)
     }
 }
 
