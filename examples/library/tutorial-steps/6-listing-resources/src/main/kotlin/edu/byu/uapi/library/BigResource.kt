@@ -3,6 +3,8 @@ package edu.byu.uapi.library
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.fields
 import edu.byu.uapi.spi.input.ListParams
+import edu.byu.uapi.spi.input.ListWithTotal
+import edu.byu.uapi.spi.input.SubsetParams
 
 data class Big(
     val key: Int,
@@ -10,8 +12,12 @@ data class Big(
     val even: Boolean = key % 2 == 0
 )
 
+data class BigParams(
+    override val subset: SubsetParams
+): ListParams.WithSubset
+
 class BigResource: IdentifiedResource<LibraryUser, Int, Big>,
-                   IdentifiedResource.Listable.Simple<LibraryUser, Int, Big> {
+                   IdentifiedResource.Listable.WithSubset<LibraryUser, Int, Big, BigParams> {
     override fun loadModel(
         userContext: LibraryUser,
         id: Int
@@ -33,12 +39,16 @@ class BigResource: IdentifiedResource<LibraryUser, Int, Big>,
         value(Big::even) {}
     }
 
-    private val listSize = 5000
-
     override fun list(
         userContext: LibraryUser,
-        params: ListParams.Empty
-    ): List<Big> {
-        return (0 until listSize).map { Big(it) }
+        params: BigParams
+    ): ListWithTotal<Big> {
+        val start = params.subset.subsetStartOffset
+        val size = params.subset.subsetSize
+        val list = (start until (start + size)).map { Big(it) }
+        return ListWithTotal(Integer.MAX_VALUE, list)
     }
+
+    override val listDefaultSubsetSize: Int = 1
+    override val listMaxSubsetSize: Int = 10_000
 }

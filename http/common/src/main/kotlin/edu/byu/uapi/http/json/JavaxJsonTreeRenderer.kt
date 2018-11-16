@@ -49,7 +49,7 @@ class JavaxJsonTreeRenderer(override val typeDictionary: TypeDictionary, private
         root.add(key, jsonProvider.createArrayBuilder().apply { array.forEach { add(it.root) } })
     }
 
-    override fun render(): JsonObject = root.build()
+    override fun finalize(): JsonObject = root.build()
 }
 
 class JsonValueScalarRenderer(private val jsonProvider: JsonProvider) : ScalarRenderer<JsonValue> {

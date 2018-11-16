@@ -1,6 +1,5 @@
 package edu.byu.uapi.http
 
-import edu.byu.uapi.http.json.JavaxJsonTreeRenderer
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
@@ -14,10 +13,8 @@ import edu.byu.uapi.server.types.UAPIResponse
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamMeta
 import edu.byu.uapi.spi.rendering.Renderable
+import edu.byu.uapi.spi.rendering.Renderer
 import edu.byu.uapi.spi.requests.*
-import java.io.StringWriter
-import java.io.Writer
-import javax.json.spi.JsonProvider
 
 class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
@@ -79,7 +76,7 @@ abstract class AuthenticatedHandler<UserContext : Any>(
         val authResult = factory.createUserContext(HttpUserContextAuthnInfo(request))
         return when (authResult) {
             is UserContextResult.Success -> handleAuthenticated(request, authResult.result)
-            is UserContextResult.Failure -> UAPINotAuthenticatedError(authResult.messages).toHttpResponse(typeDictionary)
+            is UserContextResult.Failure -> UAPINotAuthenticatedError(authResult.messages).toHttpResponse()
         }
     }
 
@@ -89,39 +86,24 @@ abstract class AuthenticatedHandler<UserContext : Any>(
     ): HttpResponse
 }
 
-fun UAPIResponse<*>.toHttpResponse(typeDictionary: TypeDictionary): HttpResponse {
-    return UAPIHttpResponse(this, typeDictionary)
+fun UAPIResponse<*>.toHttpResponse(): HttpResponse {
+    return UAPIHttpResponse(this)
 }
 
 class UAPIHttpResponse(
-    response: UAPIResponse<*>,
-    typeDictionary: TypeDictionary
+    response: UAPIResponse<*>
 ) : HttpResponse {
     override val status: Int = response.metadata.validationResponse.code
     override val headers: HttpHeaders = emptyMap()
-    override val body: ResponseBody = if (this.status == 404) EmptyResponseBody else RenderableResponseBody(response, typeDictionary)
+    override val body: ResponseBody = if (this.status == 404) EmptyResponseBody else RenderableResponseBody(response)
 }
 
-val jsonProvider: JsonProvider = JsonProvider.provider()
-
 class RenderableResponseBody(
-    private val wrapped: Renderable,
-    private val typeDictionary: TypeDictionary
+    private val wrapped: Renderable
 ) : ResponseBody {
-    override fun asString(): String {
-        return StringWriter().use {
-            toWriter(it)
-            it.toString()
-        }
-    }
-
-    override fun toWriter(writer: Writer) {
-        val json = JavaxJsonTreeRenderer(typeDictionary, jsonProvider)
-        wrapped.render(json)
-        val obj = json.render()
-        jsonProvider.createWriter(writer).use {
-            it.write(obj)
-        }
+    override fun <Output: Any> render(renderer: Renderer<Output>): Output {
+        wrapped.render(renderer)
+        return renderer.finalize()
     }
 }
 
@@ -160,7 +142,7 @@ class IdentifiedResourceFetchHttpHandler<UserContext : Any, Id : Any, Model : An
             request.path.asIdParams(),
             request.query.asQueryParams()
         ))
-        return response.toHttpResponse(runtime.typeDictionary)
+        return response.toHttpResponse()
     }
 }
 
@@ -177,7 +159,7 @@ class IdentifiedResourceListHttpHandler<UserContext : Any, Id : Any, Model : Any
             userContext,
             request.query.asQueryParams()
         ))
-        return response.toHttpResponse(runtime.typeDictionary)
+        return response.toHttpResponse()
     }
 }
 

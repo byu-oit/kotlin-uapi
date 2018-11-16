@@ -1,6 +1,6 @@
 package edu.byu.uapi.http
 
-import java.io.Writer
+import edu.byu.uapi.spi.rendering.Renderer
 
 interface HttpResponse {
 
@@ -12,15 +12,10 @@ interface HttpResponse {
 
 interface ResponseBody {
 
-    fun asString(): String
-    fun toWriter(writer: Writer) {
-        writer.use { it.write(asString()) }
-    }
+    fun <Output: Any> render(renderer: Renderer<Output>): Output
 
 }
 
 object EmptyResponseBody : ResponseBody {
-    override fun asString(): String {
-        return ""
-    }
+    override fun <Output : Any> render(renderer: Renderer<Output>): Output = renderer.finalize()
 }

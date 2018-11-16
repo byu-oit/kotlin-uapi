@@ -42,6 +42,6 @@ class MapRenderer(override val typeDictionary: TypeDictionary) : RendererBase<Ma
     }
 
     // TODO: Defensively copy the contents
-    override fun render(): Map<String, Any?> = LinkedHashMap(map)
+    override fun finalize(): Map<String, Any?> = LinkedHashMap(map)
 
 }

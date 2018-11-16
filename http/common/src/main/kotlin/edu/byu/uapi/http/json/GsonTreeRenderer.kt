@@ -51,7 +51,7 @@ class GsonTreeRenderer(override val typeDictionary: TypeDictionary, private val 
         root.add(key, json)
     }
 
-    override fun render(): JsonObject = root
+    override fun finalize(): JsonObject = root
 }
 
 class GsonScalarRenderer(private val jsonProvider: Gson) : ScalarRenderer<JsonElement> {

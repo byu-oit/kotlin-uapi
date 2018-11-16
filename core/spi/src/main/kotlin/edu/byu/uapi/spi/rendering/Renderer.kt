@@ -82,5 +82,5 @@ interface Renderer<Output : Any> {
         tree: Map<String, Any?>
     )
 
-    fun render(): Output
+    fun finalize(): Output
 }
