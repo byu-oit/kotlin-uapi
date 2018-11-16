@@ -12,7 +12,7 @@ data class HttpRoute(
 //
 //    override val status = error.code
 //
-//    override val headers: HttpHeaders
+//    override val headers: Headers
 //        get() = SimpleHeaders(super.headers + mapOf("X-BYUAPI-Error" to setOf(error.message)))
 //
 //}
@@ -23,7 +23,7 @@ data class HttpRoute(
 //
 //    override val status = validationResponse.code
 //
-//    override val headers: HttpHeaders = SimpleHeaders(
+//    override val headers: Headers = SimpleHeaders(
 //        "X-BYUAPI-Response-Message" to validationResponse.message,
 //        "Content-Type" to "application/json"
 //    )
@@ -34,7 +34,7 @@ data class HttpRoute(
 //
 //object EmptyUAPIHttpResponse: HttpResponse {
 //    override val status: Int = 204
-//    override val headers: HttpHeaders = EmptyHeaders
+//    override val headers: Headers = EmptyHeaders
 //    override val body: ResponseBody = EmptyResponseBody
 //}
 

@@ -5,7 +5,7 @@ import edu.byu.uapi.spi.rendering.Renderer
 interface HttpResponse {
 
     val status: Int
-    val headers: HttpHeaders
+    val headers: Map<String, Set<String>>
     val body: ResponseBody
 
 }

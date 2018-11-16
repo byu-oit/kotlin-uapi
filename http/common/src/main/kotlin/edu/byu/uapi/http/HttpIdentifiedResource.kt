@@ -1,15 +1,13 @@
 package edu.byu.uapi.http
 
-import edu.byu.uapi.server.UAPIRuntime
-import edu.byu.uapi.server.UserContextAuthnInfo
-import edu.byu.uapi.server.UserContextFactory
-import edu.byu.uapi.server.UserContextResult
+import edu.byu.uapi.server.*
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceFetchHandler
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceListHandler
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRequestHandler
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
 import edu.byu.uapi.server.types.UAPINotAuthenticatedError
 import edu.byu.uapi.server.types.UAPIResponse
+import edu.byu.uapi.spi.requests.Headers
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamMeta
 import edu.byu.uapi.spi.rendering.Renderable
@@ -94,7 +92,7 @@ class UAPIHttpResponse(
     response: UAPIResponse<*>
 ) : HttpResponse {
     override val status: Int = response.metadata.validationResponse.code
-    override val headers: HttpHeaders = emptyMap()
+    override val headers: Map<String, Set<String>> = emptyMap()
     override val body: ResponseBody = if (this.status == 404) EmptyResponseBody else RenderableResponseBody(response)
 }
 
@@ -109,7 +107,7 @@ class RenderableResponseBody(
 
 class EmptyResponse(
     override val status: Int,
-    override val headers: HttpHeaders = emptyMap()
+    override val headers: Map<String, Set<String>> = emptyMap()
 ) : HttpResponse {
     override val body: ResponseBody = EmptyResponseBody
 }
@@ -117,7 +115,7 @@ class EmptyResponse(
 class HttpUserContextAuthnInfo(
     req: HttpRequest
 ) : UserContextAuthnInfo {
-    override val headers: Map<String, Set<String>> = req.headers
+    override val headers: Headers = req.headers
     override val queryParams: Map<String, Set<String>> = req.query
     override val requestUrl: String
         get() = TODO("not implemented")
@@ -175,5 +173,5 @@ fun HttpRequest.asRequestContext() = HttpRequestContext(this)
 
 data class HttpRequestContext(val request: HttpRequest) : RequestContext {
     override val baseUri: String = ""
-    override val headers: Map<String, Set<String>> = request.headers
+    override val headers: Headers = request.headers
 }

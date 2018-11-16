@@ -1,9 +1,10 @@
 package edu.byu.uapi.server
 
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
-import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
+import edu.byu.uapi.spi.requests.Headers
+import edu.byu.uapi.spi.dictionary.TypeDictionary
 import java.util.*
 
 class UAPIRuntime<UserContext : Any>(
@@ -61,9 +62,10 @@ sealed class UserContextResult<out UserContext : Any> {
 }
 
 interface UserContextAuthnInfo {
-    val headers: Map<String, Set<String>>
+    val headers: Headers
     val queryParams: Map<String, Set<String>>
     val requestUrl: String
     val relativePath: String
     val remoteIp: String
 }
+

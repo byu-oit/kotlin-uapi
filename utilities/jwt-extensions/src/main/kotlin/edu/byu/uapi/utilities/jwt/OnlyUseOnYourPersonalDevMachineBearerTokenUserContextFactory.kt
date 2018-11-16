@@ -4,6 +4,7 @@ import edu.byu.jwt.validate.ByuJwtValidator
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
+import edu.byu.uapi.spi.requests.Headers
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
@@ -24,7 +25,7 @@ class OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory<UserContext :
     override fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext> {
         LOG.debug("Creating user context")
         val authnInfo = maybeDecorateAuthInfo(authenticationInfo)
-        return when(authnInfo) {
+        return when (authnInfo) {
             is UserContextResult.Success -> wrapped.createUserContext(authnInfo.result)
             is UserContextResult.Failure -> authnInfo
         }
@@ -117,6 +118,16 @@ private class ExtraHeaderUserContextAuthnInfo(
     extraHeaders: Map<String, Set<String>>
 ) : UserContextAuthnInfo by wrapped {
 
-    override val headers: Map<String, Set<String>> = wrapped.headers + extraHeaders
+    override val headers = ExtraHeaders(wrapped.headers, extraHeaders)
+}
+
+private class ExtraHeaders(
+    val wrapped: Headers,
+    extras: Map<String, Set<String>>
+) : Headers {
+    private val extraMap = extras.mapKeys { it.key.toLowerCase() }
+    override fun get(header: String): Set<String> {
+        return extraMap.getOrElse(header.toLowerCase()) { wrapped[header] }
+    }
 }
 

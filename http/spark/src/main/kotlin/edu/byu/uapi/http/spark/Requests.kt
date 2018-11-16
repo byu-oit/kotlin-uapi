@@ -1,6 +1,7 @@
 package edu.byu.uapi.http.spark
 
 import edu.byu.uapi.http.*
+import edu.byu.uapi.spi.requests.Headers
 import spark.Request
 
 class SparkRequest(
@@ -12,6 +13,12 @@ class SparkRequest(
     override val body: RequestBody?
         get() = TODO("not implemented")
     override val path: HttpPathParams = req.params().mapKeys { it.key.substring(1) }
-    override val headers: HttpHeaders = req.headers().associate { it.toLowerCase() to setOf(req.headers(it)) }
+    override val headers: Headers = SparkHeaders(req)
     override val query: HttpQueryParams = req.queryMap().toMap().mapValues { setOf(*it.value) }
+}
+
+class SparkHeaders(private val req: Request): Headers {
+    override fun get(header: String): Set<String> {
+        return req.headers(header)?.let { setOf(it) } ?: emptySet()
+    }
 }
