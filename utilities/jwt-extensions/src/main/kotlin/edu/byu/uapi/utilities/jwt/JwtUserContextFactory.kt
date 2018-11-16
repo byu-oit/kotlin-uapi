@@ -17,8 +17,8 @@ abstract class JwtUserContextFactory<UserContext : Any>(
 ) : UserContextFactory<UserContext> {
 
     override fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext> {
-        val jwtHeader = authenticationInfo.headers[ByuJwtValidator.BYU_JWT_HEADER_CURRENT]?.firstOrNull()
-        val originalHeader = authenticationInfo.headers[ByuJwtValidator.BYU_JWT_HEADER_ORIGINAL]?.firstOrNull()
+        val jwtHeader = authenticationInfo.headers[ByuJwtValidator.BYU_JWT_HEADER_CURRENT.toLowerCase()]?.firstOrNull()
+        val originalHeader = authenticationInfo.headers[ByuJwtValidator.BYU_JWT_HEADER_ORIGINAL.toLowerCase()]?.firstOrNull()
 
         if (jwtHeader == null) {
             LOG.warn("No current JWT found in headers")
