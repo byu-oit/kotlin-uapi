@@ -1,0 +1,19 @@
+---
+version: 1
+name: uapi-kotlin-lambda-hello-world
+
+tags:
+  data-sensitivity: public
+  team: AD-General Enterprise Systems
+
+environments:
+  dev:
+    lambda:
+      type: apigateway
+      proxy:
+        path_to_code: target/lambda-hello-world.jar
+        runtime: java8
+        handler: lambda.HelloWorldLambda
+        memory: 1024
+        timeout: 30
+

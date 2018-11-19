@@ -9,6 +9,7 @@ import edu.byu.uapi.http.json.JsonEngine
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.rendering.Renderer
+import org.slf4j.LoggerFactory
 import spark.*
 import java.io.File
 import java.io.InputStream
@@ -16,7 +17,7 @@ import java.io.Writer
 
 
 data class SparkConfig(
-    override val port: Int = defaultPort,
+    val port: Int = defaultPort,
     override val jsonEngine: JsonEngine<*, *> = defaultJsonEngine
 ) : HttpEngineConfig {
     companion object {
@@ -26,6 +27,7 @@ data class SparkConfig(
 }
 
 class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig>(config) {
+    private val LOG = LoggerFactory.getLogger(SparkHttpEngine::class.java)
     init {
         super.doInit()
     }
@@ -51,6 +53,8 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
                 println("Finished in ${end - start} ms")
                 response.header("Content-Encoding", "gzip")
             }
+
+            LOG.info("UAPI-HTTP Spark server is listening on port {}", config.port)
         }
     }
 

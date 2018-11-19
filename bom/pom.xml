@@ -55,6 +55,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>edu.byu.uapi.kotlin.http</groupId>
+                <artifactId>aws-lambda-proxy-adapter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>edu.byu.uapi.kotlin.utilities</groupId>
                 <artifactId>jwt-extensions</artifactId>
                 <version>${project.version}</version>

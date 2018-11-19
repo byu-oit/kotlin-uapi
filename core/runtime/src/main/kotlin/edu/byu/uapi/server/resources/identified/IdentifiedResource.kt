@@ -111,6 +111,10 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         interface Simple<UserContext : Any, Id : Any, Model : Any> : Listable<UserContext, Id, Model, ListParams.Empty> {
             override val listParamsType: KClass<ListParams.Empty>
                 get() = ListParams.Empty::class
+
+            override fun getListParamReader(dictionary: TypeDictionary): ListParamReader<ListParams.Empty> {
+                return EmptyListParamReader
+            }
         }
 
         interface WithSubset<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :

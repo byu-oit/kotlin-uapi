@@ -21,8 +21,6 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
 
     protected fun doInit() {
         _server = startServer(config)
-
-        LOG.info("UAPI-HTTP server is listening on port {}", config.port)
     }
 
     private fun checkInitialized() {
@@ -56,6 +54,5 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
 }
 
 interface HttpEngineConfig {
-    val port: Int
     val jsonEngine: JsonEngine<*, *>
 }
