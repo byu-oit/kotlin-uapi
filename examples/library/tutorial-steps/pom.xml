@@ -18,6 +18,7 @@
         <module>4-creating-a-resource</module>
         <module>5-response-body</module>
         <module>6-listing-resources</module>
+        <module>7-mutating-resources</module>
     </modules>
 
 </project>

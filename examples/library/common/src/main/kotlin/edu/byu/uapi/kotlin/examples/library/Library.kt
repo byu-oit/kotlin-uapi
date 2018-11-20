@@ -1,7 +1,10 @@
 package edu.byu.uapi.kotlin.examples.library
 
 import edu.byu.uapi.kotlin.examples.library.infra.db.*
+import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.Statement
+import java.time.LocalTime
 
 /**
  * Created by Scott Hutchings on 9/14/2018.
@@ -34,6 +37,11 @@ object Library {
         return DB.querySingle(sql, { setLong(1, byOclc) }, this::convertResultSetToBook)
     }
 
+    fun getBookById(bookId: Long): Book? {
+        val sql = "select * from library.BOOK where book_id = ?"
+        return DB.querySingle(sql, { setLong(1, bookId) }, this::convertResultSetToBook)
+    }
+
     private val BASIC_BOOK_SELECT = """
         select b.*
         from library.book b
@@ -52,17 +60,32 @@ object Library {
         }
     }
 
-    fun getAuthors(bookId: Long): List<Author> =
+    fun getAuthorsForBook(bookId: Long): List<Author> =
         DB.queryList("select a.*, ba.author_order from library.author a, library.book_authors ba where ba.author_id = a.author_id and ba.book_id = ? order by ba.author_order",
                      { setLong(1, bookId) }) {
             Author(getInt("author_id"), getString("name"), getInt("author_order"))
         }
 
-    fun getGenres(bookId: Long): List<Genre> =
+    fun getAuthor(authorId: Long): Author? =
+        DB.querySingle("select a.* from library.author a where a.author_id = ?",
+                       { setLong(1, authorId) }) {
+            Author(getInt("author_id"), getString("name"), 1)
+        }
+
+    fun getGenresForBook(bookId: Long): Set<Genre> =
         DB.queryList("select g.* from library.genre g, library.book_genres bg where bg.genre_code = g.genre_code and bg.book_id = ?",
                      { setLong(1, bookId) }) {
             Genre(getString("genre_code"), getString("name"))
+        }.toSet()
+
+    fun getGenreByCode(code: String): Genre? {
+        return DB.querySingle(
+            "select g.* from library.genre g where g.genre_code = ?",
+            { setString(1, code) }
+        ) {
+            Genre(getString(1), getString(2))
         }
+    }
 //
 //    fun getCardholderByNetId(netId: String): CardHolder? {
 //        return DB.openConnection().use { conn ->
@@ -103,8 +126,8 @@ object Library {
                     getSubtitles(id),
                     rs.getInt("published_year"),
                     publisher!!,
-                    getAuthors(id),
-                    getGenres(id),
+                    getAuthorsForBook(id),
+                    getGenresForBook(id),
                     availableCopiesOf(id),
                     rs.getBoolean("restricted")
         )
@@ -182,11 +205,151 @@ object Library {
             getString("subtitle")
         }
     }
+
+    fun createBook(book: NewBook): Long {
+        return DB.openConnection().use { conn ->
+            conn.prepareStatement("""
+                insert into library.book
+                (oclc, isbn, title, published_year, publisher_id, restricted)
+                values
+                (?,    ?,    ?,     ?,              ?,            ?)
+            """.trimIndent(), Statement.RETURN_GENERATED_KEYS).use { ps ->
+                ps.setLong(1, book.oclc)
+                ps.setString(2, book.isbn)
+                ps.setString(3, book.title)
+                ps.setInt(4, book.publishedYear)
+                ps.setInt(5, book.publisher.publisherId)
+                ps.setBoolean(6, book.restricted)
+                ps.execute()
+                val id = ps.generatedKeys.use { rs ->
+                    rs.next()
+                    rs.getLong(1)
+                }
+
+                setBookAuthors(conn, id, book.authors)
+                setBookGenres(conn, id, book.genres)
+                setBookSubtitles(conn, id, book.subtitles)
+
+                id
+            }
+        }
+    }
+
+    fun setBookAuthors(
+        bookId: Long,
+        authors: List<Author>
+    ) {
+        DB.openConnection().use { c ->
+            setBookAuthors(c, bookId, authors)
+        }
+    }
+
+    internal fun setBookSubtitles(
+        connection: Connection,
+        bookId: Long,
+        subtitles: List<String>
+    ) {
+        connection.prepareStatement("delete from library.BOOK_SUBTITLES where BOOK_ID = ?").use { delete ->
+            delete.setLong(1, bookId)
+            delete.execute()
+        }
+        if (subtitles.isEmpty()) {
+            return
+        }
+        connection.prepareStatement("""
+                |insert into library.BOOK_SUBTITLES
+                |(BOOK_ID, SUBTITLE_ORDER, SUBTITLE)
+                |values (?, ?, ?)""".trimMargin()).use { insert ->
+            subtitles.forEachIndexed { idx, s ->
+                insert.setLong(1, bookId)
+                insert.setInt(2, idx)
+                insert.setString(3, s)
+                insert.addBatch()
+            }
+            insert.executeBatch()
+        }
+    }
+
+    internal fun setBookAuthors(
+        connection: Connection,
+        bookId: Long,
+        authors: List<Author>
+    ) {
+        connection.prepareStatement("delete from library.BOOK_AUTHORS where BOOK_ID = ?").use { delete ->
+            delete.setLong(1, bookId)
+            delete.execute()
+        }
+        if (authors.isEmpty()) {
+            return
+        }
+        connection.prepareStatement("""
+                |insert into library.BOOK_AUTHORS
+                |(BOOK_ID, AUTHOR_ID, AUTHOR_ORDER)
+                |values (?, ?, ?)""".trimMargin()).use { insert ->
+            authors.forEachIndexed { idx, a ->
+                insert.setLong(1, bookId)
+                insert.setInt(2, a.authorId)
+                insert.setInt(3, idx)
+                insert.addBatch()
+            }
+            insert.executeBatch()
+        }
+    }
+
+    internal fun setBookGenres(
+        connection: Connection,
+        bookId: Long,
+        genres: Collection<Genre>
+    ) {
+        connection.prepareStatement("delete from library.BOOK_GENRES where BOOK_ID = ?").use { delete ->
+            delete.setLong(1, bookId)
+            delete.execute()
+        }
+        if (genres.isEmpty()) {
+            return
+        }
+        connection.prepareStatement("""
+                |insert into library.BOOK_GENRES
+                |(BOOK_ID, GENRE_CODE)
+                |values (?, ?)""".trimMargin()).use { insert ->
+            genres.toSet().forEach {
+                insert.setLong(1, bookId)
+                insert.setString(2, it.code)
+                insert.addBatch()
+            }
+            insert.executeBatch()
+        }
+    }
 }
+
+data class NewBook(
+    val oclc: Long,
+    val isbn: String?,
+    val title: String,
+    val subtitles: List<String>,
+    val publishedYear: Int,
+    val publisher: Publisher,
+    val authors: List<Author>,
+    val genres: Collection<Genre>,
+    val restricted: Boolean
+)
 
 
 fun main(args: Array<String>) {
     println(Library.listBooks(includeRestricted = true, filters = BookQueryFilters(
         title = "The Player of Games"
     )))
+    val result = Library.createBook(NewBook(
+        oclc = LocalTime.now().toSecondOfDay().toLong(),
+        isbn = null,
+        title = "Title2",
+        subtitles = emptyList(),
+        publishedYear = 1999,
+        publisher = Library.getPublisher(1)!!,
+        authors = listOf(Library.getAuthor(1)!!),
+        genres = emptySet(),
+        restricted = false
+    ))
+    println(result)
+    println(Library.getBookById(result))
 }

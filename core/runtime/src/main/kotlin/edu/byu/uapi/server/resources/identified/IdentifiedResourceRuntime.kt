@@ -46,6 +46,9 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         resource.listView?.also {
             ops.add(IdentifiedResourceListHandler(this, it))
         }
+        resource.createOperation?.also {
+            ops.add(IdentifiedResourceCreateHandler(this, it))
+        }
 
         Collections.unmodifiableSet(ops)
     }

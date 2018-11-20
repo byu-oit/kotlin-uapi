@@ -4,9 +4,10 @@ import com.google.gson.JsonObject
 import edu.byu.uapi.http.*
 import edu.byu.uapi.http.json.*
 import edu.byu.uapi.server.UAPIRuntime
+import edu.byu.uapi.server.util.info
+import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.rendering.Renderer
-import org.slf4j.LoggerFactory
 import spark.*
 import java.io.File
 import java.io.InputStream
@@ -24,7 +25,8 @@ data class SparkConfig(
 }
 
 class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig>(config) {
-    private val LOG = LoggerFactory.getLogger(SparkHttpEngine::class.java)
+    private val LOG = loggerFor<SparkHttpEngine>()
+
     init {
         super.doInit()
     }
@@ -67,10 +69,22 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
         rootPath: String,
         runtime: UAPIRuntime<*>
     ) {
-        server.path(rootPath) {
+        server.optionalPath(rootPath) {
             routes.forEach {
+                LOG.info { "Adding route ${it.method} $rootPath${it.pathParts.stringify(PathParamDecorators.COLON)}" }
                 server.addRoute(it.method.toSpark(), it.toSpark(config, runtime.typeDictionary))
             }
+        }
+    }
+
+    private inline fun Service.optionalPath(
+        rootPath: String,
+        crossinline group: () -> Unit
+    ) {
+        if (rootPath.isBlank() || rootPath.trim() == "/") {
+            group()
+        } else {
+            this.path(rootPath) { group() }
         }
     }
 }
@@ -88,16 +102,26 @@ fun <UserContext : Any> UAPIRuntime<UserContext>.startSpark(
     return this.startSpark(SparkConfig(port, jsonEngine))
 }
 
-private fun HttpRoute.toSpark(config: SparkConfig, typeDictionary: TypeDictionary): RouteImpl {
+private fun HttpRoute.toSpark(
+    config: SparkConfig,
+    typeDictionary: TypeDictionary
+): RouteImpl {
     val path = pathParts.stringify(PathParamDecorators.COLON)
     return RouteImpl.create(path, this.handler.toSpark(config, typeDictionary))
 }
 
-private fun HttpHandler.toSpark(config: SparkConfig, typeDictionary: TypeDictionary): SparkHttpRoute {
+private fun HttpHandler.toSpark(
+    config: SparkConfig,
+    typeDictionary: TypeDictionary
+): SparkHttpRoute {
     return SparkHttpRoute(this, config, typeDictionary)
 }
 
-class SparkHttpRoute(val handler: HttpHandler, val config: SparkConfig, val typeDictionary: TypeDictionary) : Route {
+class SparkHttpRoute(
+    val handler: HttpHandler,
+    val config: SparkConfig,
+    val typeDictionary: TypeDictionary
+) : Route {
     override fun handle(
         request: Request,
         response: Response
@@ -108,7 +132,10 @@ class SparkHttpRoute(val handler: HttpHandler, val config: SparkConfig, val type
     }
 }
 
-fun ResponseBody.renderResponseBody(json: JsonEngine<*, *>, typeDictionary: TypeDictionary): Any {
+fun ResponseBody.renderResponseBody(
+    json: JsonEngine<*, *>,
+    typeDictionary: TypeDictionary
+): Any {
     return when (json) {
         is GsonTreeEngine -> {
             val result: JsonObject = this.render(json.renderer(typeDictionary, null))
@@ -131,7 +158,10 @@ fun ResponseBody.renderResponseBody(json: JsonEngine<*, *>, typeDictionary: Type
     }
 }
 
-inline fun <Output: Any> JsonEngine<Output, Writer>.renderWithFile(typeDictionary: TypeDictionary, render: (Renderer<Output>) -> Unit): InputStream {
+inline fun <Output : Any> JsonEngine<Output, Writer>.renderWithFile(
+    typeDictionary: TypeDictionary,
+    render: (Renderer<Output>) -> Unit
+): InputStream {
     val file = File.createTempFile("uapi-runtime-render-buffer", ".tmp.json")
     println(file)
     file.deleteOnExit()

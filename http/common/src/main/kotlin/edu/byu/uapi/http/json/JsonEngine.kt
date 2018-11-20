@@ -1,6 +1,7 @@
 package edu.byu.uapi.http.json
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -34,6 +35,7 @@ object JacksonEngine : JsonEngine<JacksonGenerator, Writer>() {
     private val objectMapper = ObjectMapper()
         .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
         .configure(SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS, false)
+        .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
         .registerModules(
             KotlinModule(),
             JavaTimeModule()

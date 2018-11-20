@@ -9,7 +9,7 @@ data class Book(
     val publishedYear: Int,
     val publisher: Publisher,
     val authors: List<Author>,
-    val genres: List<Genre>,
+    val genres: Set<Genre>,
     val availableCopies: Int,
     val restricted: Boolean
 )
