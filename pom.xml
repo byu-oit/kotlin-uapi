@@ -49,7 +49,7 @@
         <byu.jwt.version>2.1.0-SNAPSHOT</byu.jwt.version>
 
         <!-- Guava because, well, Guava. -->
-        <util.guava.version>27.0-jre</util.guava.version>
+        <util.guava.version>27.0.1-jre</util.guava.version>
 
         <logging.slf4j.version>1.7.25</logging.slf4j.version>
 
