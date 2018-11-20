@@ -10,7 +10,7 @@ class SparkRequest(
     override val method: HttpMethod = HttpMethod.valueOf(req.requestMethod().toUpperCase())
     override val rawPath: String
         get() = TODO("not implemented")
-    override val body: RequestBody?
+    override val body: HttpRequestBody?
         get() = TODO("not implemented")
     override val path: HttpPathParams = req.params().mapKeys { it.key.substring(1) }
     override val headers: Headers = SparkHeaders(req)

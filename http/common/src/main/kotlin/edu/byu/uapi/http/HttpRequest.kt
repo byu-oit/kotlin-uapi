@@ -1,6 +1,8 @@
 package edu.byu.uapi.http
 
 import edu.byu.uapi.spi.requests.Headers
+import java.io.InputStream
+import java.io.Reader
 
 interface HttpRequest {
     val method: HttpMethod
@@ -8,13 +10,27 @@ interface HttpRequest {
     val headers: Headers
     val query: HttpQueryParams
     val rawPath: String
-    val body: RequestBody?
+    val body: HttpRequestBody?
 }
 
-interface RequestBody // TODO: Handle cases of streamed or number'ed bodies. Maybe with sealed class? How does that work in Multiplatform projects?
+interface HttpRequestBody {
+    fun asStream(): InputStream
+    fun asReader(): Reader
+    fun asString(): String
+}
 
-data class StringRequestBody(val body: String): RequestBody {
+data class StringHttpRequestBody(val body: String): HttpRequestBody {
+    override fun asStream(): InputStream {
+        return body.byteInputStream()
+    }
 
+    override fun asReader(): Reader {
+        return body.reader()
+    }
+
+    override fun asString(): String {
+        return body
+    }
 }
 
 typealias HttpPathParams = Map<String, String>

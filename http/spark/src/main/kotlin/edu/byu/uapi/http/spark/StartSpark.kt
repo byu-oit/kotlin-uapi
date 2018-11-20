@@ -2,10 +2,7 @@ package edu.byu.uapi.http.spark
 
 import com.google.gson.JsonObject
 import edu.byu.uapi.http.*
-import edu.byu.uapi.http.json.GsonTreeEngine
-import edu.byu.uapi.http.json.JavaxJsonStreamEngine
-import edu.byu.uapi.http.json.JavaxJsonTreeEngine
-import edu.byu.uapi.http.json.JsonEngine
+import edu.byu.uapi.http.json.*
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.rendering.Renderer
@@ -22,7 +19,7 @@ data class SparkConfig(
 ) : HttpEngineConfig {
     companion object {
         val defaultPort = 4567
-        val defaultJsonEngine: JsonEngine<*, *> = JavaxJsonStreamEngine
+        val defaultJsonEngine: JsonEngine<*, *> = JacksonEngine
     }
 }
 
@@ -122,6 +119,11 @@ fun ResponseBody.renderResponseBody(json: JsonEngine<*, *>, typeDictionary: Type
             obj.toString()
         }
         is JavaxJsonStreamEngine -> {
+            json.renderWithFile(typeDictionary) {
+                this.render(it)
+            }
+        }
+        is JacksonEngine -> {
             json.renderWithFile(typeDictionary) {
                 this.render(it)
             }

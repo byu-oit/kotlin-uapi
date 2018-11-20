@@ -3,12 +3,17 @@ package edu.byu.uapi.spi.requests
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.input.ParamReadFailure
 import edu.byu.uapi.spi.scalars.ScalarType
+import kotlin.reflect.KClass
 
 typealias QueryParams = Map<String, QueryParam>
 typealias IdParams = Map<String, IdParam>
 
 interface Param {
     val name: String
+}
+
+interface RequestBody {
+    fun <T: Any> readAs(type: KClass<T>): T
 }
 
 interface ScalarParam : Param {

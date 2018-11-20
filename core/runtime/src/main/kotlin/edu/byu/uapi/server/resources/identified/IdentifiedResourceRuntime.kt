@@ -10,10 +10,7 @@ import edu.byu.uapi.spi.input.IdParamReader
 import edu.byu.uapi.spi.input.ListParamReader
 import edu.byu.uapi.spi.input.ListParams
 import edu.byu.uapi.spi.input.ListWithTotal
-import edu.byu.uapi.spi.requests.FetchIdentifiedResource
-import edu.byu.uapi.spi.requests.IdParams
-import edu.byu.uapi.spi.requests.IdentifiedResourceRequest
-import edu.byu.uapi.spi.requests.ListIdentifiedResource
+import edu.byu.uapi.spi.requests.*
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -326,6 +323,29 @@ class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Pa
             searchMetadata = searchMeta,
             sortMetadata = sortMeta,
             subsetMetadata = subsetMeta
+        )
+    }
+}
+
+class IdentifiedResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Input : Any>(
+    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
+    private val createOperation: IdentifiedResource.Creatable<UserContext, Id, Model, Input>
+) : IdentifiedResourceRequestHandler<UserContext, Id, Model, CreateIdentifiedResource<UserContext>>(runtime) {
+    override fun handle(request: CreateIdentifiedResource<UserContext>): UAPIResponse<*> {
+        val userContext = request.userContext
+
+        val authorized = createOperation.canUserCreate(userContext)
+        if (!authorized) {
+            return UAPINotAuthorizedError
+        }
+        val input = request.body.readAs(createOperation.createInput)
+        // TODO: validation
+        val createdId = createOperation.handleCreate(userContext, input)
+
+        return super.idToBasic(
+            userContext = userContext,
+            id = createdId,
+            validationResponse = ValidationResponse(code = 201, message = "Created")
         )
     }
 }

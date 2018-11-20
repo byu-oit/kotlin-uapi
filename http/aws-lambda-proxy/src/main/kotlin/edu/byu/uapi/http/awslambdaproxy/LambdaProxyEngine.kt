@@ -4,10 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import edu.byu.uapi.http.*
-import edu.byu.uapi.http.json.GsonTreeEngine
-import edu.byu.uapi.http.json.JavaxJsonStreamEngine
-import edu.byu.uapi.http.json.JavaxJsonTreeEngine
-import edu.byu.uapi.http.json.JsonEngine
+import edu.byu.uapi.http.json.*
 import edu.byu.uapi.server.UAPIRuntime
 import java.io.StringWriter
 
@@ -34,6 +31,11 @@ data class LambdaRequestHandler(
                 obj.toString()
             }
             is JavaxJsonStreamEngine -> {
+                val writer = StringWriter()
+                response.body.render(jsonEngine.renderer(runtime.typeDictionary, writer))
+                writer.toString()
+            }
+            is JacksonEngine -> {
                 val writer = StringWriter()
                 response.body.render(jsonEngine.renderer(runtime.typeDictionary, writer))
                 writer.toString()

@@ -73,6 +73,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         ): Id
 
         val createInput: KClass<Input>
+            get() = defaultGetCreateInput()
     }
 
     interface Deletable<UserContext : Any, Id : Any, Model : Any> {
@@ -199,6 +200,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         )
 
         val updateInput: KClass<Input>
+            get() = this.defaultGetUpdateInput()
     }
 
     interface UpdatableOrCreatable<UserContext : Any, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Id, Model, Input> {
@@ -244,7 +246,7 @@ private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserCo
     }
 }
 
-internal fun <Params: ListParams>
+internal fun <Params : ListParams>
     IdentifiedResource.Listable<*, *, *, Params>.defaultListParamsType(): KClass<Params> {
     return try {
         val listable = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable::class)
@@ -369,6 +371,32 @@ internal fun <Filters : Any>
         throw UAPITypeError.create(this::class, "Unable to get list filters type", ex)
     }
     return ReflectiveFilterParamReader.create(filterType, typeDictionary)
+}
+
+@Throws(UAPITypeError::class)
+internal fun <Input : Any>
+    IdentifiedResource.Creatable<*, *, *, Input>.defaultGetCreateInput(): KClass<Input> {
+    return try {
+        val create = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Creatable::class)
+            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
+        val projection = create.arguments[3]
+        DarkMagic.getConcreteType(projection)
+    } catch (ex: DarkMagicException) {
+        throw UAPITypeError.create(this::class, "Unable to get create input type", ex)
+    }
+}
+
+@Throws(UAPITypeError::class)
+internal fun <Input : Any>
+    IdentifiedResource.Updatable<*, *, *, Input>.defaultGetUpdateInput(): KClass<Input> {
+    return try {
+        val create = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Updatable::class)
+            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
+        val projection = create.arguments[3]
+        DarkMagic.getConcreteType(projection)
+    } catch (ex: DarkMagicException) {
+        throw UAPITypeError.create(this::class, "Unable to get create input type", ex)
+    }
 }
 
 inline fun <UserContext : Any, Model : Any> IdentifiedResource<UserContext, *, Model>.fields(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)

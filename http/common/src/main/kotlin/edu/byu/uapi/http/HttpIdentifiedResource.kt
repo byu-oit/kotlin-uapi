@@ -1,13 +1,14 @@
 package edu.byu.uapi.http
 
-import edu.byu.uapi.server.*
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceFetchHandler
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceListHandler
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceRequestHandler
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
+import edu.byu.uapi.http.json.JsonEngine
+import edu.byu.uapi.server.UAPIRuntime
+import edu.byu.uapi.server.UserContextAuthnInfo
+import edu.byu.uapi.server.UserContextFactory
+import edu.byu.uapi.server.UserContextResult
+import edu.byu.uapi.server.resources.identified.*
+import edu.byu.uapi.server.types.GenericUAPIErrorResponse
 import edu.byu.uapi.server.types.UAPINotAuthenticatedError
 import edu.byu.uapi.server.types.UAPIResponse
-import edu.byu.uapi.spi.requests.Headers
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamMeta
 import edu.byu.uapi.spi.rendering.Renderable
@@ -16,6 +17,7 @@ import edu.byu.uapi.spi.requests.*
 
 class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
+    val config: HttpEngineConfig,
     val resource: IdentifiedResourceRuntime<UserContext, Id, Model>
 ) {
     val routes: List<HttpRoute> by lazy {
@@ -46,6 +48,9 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
             )
             is IdentifiedResourceListHandler<UserContext, Id, Model, *> -> HttpRoute(
                 rootPath, HttpMethod.GET, IdentifiedResourceListHttpHandler(runtime, op)
+            )
+            is IdentifiedResourceCreateHandler<UserContext, Id, Model, *> -> HttpRoute(
+                rootPath, HttpMethod.POST, IdentifiedResourceCreateHttpHandler(runtime, op, config.jsonEngine)
             )
         }
     }
@@ -156,6 +161,31 @@ class IdentifiedResourceListHttpHandler<UserContext : Any, Id : Any, Model : Any
             request.asRequestContext(),
             userContext,
             request.query.asQueryParams()
+        ))
+        return response.toHttpResponse()
+    }
+}
+
+class IdentifiedResourceCreateHttpHandler<UserContext: Any, Id: Any, Model: Any>(
+    val runtime: UAPIRuntime<UserContext>,
+    val handler: IdentifiedResourceCreateHandler<UserContext, Id, Model, *>,
+    val jsonEngine: JsonEngine<*, *>
+): AuthenticatedHandler<UserContext>(runtime) {
+    override fun handleAuthenticated(
+        request: HttpRequest,
+        userContext: UserContext
+    ): HttpResponse {
+        val body = request.body ?: return UAPIHttpResponse(GenericUAPIErrorResponse(
+            statusCode = 400,
+            message = "Missing Request Body",
+            validationInformation = listOf("Expected a request body. Please try your request again.")
+        ))
+
+        val wrappedBody = jsonEngine.resourceBody(body, runtime.typeDictionary)
+        val response = handler.handle(CreateIdentifiedResource(
+            request.asRequestContext(),
+            userContext,
+            wrappedBody
         ))
         return response.toHttpResponse()
     }

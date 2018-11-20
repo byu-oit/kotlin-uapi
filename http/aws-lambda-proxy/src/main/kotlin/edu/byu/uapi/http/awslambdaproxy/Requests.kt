@@ -12,7 +12,7 @@ class LambdaRequest(
     override val method: HttpMethod = HttpMethod.valueOf(req.httpMethod.toUpperCase())
     override val rawPath: String
         get() = TODO("not implemented")
-    override val body: RequestBody?
+    override val body: HttpRequestBody?
         get() = TODO("not implemented")
     override val path: HttpPathParams = extractPathParams(req, pattern, paramNames)
     override val headers: Headers = LambdaHeaders(req)

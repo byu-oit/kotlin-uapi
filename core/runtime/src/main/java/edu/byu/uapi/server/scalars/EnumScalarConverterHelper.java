@@ -4,9 +4,12 @@ import edu.byu.uapi.spi.scalars.ScalarType;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KClass;
 
+import javax.annotation.Nonnull;
+
 public class EnumScalarConverterHelper {
     @SuppressWarnings("unchecked")
-    public static <Type> ScalarType<Type> getEnumScalarConverter(KClass<Type> type) {
+    @Nonnull
+    public static <Type> ScalarType<Type> getEnumScalarConverter(@Nonnull KClass<Type> type) {
         final Class<Type> javaType = JvmClassMappingKt.getJavaClass(type);
         if (!javaType.isEnum()) {
             throw new IllegalArgumentException(javaType + " is not an enum type");

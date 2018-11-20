@@ -22,18 +22,17 @@ data class ListIdentifiedResource<UserContext : Any>(
     val queryParams: QueryParams
 ) : IdentifiedResourceRequest<UserContext>()
 
-data class CreateIdentifiedResource<UserContext : Any, Input : Any>(
+data class CreateIdentifiedResource<UserContext : Any>(
     override val requestContext: RequestContext,
     override val userContext: UserContext,
-    val idParams: IdParams?,
-    val input: Input
+    val body: RequestBody
 ) : IdentifiedResourceRequest<UserContext>()
 
-data class UpdateIdentifiedResource<UserContext : Any, Input : Any>(
+data class UpdateIdentifiedResource<UserContext : Any>(
     override val requestContext: RequestContext,
     override val userContext: UserContext,
     override val idParams: IdParams,
-    val input: Input
+    val body: RequestBody
 ) : IdentifiedResourceWithIdRequest<UserContext>()
 
 data class DeleteIdentifiedResource<UserContext : Any>(
