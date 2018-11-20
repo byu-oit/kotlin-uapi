@@ -70,7 +70,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         value(Book::oclc) {
             key = true
             displayLabel = "OCLC Control Number"
-            doc = "Control number assigned to this title by the [Online Computer Library Center](www.OCLC.org)."
+            doc = "Control number assigned to this title by the [Online Computer Library Center](www.oclc.org)."
         }
         value(Book::title) {
             displayLabel = "Title"

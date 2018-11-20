@@ -21,7 +21,7 @@ fi
 
 diff_file="_patches/${dest}.patch"
 
-diff -urN -x '*.iml' -x 'target/*' ${src} ${dest} > ${diff_file}
+diff -urN -x '*.iml' -x '*.orig' -x 'target/*' ${src} ${dest} > ${diff_file}
 
 echo "Wrote diff to ${diff_file}"
 

@@ -24,7 +24,6 @@ fun main(args: Array<String>) {
     runtime.register("books", BooksResource())
 
     runtime.startSpark(
-//        jsonEngine = JavaxJsonStreamEngine,
         port = 8080
     )
 }
