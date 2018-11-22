@@ -12,8 +12,8 @@
     <name>Kotlin UAPI HTTP Bindings Parent POM</name>
 
     <modules>
-	    <module>common</module>
-	    <module>spark</module>
+        <module>common</module>
+        <module>spark</module>
         <module>aws-lambda-proxy</module>
     </modules>
 
@@ -25,11 +25,16 @@
 
     <dependencyManagement>
         <dependencies>
-        	<dependency>
-			<groupId>edu.byu.uapi.kotlin</groupId>
-			<artifactId>uapi-runtime</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.kotlin</groupId>
+                <artifactId>uapi-runtime</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.kotlin.validation</groupId>
+                <artifactId>uapi-hibernate-validator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

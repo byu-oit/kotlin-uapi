@@ -4,51 +4,54 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>spark-http-adapter</artifactId>
+    <artifactId>uapi-hibernate-validator</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>Kotlin UAPI Spark Adapter</name>
+    <name>Kotlin UAPI Hibernate Validator</name>
 
     <parent>
-        <groupId>edu.byu.uapi.kotlin.http</groupId>
-        <artifactId>kotlin-uapi-http-pom</artifactId>
+        <groupId>edu.byu.uapi.kotlin.validation</groupId>
+        <artifactId>kotlin-uapi-validation-pom</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <properties>
-        <dependencies.checkUnused>false</dependencies.checkUnused>
-    </properties>
-
     <dependencies>
+        <!-- Hibernate Validator -->
         <dependency>
-            <groupId>${project.parent.groupId}</groupId>
-            <artifactId>http-common</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.validation</groupId>
-            <artifactId>uapi-hibernate-validator</artifactId>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
+        <!-- UAPI -->
         <dependency>
-            <groupId>com.sparkjava</groupId>
-            <artifactId>spark-core</artifactId>
+            <groupId>edu.byu.uapi.kotlin</groupId>
+            <artifactId>uapi-spi</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
+        <!-- Kotlin -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-reflect</artifactId>
-        </dependency>
+
+        <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!-- Test -->
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-core</artifactId>
@@ -81,4 +84,16 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <configuration>
+                    <ignoredUnusedDeclaredDependencies>
+                        <dependency>org.hibernate.validator:hibernate-validator</dependency>
+                    </ignoredUnusedDeclaredDependencies>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

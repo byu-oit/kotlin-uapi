@@ -16,6 +16,7 @@ class LibraryUser(
     val canCreateBooks: Boolean = isLibrarian
     val canModifyBooks: Boolean = isLibrarian
     val canViewRestrictedBooks = isLibrarian
+    val canDeleteBooks: Boolean = isLibrarian
 
     fun canViewBook(model: Book): Boolean {
         return !model.restricted || this.canViewRestrictedBooks

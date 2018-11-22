@@ -13,7 +13,8 @@ import edu.byu.uapi.server.util.DarkMagicException
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.*
-import edu.byu.uapi.spi.validation.Validating
+import edu.byu.uapi.spi.validation.ValidationEngine
+import edu.byu.uapi.spi.validation.Validator
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
@@ -61,16 +62,15 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
     interface Creatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
         fun canUserCreate(userContext: UserContext): Boolean
-        fun validateCreateInput(
-            userContext: UserContext,
-            input: Input,
-            validation: Validating
-        )
+
+        fun getCreateValidator(validationEngine: ValidationEngine): Validator<Input> {
+            return validationEngine.validatorFor(createInput)
+        }
 
         fun handleCreate(
             userContext: UserContext,
             input: Input
-        ): Id
+        ): CreateResult<Id>
 
         val createInput: KClass<Input>
             get() = defaultGetCreateInput()
@@ -92,7 +92,7 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             userContext: UserContext,
             id: Id,
             model: Model
-        )
+        ): DeleteResult
     }
 
     interface Listable<UserContext : Any, Id : Any, Model : Any, Params : ListParams> {
@@ -184,45 +184,88 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             model: Model
         ): Boolean
 
-        fun validateUpdateInput(
-            userContext: UserContext,
-            id: Id,
-            model: Model,
-            input: Input,
-            validation: Validating
-        )
+        fun getUpdateValidator(validationEngine: ValidationEngine): Validator<Input> {
+            return validationEngine.validatorFor(updateInput)
+        }
 
         fun handleUpdate(
             userContext: UserContext,
             id: Id,
             model: Model,
             input: Input
-        )
+        ): UpdateResult
 
         val updateInput: KClass<Input>
             get() = this.defaultGetUpdateInput()
     }
 
-    interface UpdatableOrCreatable<UserContext : Any, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Id, Model, Input> {
+    interface CreatableWithId<UserContext : Any, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Id, Model, Input> {
         fun canUserCreateWithId(
             userContext: UserContext,
             id: Id
         ): Boolean
 
-        fun validateCreateWithIdInput(
-            userContext: UserContext,
-            id: Id,
-            input: Input,
-            validation: Validating
-        )
-
         fun handleCreateWithId(
             userContext: UserContext,
             input: Input,
             id: Id
-        )
+        ): CreateResult<Id>
     }
 }
+
+sealed class CreateResult<out Id : Any> {
+    data class Success<Id : Any>(val id: Id) : CreateResult<Id>()
+    object Unauthorized : CreateResult<Nothing>()
+    data class InvalidInput(val errors: List<InputError>) : CreateResult<Nothing>() {
+        constructor(
+            field: String,
+            description: String
+        ) : this(listOf(InputError(field, description)))
+    }
+
+    data class Error(
+        val errors: List<String>,
+        val cause: Throwable? = null
+    ) : CreateResult<Nothing>() {
+        constructor(error: String) : this(listOf(error))
+    }
+}
+
+sealed class UpdateResult {
+    object Success : UpdateResult()
+    data class InvalidInput(val errors: List<InputError>) : UpdateResult() {
+        constructor(
+            field: String,
+            description: String
+        ) : this(listOf(InputError(field, description)))
+    }
+
+    object Unauthorized : UpdateResult()
+    data class CannotBeUpdated(val reason: String) : UpdateResult()
+
+    data class Error(
+        val errors: List<String>,
+        val cause: Throwable? = null
+    ) : UpdateResult() {
+        constructor(error: String) : this(listOf(error))
+    }
+}
+
+sealed class DeleteResult {
+    object Success : DeleteResult()
+    object AlreadyDeleted : DeleteResult()
+    object Unauthorized: DeleteResult()
+    data class CannotBeDeleted(val reason: String) : DeleteResult()
+    data class Error(
+        val errors: List<String>,
+        val cause: Throwable? = null
+    ) : DeleteResult()
+}
+
+data class InputError(
+    val field: String,
+    val description: String
+)
 
 private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserContext, Id, Model>.defaultIdReader(
     dictionary: TypeDictionary,

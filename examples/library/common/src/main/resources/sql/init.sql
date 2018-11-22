@@ -20,7 +20,7 @@ create table if not exists book (
 );
 
 create table if not exists book_subtitles(
-  book_id bigint not null references book(book_id),
+  book_id bigint not null references book(book_id) on delete cascade,
   subtitle_order int not null,
   subtitle varchar(255) not null,
   primary key (book_id, subtitle_order)
@@ -32,7 +32,7 @@ create table if not exists author (
 );
 
 create table if not exists book_authors (
-  book_id bigint not null references book(book_id),
+  book_id bigint not null references book(book_id) on delete cascade,
   author_id bigint not null references author(author_id),
   author_order int not null,
   primary key (book_id, author_id),
@@ -45,14 +45,14 @@ create table if not exists genre (
 );
 
 create table if not exists book_genres (
-  book_id bigint not null references book(book_id),
+  book_id bigint not null references book(book_id) on delete cascade,
   genre_code varchar(5) not null references genre(genre_code),
   primary key (book_id, genre_code)
 );
 
 create table if not exists book_copy (
   copy_id bigint identity primary key not null,
-  book_id varchar(13) not null references book(book_id)
+  book_id varchar(13) not null references book(book_id) on delete cascade
 );
 
 create table if not exists cardholder (
@@ -63,7 +63,7 @@ create table if not exists cardholder (
 
 create table if not exists loans (
   loan_id bigint identity primary key not null,
-  copy_id bigint not null references book_copy(copy_id),
+  copy_id bigint not null references book_copy(copy_id) on delete cascade,
   cardholder_id bigint not null references cardholder(cardholder_id),
   checked_out_datetime timestamp not null default current_timestamp,
   due_date date not null,

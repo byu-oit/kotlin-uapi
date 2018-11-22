@@ -344,10 +344,15 @@ class IdentifiedResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, 
         val input = request.body.readAs(createOperation.createInput)
         // TODO: validation
         val createdId = createOperation.handleCreate(userContext, input)
+        if (createdId !is CreateResult.Success<Id>) {
+            throw IllegalStateException()
+        }
+
+        val id = createdId.id
 
         return super.idToBasic(
             userContext = userContext,
-            id = createdId,
+            id = id,
             validationResponse = ValidationResponse(code = 201, message = "Created")
         )
     }

@@ -3,12 +3,9 @@ package edu.byu.uapi.library
 import org.hibernate.validator.constraints.ISBN
 import java.time.Year
 import javax.validation.constraints.NotBlank
-import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.Positive
 
-data class CreateBook(
-    @Positive
-    val oclc: Long,
+data class UpdateBook(
     @ISBN
     val isbn: String? = null,
     @NotBlank
@@ -18,6 +15,6 @@ data class CreateBook(
     @Positive
     val publisherId: Int,
     val authorIds: List<@Positive Long>,
-    val genreCodes: Set<@NotEmpty String> = emptySet(),
+    val genreCodes: Set<@NotBlank String> = emptySet(),
     val restricted: Boolean = false
 )

@@ -34,21 +34,21 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- SPI -->
             <dependency>
                 <groupId>edu.byu.uapi.kotlin</groupId>
                 <artifactId>uapi-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!-- The actual runtime -->
             <dependency>
                 <groupId>edu.byu.uapi.kotlin</groupId>
                 <artifactId>uapi-runtime</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>edu.byu.uapi.kotlin</groupId>
-                <artifactId>uapi-compiler</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+
+            <!-- HTTP layers -->
             <dependency>
                 <groupId>edu.byu.uapi.kotlin.http</groupId>
                 <artifactId>spark-http-adapter</artifactId>
@@ -59,9 +59,18 @@
                 <artifactId>aws-lambda-proxy-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!-- Utilities -->
             <dependency>
                 <groupId>edu.byu.uapi.kotlin.utilities</groupId>
                 <artifactId>jwt-extensions</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Validation -->
+            <dependency>
+                <groupId>edu.byu.uapi.kotlin.validation</groupId>
+                <artifactId>uapi-hibernate-validator</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

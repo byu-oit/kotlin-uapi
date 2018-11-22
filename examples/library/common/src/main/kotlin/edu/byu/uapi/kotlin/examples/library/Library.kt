@@ -320,6 +320,35 @@ object Library {
             insert.executeBatch()
         }
     }
+
+    fun updateBook(newBook: NewBook) {
+        TODO("not implemented")
+    }
+
+    fun hasCheckedOutCopies(bookId: Long): Boolean {
+        val result = DB.querySingle("""
+            select 1 from library.book_copy bc
+            where bc.book_id = ?
+            and exists(
+              select 1 from library.loans l
+              where l.copy_id = bc.copy_id
+              and returned_datetime is null
+            )
+        """.trimIndent(), {
+            setLong(1, bookId)
+        }) {
+            getInt(1)
+        }
+        return result != null && result == 1
+    }
+
+    fun deleteBook(id: Long) {
+        if (hasCheckedOutCopies(id)) throw IllegalStateException("Can't delete books with checked-out copies!")
+        DB.execute("delete from library.book where book_id = ?") {
+            setLong(1, id)
+        }
+    }
+
 }
 
 data class NewBook(
@@ -352,4 +381,5 @@ fun main(args: Array<String>) {
     ))
     println(result)
     println(Library.getBookById(result))
+    Library.deleteBook(11)
 }

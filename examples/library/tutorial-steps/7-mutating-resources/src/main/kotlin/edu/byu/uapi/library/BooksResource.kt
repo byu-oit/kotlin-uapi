@@ -1,18 +1,20 @@
 package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.*
-import edu.byu.uapi.server.resources.identified.IdentifiedResource
-import edu.byu.uapi.server.resources.identified.fields
+import edu.byu.uapi.server.resources.identified.*
 import edu.byu.uapi.spi.input.ListWithTotal
 import edu.byu.uapi.spi.input.UAPISortOrder
-import edu.byu.uapi.spi.validation.Validating
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
                       IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
                       IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
                       IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
                       IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>,
-                      IdentifiedResource.Creatable<LibraryUser, Long, Book, CreateBook> {
+                      IdentifiedResource.Creatable<LibraryUser, Long, Book, CreateBook>,
+                      IdentifiedResource.Updatable<LibraryUser, Long, Book, UpdateBook>,
+                      IdentifiedResource.CreatableWithId<LibraryUser, Long, Book, UpdateBook>,
+                      IdentifiedResource.Deletable<LibraryUser, Long, Book>
+{
 
     override fun list(
         userContext: LibraryUser,
@@ -123,30 +125,137 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         return userContext.canCreateBooks
     }
 
-    override fun validateCreateInput(
-        userContext: LibraryUser,
-        input: CreateBook,
-        validation: Validating
-    ) {
-        TODO("not implemented")
-    }
-
     override fun handleCreate(
         userContext: LibraryUser,
         input: CreateBook
-    ): Long {
-        val bookId = Library.createBook(NewBook(
+    ): CreateResult<Long> {
+        val publisher = Library.getPublisher(input.publisherId)
+            ?: return CreateResult.InvalidInput("publisher_id", "No such publisher exists")
+        val authors = input.authorIds.map {
+            Library.getAuthor(it) ?: return CreateResult.InvalidInput("author_ids", "No such author exists")
+        }
+        val genres = input.genreCodes.map {
+            Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
+        }
+
+        Library.createBook(NewBook(
             oclc = input.oclc,
             isbn = input.isbn,
             title = input.title,
             subtitles = input.subtitles,
             publishedYear = input.publishedYear.value,
-            publisher = Library.getPublisher(input.publisherId)!!,
-            authors = input.authorIds.map { Library.getAuthor(it)!! },
-            genres = input.genreCodes.map { Library.getGenreByCode(it)!! },
+            publisher = publisher,
+            authors = authors,
+            genres = genres,
             restricted = input.restricted
         ))
-        return input.oclc
+
+        return CreateResult.Success(input.oclc)
     }
 
+    override fun canUserUpdate(
+        userContext: LibraryUser,
+        id: Long,
+        model: Book
+    ): Boolean {
+        return userContext.canModifyBooks
+    }
+
+    override fun canBeUpdated(
+        id: Long,
+        model: Book
+    ): Boolean {
+        return true
+    }
+
+    override fun handleUpdate(
+        userContext: LibraryUser,
+        id: Long,
+        model: Book,
+        input: UpdateBook
+    ): UpdateResult {
+        val publisher = Library.getPublisher(input.publisherId)
+            ?: return UpdateResult.InvalidInput("publisher_id", "No such publisher exists")
+        val authors = input.authorIds.map {
+            Library.getAuthor(it) ?: return UpdateResult.InvalidInput("author_ids", "No such author exists")
+        }
+        val genres = input.genreCodes.map {
+            Library.getGenreByCode(it) ?: return UpdateResult.InvalidInput("genre_codes", "No such genre exists")
+        }
+
+        Library.updateBook(NewBook(
+            oclc = id,
+            isbn = input.isbn,
+            title = input.title,
+            subtitles = input.subtitles,
+            publishedYear = input.publishedYear.value,
+            publisher = publisher,
+            authors = authors,
+            genres = genres,
+            restricted = input.restricted
+        ))
+
+        return UpdateResult.Success
+    }
+
+    override fun canUserCreateWithId(
+        userContext: LibraryUser,
+        id: Long
+    ): Boolean {
+        return userContext.canCreateBooks
+    }
+
+    override fun handleCreateWithId(
+        userContext: LibraryUser,
+        input: UpdateBook,
+        id: Long
+    ): CreateResult<Long> {
+        val publisher = Library.getPublisher(input.publisherId)
+            ?: return CreateResult.InvalidInput("publisher_id", "No such publisher exists")
+        val authors = input.authorIds.map {
+            Library.getAuthor(it) ?: return CreateResult.InvalidInput("author_ids", "No such author exists")
+        }
+        val genres = input.genreCodes.map {
+            Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
+        }
+
+        Library.createBook(NewBook(
+            oclc = id,
+            isbn = input.isbn,
+            title = input.title,
+            subtitles = input.subtitles,
+            publishedYear = input.publishedYear.value,
+            publisher = publisher,
+            authors = authors,
+            genres = genres,
+            restricted = input.restricted
+        ))
+
+        return CreateResult.Success(id)
+    }
+
+    override fun canUserDelete(
+        userContext: LibraryUser,
+        id: Long,
+        model: Book
+    ): Boolean {
+        return userContext.canDeleteBooks
+    }
+
+    override fun canBeDeleted(
+        id: Long,
+        model: Book
+    ): Boolean {
+        val copies = Library.hasCheckedOutCopies(model.id)
+        return !copies //Cannot delete books that have checked-out copies!
+    }
+
+    override fun handleDelete(
+        userContext: LibraryUser,
+        id: Long,
+        model: Book
+    ): DeleteResult {
+        Library.deleteBook(model.id)
+        return DeleteResult.Success
+    }
 }

@@ -52,13 +52,26 @@ class DB(val dbPath: String) {
 
 val DefaultDB = DB("./target/library/library-db")
 
+inline fun DB.execute(
+    sql: String,
+    prepare: PreparedStatement.() -> Unit
+): Int {
+    println("Executing SQL [$sql]")
+    return this.openConnection().use { conn ->
+        conn.prepareStatement(sql).use { ps ->
+            ps.prepare()
+            ps.executeUpdate()
+        }
+    }
+}
+
 inline fun <T> DB.query(
     sql: String,
     prepare: PreparedStatement.() -> Unit,
     process: ResultSet.() -> T
 ): T {
     println("Executing SQL Query [$sql]")
-    return DefaultDB.openConnection().use { conn ->
+    return this.openConnection().use { conn ->
         conn.prepareStatement(sql).use { ps ->
             ps.prepare()
             ps.executeQuery().use(process)
@@ -76,7 +89,7 @@ inline fun <T> DB.queryList(
     prepare: PreparedStatement.() -> Unit,
     process: ResultSet.() -> T
 ): List<T> {
-    return DefaultDB.query(sql, prepare) {
+    return this.query(sql, prepare) {
         val list = mutableListOf<T>()
 
         while (next()) {
@@ -154,7 +167,7 @@ data class WhereClause(
     val setValues: (PreparedStatement.(firstIndex: Int) -> Int)? = null
 ) {
     companion object {
-        fun <T: Any> singleParam(
+        fun <T : Any> singleParam(
             clause: String,
             value: T,
             setValue: PreparedStatement.(index: Int, value: T) -> Unit
@@ -186,7 +199,7 @@ data class WhereClause(
                         this.set(initialIndex + idx++)
                     }
                 }
-               idx
+                idx
             }
         }
     }

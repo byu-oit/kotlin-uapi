@@ -2,7 +2,6 @@ package edu.byu.uapi.server.resources.identified
 
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.spi.input.ListParams
-import edu.byu.uapi.spi.validation.Validating
 import io.kotlintest.data.forall
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.DescribeSpec
@@ -69,18 +68,10 @@ class IdentifiedResourceSpec : DescribeSpec() {
             TODO("not implemented")
         }
 
-        override fun validateCreateInput(
-            userContext: String,
-            input: String,
-            validation: Validating
-        ) {
-            TODO("not implemented")
-        }
-
         override fun handleCreate(
             userContext: String,
             input: String
-        ): String {
+        ): CreateResult<String> {
             TODO("not implemented")
         }
 
@@ -105,22 +96,12 @@ class IdentifiedResourceSpec : DescribeSpec() {
             TODO("not implemented")
         }
 
-        override fun validateUpdateInput(
-            userContext: String,
-            id: String,
-            model: String,
-            input: String,
-            validation: Validating
-        ) {
-            TODO("not implemented")
-        }
-
         override fun handleUpdate(
             userContext: String,
             id: String,
             model: String,
             input: String
-        ) {
+        ): UpdateResult {
             TODO("not implemented")
         }
 
@@ -130,7 +111,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private class WithCreateWithId : WithUpdate(),
-                                     IdentifiedResource.UpdatableOrCreatable<String, String, String, String> {
+                                     IdentifiedResource.CreatableWithId<String, String, String, String> {
         override fun canUserCreateWithId(
             userContext: String,
             id: String
@@ -138,23 +119,13 @@ class IdentifiedResourceSpec : DescribeSpec() {
             TODO("not implemented")
         }
 
-        override fun validateCreateWithIdInput(
-            userContext: String,
-            id: String,
-            input: String,
-            validation: Validating
-        ) {
-            TODO("not implemented")
-        }
-
         override fun handleCreateWithId(
             userContext: String,
             input: String,
             id: String
-        ) {
+        ): CreateResult<String> {
             TODO("not implemented")
         }
-
 
     }
 
@@ -179,10 +150,9 @@ class IdentifiedResourceSpec : DescribeSpec() {
             userContext: String,
             id: String,
             model: String
-        ) {
+        ): DeleteResult {
             TODO("not implemented")
         }
-
     }
 
     private class WithListable : Base(),
