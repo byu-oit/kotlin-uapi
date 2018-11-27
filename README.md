@@ -20,8 +20,8 @@ Milestones:
   * [ ] Authorize filter params
 - [x] Run HTTP on top of Spark
 - [x] Resource Creation
-- [ ] Resource Modification
-- [ ] Resource Deletion
+- [x] Resource Modification
+- [x] Resource Deletion
 - [ ] Automatic link handling
 - [ ] Automatic subresource/fieldset handling
 - [ ] Run HTTP on top of ktor
