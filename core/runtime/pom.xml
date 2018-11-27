@@ -23,6 +23,11 @@
             <artifactId>uapi-spi</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>edu.byu.uapi.kotlin.validation</groupId>
+            <artifactId>uapi-hibernate-validator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Kotlin -->
         <dependency>

@@ -3,7 +3,10 @@ package edu.byu.uapi.server.resources.identified
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.schemas.*
 import edu.byu.uapi.server.types.*
+import edu.byu.uapi.server.util.debug
+import edu.byu.uapi.server.util.info
 import edu.byu.uapi.server.util.loggerFor
+import edu.byu.uapi.server.util.warn
 import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamReader
@@ -11,6 +14,7 @@ import edu.byu.uapi.spi.input.ListParamReader
 import edu.byu.uapi.spi.input.ListParams
 import edu.byu.uapi.spi.input.ListWithTotal
 import edu.byu.uapi.spi.requests.*
+import edu.byu.uapi.spi.validation.ValidationEngine
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -22,7 +26,8 @@ import kotlin.reflect.full.primaryConstructor
 class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     val name: String,
     internal val resource: IdentifiedResource<UserContext, Id, Model>,
-    val typeDictionary: TypeDictionary
+    val typeDictionary: TypeDictionary,
+    val validationEngine: ValidationEngine
 ) {
 
     // TODO fun validateResource(validation: Validating)
@@ -42,36 +47,17 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     }
 
     val availableOperations: Set<IdentifiedResourceRequestHandler<UserContext, Id, Model, *>> by lazy {
-        val ops: MutableSet<IdentifiedResourceRequestHandler<UserContext, Id, Model, *>> = mutableSetOf(IdentifiedResourceFetchHandler(this))
-        resource.listView?.also {
-            ops.add(IdentifiedResourceListHandler(this, it))
-        }
-        resource.createOperation?.also {
-            ops.add(IdentifiedResourceCreateHandler(this, it))
-        }
+        val ops: MutableSet<IdentifiedResourceRequestHandler<UserContext, Id, Model, *>> = mutableSetOf()
+
+        ops.add(IdentifiedResourceFetchHandler(this))
+
+        resource.listView?.also { ops.add(IdentifiedResourceListHandler(this, it)) }
+        resource.createOperation?.also { ops.add(IdentifiedResourceCreateHandler(this, it)) }
+        resource.updateOperation?.also { ops.add(IdentifiedResourceUpdateHandler(this, it)) }
+        resource.deleteOperation?.also { ops.add(IdentifiedResourceDeleteHandler(this, it)) }
 
         Collections.unmodifiableSet(ops)
     }
-
-//    fun <Input : Any> handleCreate(
-//        userContext: UserContext,
-//        input: Input
-//    ): UAPIResponse<*> {
-//        val op = this.resource.createOperation ?: return UAPIOperationNotImplementedError
-//        if (!op.createInput.isInstance(input)) {
-//            throw IllegalStateException("Illegal input type in resource ${this.name}: expected ${op.createInput}, got ${input::class}")
-//        }
-//        @Suppress("UNCHECKED_CAST")
-//        op as IdentifiedResource.Creatable<UserContext, Id, Model, Input>
-//        if (!op.canUserCreate(userContext)) {
-//            return UAPINotAuthorizedError
-//        }
-//        // TODO: validation
-//        val createdId = op.handleCreate(userContext, input)
-//
-//        return idToBasic(userContext, createdId, ValidationResponse(201))
-//    }
-
 
     val availableFieldsets = setOf(SpecConstants.FieldSets.VALUE_BASIC)
     val availableContexts = emptyMap<String, Set<String>>()
@@ -332,28 +318,282 @@ class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Pa
 
 class IdentifiedResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Input : Any>(
     runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
-    private val createOperation: IdentifiedResource.Creatable<UserContext, Id, Model, Input>
+    private val operation: IdentifiedResource.Creatable<UserContext, Id, Model, Input>
 ) : IdentifiedResourceRequestHandler<UserContext, Id, Model, CreateIdentifiedResource<UserContext>>(runtime) {
+
+    companion object {
+        private val LOG = loggerFor<IdentifiedResourceCreateHandler<*, *, *, *>>()
+    }
+
+    private val inputType = operation.createInput
+
     override fun handle(request: CreateIdentifiedResource<UserContext>): UAPIResponse<*> {
+        LOG.debug { "Got request to create ${runtime.name}" }
         val userContext = request.userContext
 
-        val authorized = createOperation.canUserCreate(userContext)
+        val authorized = operation.canUserCreate(userContext)
         if (!authorized) {
+            LOG.warn { "Unauthorized request to create ${runtime.name}! User Context was $userContext" }
             return UAPINotAuthorizedError
         }
-        val input = request.body.readAs(createOperation.createInput)
-        // TODO: validation
-        val createdId = createOperation.handleCreate(userContext, input)
-        if (createdId !is CreateResult.Success<Id>) {
-            throw IllegalStateException()
+        val input = request.body.readAs(inputType)
+
+        val validator = operation.getCreateValidator(runtime.validationEngine)
+        val validationResponse = validator.validate(input)
+        if (validationResponse.isNotEmpty()) {
+            LOG.warn { "Invalid create ${runtime.name} request body: ${validationResponse.map { "${it.field}: ${it.should}" }}" }
+            return GenericUAPIErrorResponse(
+                statusCode = 401,
+                message = "Bad Request",
+                validationInformation = validationResponse.map { "The value for ${it.field} is invalid: ${it.should}" }
+            )
+        }
+        return when (val result = operation.handleCreate(userContext, input)) {
+            is CreateResult.Success -> {
+                LOG.info { "Successfully created ${runtime.name} ${result.id}" }
+                super.idToBasic(
+                    userContext = userContext,
+                    id = result.id,
+                    validationResponse = ValidationResponse(201, "Created")
+                )
+            }
+            CreateResult.Unauthorized -> {
+                LOG.warn { "Unauthorized request to create ${runtime.name} (caught in handleCreate)! User Context was $userContext" }
+                UAPINotAuthorizedError
+            }
+            is CreateResult.InvalidInput -> {
+                LOG.warn { "Invalid create ${runtime.name} request body: ${result.errors.map { "${it.field}: ${it.description}" }}" }
+                GenericUAPIErrorResponse(
+                    400, "Bad Request", result.errors.map { "The value for ${it.field} is invalid: ${it.description}" }
+                )
+            }
+            is CreateResult.Error -> {
+                LOG.error("Error(s) creating ${runtime.name}: ${result.errors.joinToString()}", result.cause)
+                GenericUAPIErrorResponse(
+                    result.code, "Error", result.errors
+                )
+            }
+        }
+    }
+}
+
+class IdentifiedResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Input : Any>(
+    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
+    private val operation: IdentifiedResource.Updatable<UserContext, Id, Model, Input>
+) : IdentifiedResourceRequestHandler<UserContext, Id, Model, UpdateIdentifiedResource<UserContext>>(runtime) {
+
+    companion object {
+        private val LOG = loggerFor<IdentifiedResourceCreateHandler<*, *, *, *>>()
+    }
+
+    private val inputType = operation.updateInput
+    private val createWithId = operation.takeIfType<IdentifiedResource.CreatableWithId<UserContext, Id, Model, Input>>()
+    private val validator = operation.getUpdateValidator(runtime.validationEngine)
+
+    override fun handle(request: UpdateIdentifiedResource<UserContext>): UAPIResponse<*> {
+        LOG.debug { "Got request to update ${runtime.name}" }
+        val userContext = request.userContext
+
+        val id = getId(request.idParams)
+        val input = request.body.readAs(inputType)
+
+        val model = resource.loadModel(userContext, id)
+
+        return when {
+            model != null -> {
+                val result = doUpdate(userContext, id, model, input)
+                handleUpdateResult(userContext, id, result)
+            }
+            createWithId != null -> {
+                val result = doCreate(createWithId, userContext, id, input)
+                handleCreateResult(userContext, id, result)
+            }
+            else -> UAPINotFoundError
+        }
+    }
+
+    private fun handleUpdateResult(
+        userContext: UserContext,
+        id: Id,
+        result: UpdateResult
+    ): UAPIResponse<*> {
+        return when (result) {
+            UpdateResult.Success -> {
+                LOG.info { "Successfully updated ${runtime.name} $id" }
+                super.idToBasic(
+                    userContext = userContext,
+                    id = id,
+                    validationResponse = ValidationResponse(200, "OK")
+                )
+            }
+            is UpdateResult.InvalidInput -> {
+                LOG.warn { "Invalid update ${runtime.name} $id request body: ${result.errors.map { "${it.field}: ${it.description}" }}" }
+                GenericUAPIErrorResponse(
+                    400, "Bad Request", result.errors.map { "The value for ${it.field} is invalid: ${it.description}" }
+                )
+            }
+            UpdateResult.Unauthorized -> {
+                LOG.warn { "Unauthorized request to update ${runtime.name} $id! User Context was $userContext" }
+                UAPINotAuthorizedError
+            }
+            is UpdateResult.CannotBeUpdated -> {
+                LOG.warn { "Got request to update ${runtime.name} $id, but updates are not allowed: ${result.reason}" }
+                GenericUAPIErrorResponse(
+                    statusCode = 409,
+                    message = "Conflict",
+                    validationInformation = listOf(result.reason)
+                )
+            }
+            is UpdateResult.Error -> {
+                LOG.warn("Unknown error udpating ${runtime.name} $id: code ${result.code} ${result.errors.joinToString()}", result.cause)
+                GenericUAPIErrorResponse(
+                    statusCode = result.code,
+                    message = "Error",
+                    validationInformation = result.errors
+                )
+            }
+        }
+    }
+
+    private fun doUpdate(
+        userContext: UserContext,
+        id: Id,
+        model: Model,
+        input: Input
+    ): UpdateResult {
+        val authorized = operation.canUserUpdate(userContext, id, model)
+        if (!authorized) {
+            return UpdateResult.Unauthorized
         }
 
-        val id = createdId.id
+        val canBeUpdated = operation.canBeUpdated(id, model)
+        if (!canBeUpdated) {
+            return UpdateResult.CannotBeUpdated("cannot be updated at this time.")
+        }
 
-        return super.idToBasic(
-            userContext = userContext,
-            id = id,
-            validationResponse = ValidationResponse(code = 201, message = "Created")
-        )
+        val validationResponse = validator.validate(input)
+        if (validationResponse.isNotEmpty()) {
+            return UpdateResult.InvalidInput(validationResponse.map { InputError(it.field, it.should) })
+        }
+        return operation.handleUpdate(userContext, id, model, input)
+    }
+
+    private fun doCreate(
+        operation: IdentifiedResource.CreatableWithId<UserContext, Id, Model, Input>,
+        userContext: UserContext,
+        id: Id,
+        input: Input
+    ): CreateWithIdResult {
+        val authorized = operation.canUserCreateWithId(userContext, id)
+        if (!authorized) {
+            return CreateWithIdResult.Unauthorized
+        }
+
+        val validationResponse = validator.validate(input)
+        if (validationResponse.isNotEmpty()) {
+            return CreateWithIdResult.InvalidInput(validationResponse.map { InputError(it.field, it.should) })
+        }
+        return operation.handleCreateWithId(userContext, id, input)
+    }
+
+    private fun handleCreateResult(
+        userContext: UserContext,
+        id: Id,
+        result: CreateWithIdResult
+    ): UAPIResponse<*> {
+        return when (result) {
+            is CreateWithIdResult.Success -> {
+                LOG.info { "Successfully created ${runtime.name} $id" }
+                super.idToBasic(
+                    userContext = userContext,
+                    id = id,
+                    validationResponse = ValidationResponse(201, "Created")
+                )
+            }
+            CreateWithIdResult.Unauthorized -> {
+                LOG.warn { "Unauthorized request to create ${runtime.name} $id! User Context was $userContext" }
+                UAPINotAuthorizedError
+            }
+            is CreateWithIdResult.InvalidInput -> {
+                LOG.warn { "Invalid create ${runtime.name} $id request body: ${result.errors.map { "${it.field}: ${it.description}" }}" }
+                GenericUAPIErrorResponse(
+                    400, "Bad Request", result.errors.map { "The value for ${it.field} is invalid: ${it.description}" }
+                )
+            }
+            is CreateWithIdResult.Error -> {
+                LOG.error("Error(s) creating ${runtime.name} $id: ${result.errors.joinToString()}", result.cause)
+                GenericUAPIErrorResponse(
+                    result.code, "Error", result.errors
+                )
+            }
+        }
+    }
+}
+
+class IdentifiedResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any>(
+    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
+    val operation: IdentifiedResource.Deletable<UserContext, Id, Model>
+) : IdentifiedResourceRequestHandler<UserContext, Id, Model, DeleteIdentifiedResource<UserContext>>(runtime) {
+    companion object {
+        private val LOG = loggerFor<IdentifiedResourceDeleteHandler<*, *, *>>()
+    }
+
+    override fun handle(
+        request: DeleteIdentifiedResource<UserContext>
+    ): UAPIResponse<*> {
+        val id = getId(request.idParams)
+        val userContext = request.userContext
+
+        val model = resource.loadModel(userContext, id)
+
+        val result = doDelete(userContext, id, model)
+
+        return when (result) {
+            DeleteResult.Success -> {
+                LOG.info("Successfully deleted ${runtime.name} $id")
+                UAPIEmptyResponse
+            }
+            DeleteResult.AlreadyDeleted -> {
+                LOG.info("${runtime.name} $id has already been deleted; returning success")
+                UAPIEmptyResponse
+            }
+            DeleteResult.Unauthorized -> {
+                LOG.warn("Unauthorized request to delete ${runtime.name} $id! User context was $userContext")
+                UAPINotAuthorizedError
+            }
+            is DeleteResult.CannotBeDeleted -> {
+                LOG.warn("${runtime.name} $id cannot be deleted: ${result.reason}")
+                GenericUAPIErrorResponse(
+                    statusCode = 409,
+                    message = "Conflict",
+                    validationInformation = listOf(result.reason)
+                )
+            }
+            is DeleteResult.Error -> {
+                LOG.error("Unexpected error deleting ${runtime.name} $id: ${result.code} ${result.errors.joinToString()}", result.cause)
+                GenericUAPIErrorResponse(
+                    statusCode = result.code,
+                    message = "Error",
+                    validationInformation = result.errors
+                )
+            }
+        }
+    }
+
+    private fun doDelete(
+        userContext: UserContext,
+        id: Id,
+        model: Model?
+    ): DeleteResult {
+        if (model == null) {
+            return DeleteResult.AlreadyDeleted
+        }
+        if (!operation.canUserDelete(userContext, id, model)) {
+            return DeleteResult.Unauthorized
+        }
+        if (!operation.canBeDeleted(id, model)) {
+            return DeleteResult.CannotBeDeleted("Cannot be deleted")
+        }
+        return operation.handleDelete(userContext, id, model)
     }
 }

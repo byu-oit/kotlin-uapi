@@ -6,6 +6,7 @@ import com.nhaarman.mockitokotlin2.mock
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.spi.input.IdParamReader
+import edu.byu.uapi.spi.validation.ValidationEngine
 import io.kotlintest.Description
 import io.kotlintest.data.forall
 import io.kotlintest.specs.DescribeSpec
@@ -44,7 +45,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
             on { it.idType } doReturn String::class
         }
 
-        fixture = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary())
+        fixture = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary(), ValidationEngine.noop())
     }
 
     init {
@@ -52,7 +53,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
             context("!availableOperations") {
                 it("always includes 'FETCH'") {
                     val foo = FooResource()
-                    val runtime = IdentifiedResourceRuntime("foo", foo, DefaultTypeDictionary())
+                    val runtime = IdentifiedResourceRuntime("foo", foo, DefaultTypeDictionary(), ValidationEngine.noop())
 //                    runtime.availableOperations should containExactly(IdentifiedResourceOperation.FETCH)
                 }
                 it("should find all provided operations") {
@@ -79,7 +80,7 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
                             )
                         )
                     ) { ops, resource ->
-                        val runtime = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary())
+                        val runtime = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary(), ValidationEngine.noop())
                         val expected = (ops + IdentifiedResourceOperation.FETCH).toTypedArray()
 
 //                        runtime.availableOperations should containExactlyInAnyOrder(*expected)

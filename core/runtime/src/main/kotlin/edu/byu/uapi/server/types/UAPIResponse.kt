@@ -107,3 +107,8 @@ object UAPIOperationNotImplementedError : UAPIErrorResponse() {
     )
     override val links: UAPILinks = emptyMap()
 }
+
+object UAPIEmptyResponse: UAPIResponse<EmptyResponseMetadata>() {
+    override val metadata = EmptyResponseMetadata
+    override val links: UAPILinks = emptyMap()
+}

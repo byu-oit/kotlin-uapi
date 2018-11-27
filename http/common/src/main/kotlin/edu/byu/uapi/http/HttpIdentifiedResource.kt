@@ -32,16 +32,6 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
         rootPath: List<PathPart>,
         idPath: List<PathPart>
     ): HttpRoute {
-//        return when (op) {
-//            FETCH -> HttpRoute(
-//                idPath, HttpMethod.GET, IdentifiedResourceFetchHandler(
-//                runtime, resource
-//            ))
-//            CREATE -> TODO()
-//            UPDATE -> TODO()
-//            DELETE -> TODO()
-//            LIST -> TODO()
-//        }
         return when (op) {
             is IdentifiedResourceFetchHandler -> HttpRoute(
                 idPath, HttpMethod.GET, IdentifiedResourceFetchHttpHandler(runtime, op)
@@ -51,6 +41,12 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
             )
             is IdentifiedResourceCreateHandler<UserContext, Id, Model, *> -> HttpRoute(
                 rootPath, HttpMethod.POST, IdentifiedResourceCreateHttpHandler(runtime, op, config.jsonEngine)
+            )
+            is IdentifiedResourceUpdateHandler<UserContext, Id, Model, *> -> HttpRoute(
+                idPath, HttpMethod.PUT, IdentifiedResourceUpdateHttpHandler(runtime, op, config.jsonEngine)
+            )
+            is IdentifiedResourceDeleteHandler<UserContext, Id, Model> -> HttpRoute(
+                idPath, HttpMethod.DELETE, IdentifiedResourceDeleteHttpHandler(runtime, op)
             )
         }
     }
@@ -98,7 +94,7 @@ class UAPIHttpResponse(
 ) : HttpResponse {
     override val status: Int = response.metadata.validationResponse.code
     override val headers: Map<String, Set<String>> = emptyMap()
-    override val body: ResponseBody = if (this.status == 404) EmptyResponseBody else RenderableResponseBody(response)
+    override val body: ResponseBody = if (this.status == 404 || this.status == 204) EmptyResponseBody else RenderableResponseBody(response)
 }
 
 class RenderableResponseBody(
@@ -186,6 +182,49 @@ class IdentifiedResourceCreateHttpHandler<UserContext: Any, Id: Any, Model: Any>
             request.asRequestContext(),
             userContext,
             wrappedBody
+        ))
+        return response.toHttpResponse()
+    }
+}
+
+class IdentifiedResourceUpdateHttpHandler<UserContext: Any, Id: Any, Model: Any>(
+    val runtime: UAPIRuntime<UserContext>,
+    val handler: IdentifiedResourceUpdateHandler<UserContext, Id, Model, *>,
+    val jsonEngine: JsonEngine<*, *>
+): AuthenticatedHandler<UserContext>(runtime) {
+    override fun handleAuthenticated(
+        request: HttpRequest,
+        userContext: UserContext
+    ): HttpResponse {
+        val body = request.body ?: return UAPIHttpResponse(GenericUAPIErrorResponse(
+            statusCode = 400,
+            message = "Missing Request Body",
+            validationInformation = listOf("Expected a request body. Please try your request again.")
+        ))
+
+        val wrappedBody = jsonEngine.resourceBody(body, runtime.typeDictionary)
+        val response = handler.handle(UpdateIdentifiedResource(
+            request.asRequestContext(),
+            userContext,
+            request.path.asIdParams(),
+            wrappedBody
+        ))
+        return response.toHttpResponse()
+    }
+}
+
+class IdentifiedResourceDeleteHttpHandler<UserContext: Any, Id: Any, Model: Any>(
+    val runtime: UAPIRuntime<UserContext>,
+    val handler: IdentifiedResourceDeleteHandler<UserContext, Id, Model>
+): AuthenticatedHandler<UserContext>(runtime) {
+    override fun handleAuthenticated(
+        request: HttpRequest,
+        userContext: UserContext
+    ): HttpResponse {
+        val response = handler.handle(DeleteIdentifiedResource(
+            request.asRequestContext(),
+            userContext,
+            request.path.asIdParams()
         ))
         return response.toHttpResponse()
     }

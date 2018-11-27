@@ -4,6 +4,14 @@ import kotlin.reflect.KClass
 
 interface ValidationEngine {
     fun <T: Any> validatorFor(type: KClass<T>): Validator<T>
+
+    companion object {
+        fun noop(): ValidationEngine = NoOp
+    }
+
+    private object NoOp: ValidationEngine {
+        override fun <T : Any> validatorFor(type: KClass<T>): Validator<T> = Validator.noop()
+    }
 }
 
 interface Validator<in Type: Any> {

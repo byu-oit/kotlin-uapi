@@ -121,9 +121,9 @@ class IdentifiedResourceSpec : DescribeSpec() {
 
         override fun handleCreateWithId(
             userContext: String,
-            input: String,
-            id: String
-        ): CreateResult<String> {
+            id: String,
+            input: String
+        ): CreateWithIdResult {
             TODO("not implemented")
         }
 

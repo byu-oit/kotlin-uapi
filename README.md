@@ -16,14 +16,19 @@ Milestones:
 - [x] Fetch a single resource
 - [x] Field metadata generation
 - [x] Fetch a list of resources w/ typesafe parameters
+  * [ ] Validate filter params
+  * [ ] Authorize filter params
 - [x] Run HTTP on top of Spark
 - [x] Resource Creation
 - [ ] Resource Modification
 - [ ] Resource Deletion
 - [ ] Automatic link handling
 - [ ] Automatic subresource/fieldset handling
+- [ ] Run HTTP on top of ktor
+- [ ] Use Coroutines when possible
 - [ ] Output OpenAPI 2 and 3 documents
 - [ ] Automatic [Meta APIs](https://github.com/byu-oit/UAPI-Specification/blob/master/University%20API%20Specification.md#80-meta-data-sets-and-apis)
+- [ ] Automatic related resource linking
 
 # Usage
 

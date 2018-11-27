@@ -207,9 +207,9 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
         fun handleCreateWithId(
             userContext: UserContext,
-            input: Input,
-            id: Id
-        ): CreateResult<Id>
+            id: Id,
+            input: Input
+        ): CreateWithIdResult
     }
 }
 
@@ -224,10 +224,11 @@ sealed class CreateResult<out Id : Any> {
     }
 
     data class Error(
+        val code: Int,
         val errors: List<String>,
         val cause: Throwable? = null
     ) : CreateResult<Nothing>() {
-        constructor(error: String) : this(listOf(error))
+        constructor(code: Int, error: String) : this(code, listOf(error))
     }
 }
 
@@ -244,10 +245,30 @@ sealed class UpdateResult {
     data class CannotBeUpdated(val reason: String) : UpdateResult()
 
     data class Error(
+        val code: Int,
         val errors: List<String>,
         val cause: Throwable? = null
     ) : UpdateResult() {
-        constructor(error: String) : this(listOf(error))
+        constructor(code: Int, error: String) : this(code, listOf(error))
+    }
+}
+
+sealed class CreateWithIdResult {
+    object Success : CreateWithIdResult()
+    object Unauthorized : CreateWithIdResult()
+    data class InvalidInput(val errors: List<InputError>) : CreateWithIdResult() {
+        constructor(
+            field: String,
+            description: String
+        ) : this(listOf(InputError(field, description)))
+    }
+
+    data class Error(
+        val code: Int,
+        val errors: List<String>,
+        val cause: Throwable? = null
+    ) : CreateWithIdResult() {
+        constructor(code: Int, error: String) : this(code, listOf(error))
     }
 }
 
@@ -257,6 +278,7 @@ sealed class DeleteResult {
     object Unauthorized: DeleteResult()
     data class CannotBeDeleted(val reason: String) : DeleteResult()
     data class Error(
+        val code: Int,
         val errors: List<String>,
         val cause: Throwable? = null
     ) : DeleteResult()

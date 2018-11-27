@@ -206,16 +206,16 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
 
     override fun handleCreateWithId(
         userContext: LibraryUser,
-        input: UpdateBook,
-        id: Long
-    ): CreateResult<Long> {
+        id: Long,
+        input: UpdateBook
+    ): CreateWithIdResult {
         val publisher = Library.getPublisher(input.publisherId)
-            ?: return CreateResult.InvalidInput("publisher_id", "No such publisher exists")
+            ?: return CreateWithIdResult.InvalidInput("publisher_id", "No such publisher exists")
         val authors = input.authorIds.map {
-            Library.getAuthor(it) ?: return CreateResult.InvalidInput("author_ids", "No such author exists")
+            Library.getAuthor(it) ?: return CreateWithIdResult.InvalidInput("author_ids", "No such author exists")
         }
         val genres = input.genreCodes.map {
-            Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
+            Library.getGenreByCode(it) ?: return CreateWithIdResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
         Library.createBook(NewBook(
@@ -230,7 +230,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
             restricted = input.restricted
         ))
 
-        return CreateResult.Success(id)
+        return CreateWithIdResult.Success
     }
 
     override fun canUserDelete(

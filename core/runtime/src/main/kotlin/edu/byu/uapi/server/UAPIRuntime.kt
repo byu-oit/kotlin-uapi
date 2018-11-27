@@ -3,15 +3,21 @@ package edu.byu.uapi.server
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
-import edu.byu.uapi.spi.requests.Headers
 import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.requests.Headers
+import edu.byu.uapi.spi.validation.ValidationEngine
+import edu.byu.uapi.validation.hibernate.HibernateValidationEngine
 import java.util.*
 
 class UAPIRuntime<UserContext : Any>(
-    val userContextFactory: UserContextFactory<UserContext>,
-    val typeDictionary: TypeDictionary = DefaultTypeDictionary()
+    options: Options<UserContext>
 ) {
-    constructor(fn: UserContextFactoryFunc<UserContext>) : this(UserContextFactory.from(fn))
+
+    constructor(userContextFactory: UserContextFactory<UserContext>): this(Options(userContextFactory))
+
+    val userContextFactory = options.userContextFactory
+    val typeDictionary = options.typeDictionary
+    val validationEngine = options.validationEngine
 
     private val resources: MutableMap<String, IdentifiedResourceRuntime<UserContext, *, *>> = mutableMapOf()
 
@@ -19,12 +25,28 @@ class UAPIRuntime<UserContext : Any>(
         name: String,
         resource: IdentifiedResource<UserContext, *, *>
     ) {
-        val runtime = IdentifiedResourceRuntime(name, resource, typeDictionary)
+        val runtime = IdentifiedResourceRuntime(name, resource, typeDictionary, validationEngine)
         resources[name] = runtime
         //TODO: Validate resource
     }
 
     fun resources(): Map<String, IdentifiedResourceRuntime<UserContext, *, *>> = Collections.unmodifiableMap(resources)
+
+    data class Options<UserContext: Any>(
+        val userContextFactory: UserContextFactory<UserContext>,
+        val typeDictionary: TypeDictionary = DefaultTypeDictionary(),
+        val validationEngine: ValidationEngine = HibernateValidationEngine
+    ) {
+        constructor(
+            userContextFactory: UserContextFactoryFunc<UserContext>,
+            typeDictionary: TypeDictionary = DefaultTypeDictionary(),
+            validationEngine: ValidationEngine = HibernateValidationEngine
+        ): this(
+            userContextFactory = UserContextFactory.from(userContextFactory),
+            typeDictionary = typeDictionary,
+            validationEngine = validationEngine
+        )
+    }
 }
 
 typealias UserContextFactoryFunc<UserContext> = (UserContextAuthnInfo) -> UserContextResult<UserContext>
