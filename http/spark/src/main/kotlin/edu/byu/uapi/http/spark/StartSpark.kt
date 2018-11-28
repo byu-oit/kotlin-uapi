@@ -128,6 +128,8 @@ class SparkHttpRoute(
     ): Any {
         val resp = handler.handle(SparkRequest(request))
         response.type("application/json")
+        response.status(resp.status)
+        resp.headers.forEach { key, set -> set.forEach { response.header(key, it) } }
         return resp.body.renderResponseBody(config.jsonEngine, typeDictionary)
     }
 }

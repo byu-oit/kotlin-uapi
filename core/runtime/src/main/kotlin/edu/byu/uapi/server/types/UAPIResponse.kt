@@ -69,6 +69,16 @@ data class GenericUAPIErrorResponse(
     override val links: UAPILinks = emptyMap()
 }
 
+data class UAPIBadRequestError(
+    val messages: List<String>
+): UAPIResponse<UAPIErrorMetadata>() {
+    override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
+        validationResponse = ValidationResponse(400, "Bad Request"),
+        validationInformation = messages
+    )
+    override val links: UAPILinks = emptyMap()
+}
+
 class UAPINotAuthenticatedError(
     messages: List<String>
 ) : UAPIErrorResponse() {

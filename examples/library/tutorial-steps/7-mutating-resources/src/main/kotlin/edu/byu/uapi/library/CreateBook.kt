@@ -7,15 +7,15 @@ import javax.validation.constraints.NotEmpty
 import javax.validation.constraints.Positive
 
 data class CreateBook(
-    @Positive
+    @get:Positive
     val oclc: Long,
-    @ISBN
+    @get:ISBN.List(ISBN(type = ISBN.Type.ISBN_10), ISBN(type = ISBN.Type.ISBN_13))
     val isbn: String? = null,
-    @NotBlank
+    @get:NotBlank
     val title: String,
     val subtitles: List<@NotBlank String> = emptyList(),
     val publishedYear: Year,
-    @Positive
+    @get:Positive
     val publisherId: Int,
     val authorIds: List<@Positive Long>,
     val genreCodes: Set<@NotEmpty String> = emptySet(),

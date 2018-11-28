@@ -343,7 +343,7 @@ class IdentifiedResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, 
         if (validationResponse.isNotEmpty()) {
             LOG.warn { "Invalid create ${runtime.name} request body: ${validationResponse.map { "${it.field}: ${it.should}" }}" }
             return GenericUAPIErrorResponse(
-                statusCode = 401,
+                statusCode = 400,
                 message = "Bad Request",
                 validationInformation = validationResponse.map { "The value for ${it.field} is invalid: ${it.should}" }
             )
@@ -516,8 +516,8 @@ class IdentifiedResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, 
             }
             is CreateWithIdResult.InvalidInput -> {
                 LOG.warn { "Invalid create ${runtime.name} $id request body: ${result.errors.map { "${it.field}: ${it.description}" }}" }
-                GenericUAPIErrorResponse(
-                    400, "Bad Request", result.errors.map { "The value for ${it.field} is invalid: ${it.description}" }
+                UAPIBadRequestError(
+                    result.errors.map { "The value for ${it.field} is invalid: ${it.description}" }
                 )
             }
             is CreateWithIdResult.Error -> {

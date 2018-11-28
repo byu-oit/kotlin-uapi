@@ -27,6 +27,7 @@ Milestones:
 - [ ] Run HTTP on top of ktor
 - [ ] Use Coroutines when possible
 - [ ] Output OpenAPI 2 and 3 documents
+- [ ] Customize name of simple path IDs
 - [ ] Automatic [Meta APIs](https://github.com/byu-oit/UAPI-Specification/blob/master/University%20API%20Specification.md#80-meta-data-sets-and-apis)
 - [ ] Automatic related resource linking
 

@@ -4,6 +4,7 @@ import edu.byu.uapi.server.scalars.EnumScalarConverterHelper
 import edu.byu.uapi.server.scalars.builtinScalarTypeMap
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.scalars.ScalarType
+import edu.byu.uapi.utility.collections.TypeMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.reflect.KClass
 
@@ -11,7 +12,7 @@ class DefaultTypeDictionary : TypeDictionary {
     private val scalarListeners = ConcurrentLinkedQueue<TypeDictionary.ScalarRegistrationListener>()
     override fun addScalarRegistrationListener(listener: TypeDictionary.ScalarRegistrationListener) {
         scalarListeners.add(listener)
-        explicitScalarConverters.forEach { k, v -> listener.onRegister(k, v) }
+        knownScalarTypes.forEach { k, v -> listener.onRegister(k, v) }
         enumScalarCache.forEach { k, v -> listener.onRegister(k, v) }
     }
 
@@ -26,14 +27,37 @@ class DefaultTypeDictionary : TypeDictionary {
         scalarListeners.forEach { it.onRegister(type, scalarType) }
     }
 
-    private val explicitScalarConverters = mapOf<KClass<*>, ScalarType<*>>() + builtinScalarTypeMap
+    private fun dispatchScalarUnregistered(
+        type: KClass<*>,
+        scalarType: ScalarType<*>
+    ) {
+        scalarListeners.forEach { it.onUnregister(type, scalarType) }
+    }
+
+    private val knownScalarTypes = TypeMap.create(builtinScalarTypeMap)
 
     private val enumScalarCache = mutableMapOf<KClass<*>, ScalarType<*>>()
 
+    override fun registerScalarType(scalarType: ScalarType<*>) {
+        val old = knownScalarTypes.put(scalarType.type, scalarType)
+        if (old != null) {
+            dispatchScalarUnregistered(old.type, old)
+        }
+        dispatchScalarRegistered(scalarType.type, scalarType)
+    }
+
+    override fun unregisterScalarType(scalarType: ScalarType<*>) {
+        val removed = knownScalarTypes.remove(scalarType.type, scalarType)
+        if (removed) {
+            dispatchScalarUnregistered(scalarType.type, scalarType)
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     override fun <Type : Any> scalarType(type: KClass<Type>): ScalarType<Type>? {
-        if (type in explicitScalarConverters) {
-            return explicitScalarConverters[type] as ScalarType<Type>
+        val found = knownScalarTypes.getMatching(type)
+        if (found != null) {
+            return found as ScalarType<Type>
         }
         if (type.isEnum()) {
             return getOrCreateEnumScalar(type)
@@ -55,7 +79,7 @@ class DefaultTypeDictionary : TypeDictionary {
     }
 
     override fun isScalarType(type: KClass<*>): Boolean {
-        return type in explicitScalarConverters || type.isEnum()
+        return knownScalarTypes.hasMatching(type) || type.isEnum()
     }
 }
 

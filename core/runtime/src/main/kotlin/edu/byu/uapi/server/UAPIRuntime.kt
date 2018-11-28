@@ -5,6 +5,7 @@ import edu.byu.uapi.server.resources.identified.IdentifiedResource
 import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.requests.Headers
+import edu.byu.uapi.spi.scalars.ScalarType
 import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.validation.hibernate.HibernateValidationEngine
 import java.util.*
@@ -13,7 +14,8 @@ class UAPIRuntime<UserContext : Any>(
     options: Options<UserContext>
 ) {
 
-    constructor(userContextFactory: UserContextFactory<UserContext>): this(Options(userContextFactory))
+    constructor(userContextFactory: UserContextFactory<UserContext>) : this(Options(userContextFactory))
+    constructor(init: RuntimeOptionsInit<UserContext>.() -> Unit) : this(RuntimeOptionsInit<UserContext>().apply { init() }.build())
 
     val userContextFactory = options.userContextFactory
     val typeDictionary = options.typeDictionary
@@ -32,7 +34,7 @@ class UAPIRuntime<UserContext : Any>(
 
     fun resources(): Map<String, IdentifiedResourceRuntime<UserContext, *, *>> = Collections.unmodifiableMap(resources)
 
-    data class Options<UserContext: Any>(
+    data class Options<UserContext : Any>(
         val userContextFactory: UserContextFactory<UserContext>,
         val typeDictionary: TypeDictionary = DefaultTypeDictionary(),
         val validationEngine: ValidationEngine = HibernateValidationEngine
@@ -41,8 +43,35 @@ class UAPIRuntime<UserContext : Any>(
             userContextFactory: UserContextFactoryFunc<UserContext>,
             typeDictionary: TypeDictionary = DefaultTypeDictionary(),
             validationEngine: ValidationEngine = HibernateValidationEngine
-        ): this(
+        ) : this(
             userContextFactory = UserContextFactory.from(userContextFactory),
+            typeDictionary = typeDictionary,
+            validationEngine = validationEngine
+        )
+    }
+}
+
+class RuntimeOptionsInit<UserContext : Any> {
+
+    lateinit var userContextFactory: UserContextFactory<UserContext>
+
+    fun userContextFactory(factoryFunc: UserContextFactoryFunc<UserContext>) {
+        userContextFactory = UserContextFactory.from(factoryFunc)
+    }
+
+    var typeDictionary: TypeDictionary = DefaultTypeDictionary()
+    var validationEngine: ValidationEngine = HibernateValidationEngine
+
+    private val scalars: MutableList<ScalarType<*>> = mutableListOf()
+
+    fun scalar(type: ScalarType<*>) {
+        scalars.add(type)
+    }
+
+    fun build(): UAPIRuntime.Options<UserContext> {
+        scalars.forEach { typeDictionary.registerScalarType(it) }
+        return UAPIRuntime.Options(
+            userContextFactory = userContextFactory,
             typeDictionary = typeDictionary,
             validationEngine = validationEngine
         )

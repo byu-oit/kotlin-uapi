@@ -7,6 +7,9 @@ interface TypeDictionary {
     fun <Type: Any> scalarType(type: KClass<Type>): ScalarType<Type>?
     fun isScalarType(type: KClass<*>): Boolean
 
+    fun registerScalarType(scalarType: ScalarType<*>)
+    fun unregisterScalarType(scalarType: ScalarType<*>)
+
     fun addScalarRegistrationListener(listener: ScalarRegistrationListener)
     fun removeScalarRegistrationListener(listener: ScalarRegistrationListener)
 

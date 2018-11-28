@@ -12,6 +12,7 @@
     <name>Kotlin UAPI Core Parent POM</name>
 
     <modules>
+	<module>utility-types</module>
         <module>spi</module>
         <module>runtime</module>
         <module>validation</module>
