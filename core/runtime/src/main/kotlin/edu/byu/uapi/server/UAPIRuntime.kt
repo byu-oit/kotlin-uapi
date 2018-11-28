@@ -15,7 +15,15 @@ class UAPIRuntime<UserContext : Any>(
 ) {
 
     constructor(userContextFactory: UserContextFactory<UserContext>) : this(Options(userContextFactory))
-    constructor(init: RuntimeOptionsInit<UserContext>.() -> Unit) : this(RuntimeOptionsInit<UserContext>().apply { init() }.build())
+//    constructor(init: RuntimeInit<UserContext>.() -> Unit) : this(RuntimeInit<UserContext>().apply { init() }.build())
+
+    companion object {
+        inline operator fun <UserContext : Any> invoke(init: RuntimeInit<UserContext>.() -> Unit): UAPIRuntime<UserContext> {
+            val ri = RuntimeInit<UserContext>()
+            ri.init()
+            return ri.build()
+        }
+    }
 
     val userContextFactory = options.userContextFactory
     val typeDictionary = options.typeDictionary
@@ -51,7 +59,7 @@ class UAPIRuntime<UserContext : Any>(
     }
 }
 
-class RuntimeOptionsInit<UserContext : Any> {
+class RuntimeInit<UserContext : Any> {
 
     lateinit var userContextFactory: UserContextFactory<UserContext>
 
@@ -64,17 +72,25 @@ class RuntimeOptionsInit<UserContext : Any> {
 
     private val scalars: MutableList<ScalarType<*>> = mutableListOf()
 
-    fun scalar(type: ScalarType<*>) {
-        scalars.add(type)
+    operator fun ScalarType<*>.unaryPlus() {
+        scalars.add(this)
     }
 
-    fun build(): UAPIRuntime.Options<UserContext> {
+    private val resources: MutableList<Pair<String, IdentifiedResource<UserContext, *, *>>> = mutableListOf()
+
+    operator fun Pair<String, IdentifiedResource<UserContext, *, *>>.unaryPlus() {
+        resources += this
+    }
+
+    fun build(): UAPIRuntime<UserContext> {
         scalars.forEach { typeDictionary.registerScalarType(it) }
-        return UAPIRuntime.Options(
+        return UAPIRuntime(UAPIRuntime.Options(
             userContextFactory = userContextFactory,
             typeDictionary = typeDictionary,
             validationEngine = validationEngine
-        )
+        )).also { r ->
+            resources.forEach { r.register(it.first, it.second) }
+        }
     }
 }
 

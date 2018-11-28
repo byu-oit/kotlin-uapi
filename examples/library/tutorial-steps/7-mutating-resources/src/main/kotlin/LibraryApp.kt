@@ -1,6 +1,6 @@
 
-import edu.byu.uapi.http.spark.startSpark
 import edu.byu.uapi.library.BooksResource
+import edu.byu.uapi.library.LibraryUser
 import edu.byu.uapi.library.LibraryUserContextFactory
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.utilities.jwt.OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory
@@ -18,12 +18,18 @@ fun main(args: Array<String>) {
         libraryUserFactory
     }
 
-    val runtime = UAPIRuntime(actualUserFactory)
+//    val runtime = UAPIRuntime(actualUserFactory)
+//
+//    // All of our configuration is going to go here
+//    runtime.register("books", BooksResource())
+//
+//    runtime.startSpark(
+//        port = 8080
+//    )
 
-    // All of our configuration is going to go here
-    runtime.register("books", BooksResource())
+    UAPIRuntime<LibraryUser> {
+        userContextFactory = actualUserFactory
 
-    runtime.startSpark(
-        port = 8080
-    )
+        + ("books" to BooksResource())
+    }
 }
