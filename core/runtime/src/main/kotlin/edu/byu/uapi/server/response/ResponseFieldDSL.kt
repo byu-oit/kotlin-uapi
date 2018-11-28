@@ -1,5 +1,7 @@
 package edu.byu.uapi.server.response
 
+import edu.byu.uapi.server.util.before
+import edu.byu.uapi.server.util.then
 import edu.byu.uapi.server.util.toSnakeCase
 import java.lang.annotation.Inherited
 import kotlin.reflect.KClass
@@ -42,6 +44,18 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
         fieldList.add(p.toDefinition())
     }
 
+    inline fun <reified Output : Any, MappedFrom : Any> value(
+        prop: KProperty1<Model, MappedFrom>,
+        value: KProperty1<MappedFrom, Output>,
+        name: String = prop.name.toSnakeCase() + "_" + value.name.toSnakeCase(),
+        fn: MappedValueInit<UserContext, Model, MappedFrom, Output>.() -> Unit
+    ) {
+        val p = MappedValueInit<UserContext, Model, MappedFrom, Output>(name, Output::class, value)
+        p.getValue(prop)
+        p.fn()
+        fieldList.add(p.toDefinition())
+    }
+
     inline fun <reified T : Any> nullableValue(
         name: String,
         fn: ValueInit<UserContext, Model, T?, T>.() -> Unit
@@ -57,6 +71,18 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
     ) {
         val p = NullableUAPIValueInit<UserContext, Model, T>(prop.name.toSnakeCase(), T::class)
         p.getValue(prop) //TODO: We might want to make a separate type for property-driven values
+        p.fn()
+        fieldList.add(p.toDefinition())
+    }
+
+    inline fun <reified Output : Any, MappedFrom : Any> nullableValue(
+        prop: KProperty1<Model, MappedFrom?>,
+        value: KProperty1<MappedFrom, Output?>,
+        name: String = prop.name.toSnakeCase(),
+        fn: NullableMappedValueInit<UserContext, Model, MappedFrom, Output>.() -> Unit
+    ) {
+        val p = NullableMappedValueInit<UserContext, Model, MappedFrom, Output>(name, Output::class, value)
+        p.getValue(prop)
         p.fn()
         fieldList.add(p.toDefinition())
     }
@@ -105,7 +131,7 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
         fieldList.add(p.toDefinition())
     }
 
-    inline fun <reified Value: Any, Item: Any> mappedValueArray(
+    inline fun <reified Value : Any, Item : Any> mappedValueArray(
         name: String,
         fn: MappedValueArrayInit<UserContext, Model, Value, Item>.() -> Unit
     ) {
@@ -297,6 +323,37 @@ class UAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
     }
 }
 
+class MappedValueInit<UserContext : Any, Model : Any, MappedFrom : Any, Output : Any>(
+    internal val name: String,
+    internal val type: KClass<Output>,
+    internal val getOutput: KProperty1<MappedFrom, Output>
+) : ValueInit<UserContext, Model, MappedFrom, MappedFrom>() {
+
+    inline fun description(crossinline fn: (MappedFrom) -> String?) {
+        super.description { _: Model, value: MappedFrom -> fn(value) }
+    }
+
+    inline fun longDescription(crossinline fn: (MappedFrom) -> String?) {
+        super.longDescription { _: Model, value: MappedFrom -> fn(value) }
+    }
+
+    @PublishedApi
+    override fun toDefinition(): ResponseField<UserContext, Model, *> {
+        return ValueResponseField(
+            type,
+            name,
+            valueGetter.then(getOutput),
+            key,
+            descriptionFn?.before { model, value -> model to valueGetter(model) },
+            longDescriptionFn?.before { model, value -> model to valueGetter(model) },
+            modifiableFn?.before { userContext, model, value -> Triple(userContext, model, valueGetter(model)) },
+            isSystem, isDerived, doc,
+            displayLabel
+        )
+    }
+}
+
+
 class NullableUAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
     internal val name: String,
     internal val type: KClass<Type>
@@ -315,5 +372,32 @@ class NullableUAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
             isSystem, isDerived, doc,
             displayLabel
         )
+    }
+}
+
+class NullableMappedValueInit<UserContext : Any, Model : Any, MappedFrom : Any, Output : Any>(
+    internal val name: String,
+    internal val type: KClass<Output>,
+    internal val getOutput: KProperty1<MappedFrom, Output?>
+) : ValueInit<UserContext, Model, MappedFrom?, MappedFrom>() {
+    @PublishedApi
+    override fun toDefinition(): ResponseField<UserContext, Model, *> {
+        return NullableValueResponseField(
+            type,
+            name,
+            valueGetter.then { it?.run { getOutput(this) } },
+            key,
+            descriptionFn?.mapped(),
+            longDescriptionFn?.mapped(),
+            modifiableFn?.before { userContext, model, value -> Triple(userContext, model, valueGetter(model)) },
+            isSystem, isDerived, doc,
+            displayLabel
+        )
+    }
+
+    private fun ValuePropDescriber<Model, MappedFrom>.mapped(): ValuePropDescriber<Model, Output> {
+        return { model, output ->
+            valueGetter(model)?.let { this(model, it) }
+        }
     }
 }

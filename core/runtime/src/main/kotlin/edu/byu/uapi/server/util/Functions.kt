@@ -19,3 +19,11 @@ inline fun <P1, P1Prime, P2, P2Prime, R> ((P1Prime, P2Prime) -> R).before(crossi
         this(p1p, p2p)
     }
 }
+
+
+inline fun <P1, P1Prime, P2, P2Prime, P3, P3Prime, R> ((P1Prime, P2Prime, P3Prime) -> R).before(crossinline fn: (P1, P2, P3) -> Triple<P1Prime, P2Prime, P3Prime>): (P1, P2, P3) -> R {
+    return { p1, p2, p3 ->
+        val (p1p, p2p, p3p) = fn(p1, p2, p3)
+        this(p1p, p2p, p3p)
+    }
+}

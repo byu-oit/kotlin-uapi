@@ -46,7 +46,7 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
             modifiable { libraryUser, book, title -> libraryUser.canModifyBooks }
         }
         value<Int>("publisher_id") {
-            getValue { book -> book.publisher.publisherId }
+            getValue { book -> book.publisher.id }
             displayLabel = "Publisher"
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
 

@@ -45,13 +45,12 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
             doc = "The main title of the book"
             modifiable { libraryUser, book, title -> libraryUser.canModifyBooks }
         }
-        value<Int>("publisher_id") {
-            getValue { book -> book.publisher.publisherId }
+        value(Book::publisher, Publisher::id) {
             displayLabel = "Publisher"
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
 
-            description { book, publisherId -> book.publisher.commonName }
-            longDescription { book, publisherId -> book.publisher.fullName }
+            description(Publisher::commonName)
+            longDescription(Publisher::fullName)
         }
         value(Book::availableCopies) {
             isDerived = true

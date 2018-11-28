@@ -6,7 +6,7 @@ package edu.byu.uapi.kotlin.examples.library
  */
 
 data class Publisher(
-    val publisherId: Int,
+    val id: Int,
     val commonName: String,
     val fullName: String?
 )

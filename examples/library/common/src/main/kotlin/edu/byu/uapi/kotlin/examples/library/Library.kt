@@ -218,7 +218,7 @@ object Library {
                 ps.setString(2, book.isbn)
                 ps.setString(3, book.title)
                 ps.setInt(4, book.publishedYear)
-                ps.setInt(5, book.publisher.publisherId)
+                ps.setInt(5, book.publisher.id)
                 ps.setBoolean(6, book.restricted)
                 ps.execute()
                 val id = ps.generatedKeys.use { rs ->

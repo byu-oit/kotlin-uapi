@@ -55,9 +55,9 @@ class RuntimeOptionsInit<UserContext : Any> {
 
     lateinit var userContextFactory: UserContextFactory<UserContext>
 
-    fun userContextFactory(factoryFunc: UserContextFactoryFunc<UserContext>) {
-        userContextFactory = UserContextFactory.from(factoryFunc)
-    }
+//    fun userContextFactory(factoryFunc: UserContextFactoryFunc<UserContext>) {
+//        userContextFactory = UserContextFactory.from(factoryFunc)
+//    }
 
     var typeDictionary: TypeDictionary = DefaultTypeDictionary()
     var validationEngine: ValidationEngine = HibernateValidationEngine

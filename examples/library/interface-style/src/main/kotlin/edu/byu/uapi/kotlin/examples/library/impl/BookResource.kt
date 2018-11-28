@@ -52,7 +52,7 @@ class BookResource : IdentifiedResource<
             value(Book::publishedYear) {
             }
             value<Int>("publisher") {
-                getValue { book -> book.publisher.publisherId }
+                getValue { book -> book.publisher.id }
                 description { book, publisherId -> book.publisher.commonName }
             }
         }
