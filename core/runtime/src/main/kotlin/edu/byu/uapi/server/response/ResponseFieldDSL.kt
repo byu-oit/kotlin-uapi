@@ -380,6 +380,15 @@ class NullableMappedValueInit<UserContext : Any, Model : Any, MappedFrom : Any, 
     internal val type: KClass<Output>,
     internal val getOutput: KProperty1<MappedFrom, Output?>
 ) : ValueInit<UserContext, Model, MappedFrom?, MappedFrom>() {
+
+    inline fun description(crossinline fn: (MappedFrom) -> String?) {
+        super.description { _: Model, value: MappedFrom -> fn(value) }
+    }
+
+    inline fun longDescription(crossinline fn: (MappedFrom) -> String?) {
+        super.longDescription { _: Model, value: MappedFrom -> fn(value) }
+    }
+
     @PublishedApi
     override fun toDefinition(): ResponseField<UserContext, Model, *> {
         return NullableValueResponseField(
