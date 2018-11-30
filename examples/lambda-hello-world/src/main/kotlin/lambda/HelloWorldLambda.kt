@@ -30,7 +30,7 @@ class HelloWorldLambda : UAPILambdaHandler(
         val runtime = UAPIRuntime(
             HelloWorldUserFactory()
         )
-        runtime.register("greetings", GreetingResource())
+        runtime.register(GreetingResource())
 
         engine.register(runtime)
         Logger.info("Finished Setup")
@@ -64,6 +64,9 @@ fun getGreeting(lang: Language) = when (lang) {
 
 class GreetingResource : IdentifiedResource<HelloWorldUser, String, Greeting>,
                          IdentifiedResource.Listable.Simple<HelloWorldUser, String, Greeting> {
+
+    override val pluralName = "greetings"
+
     override fun list(
         userContext: HelloWorldUser,
         params: ListParams.Empty

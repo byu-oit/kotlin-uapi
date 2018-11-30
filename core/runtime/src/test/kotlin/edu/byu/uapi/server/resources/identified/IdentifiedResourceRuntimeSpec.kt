@@ -145,6 +145,8 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     private data class NewFoo(val value: String)
 
     private open class FooResource(val model: Foo? = Foo("bar"), val canUserView: Boolean = true) : IdentifiedResource<User, String, Foo> {
+        override val pluralName: String
+            get() = "foos"
         override val responseFields: List<ResponseField<User, Foo, *>>
             get() = TODO("not implemented")
         override val idType: KClass<String> = String::class

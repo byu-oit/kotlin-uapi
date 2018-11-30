@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
     val runtime = UAPIRuntime(actualUserFactory)
 
     // All of our configuration is going to go here
-    runtime.register("books", BooksResource())
+    runtime.register(BooksResource())
 
     runtime.startSpark(
         port = 8080

@@ -15,6 +15,8 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
                       IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
                       IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams> {
 
+    override val pluralName: String = "books"
+
     override fun loadModel(
         userContext: LibraryUser,
         id: Long

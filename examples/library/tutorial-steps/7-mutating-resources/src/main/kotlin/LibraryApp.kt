@@ -30,6 +30,6 @@ fun main(args: Array<String>) {
     UAPIRuntime<LibraryUser> {
         userContextFactory = actualUserFactory
 
-        + ("books" to BooksResource())
+        + BooksResource()
     }
 }

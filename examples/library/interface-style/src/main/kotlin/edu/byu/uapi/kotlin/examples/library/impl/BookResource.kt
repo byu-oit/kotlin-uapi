@@ -16,6 +16,8 @@ class BookResource : IdentifiedResource<
     Book // model
     > {
 
+    override val pluralName: String = "books"
+
     override fun loadModel(
         userContext: MyUserContext,
         id: Long

@@ -15,6 +15,8 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
                       IdentifiedResource.CreatableWithId<LibraryUser, Long, Book, UpdateBook>,
                       IdentifiedResource.Deletable<LibraryUser, Long, Book> {
 
+    override val pluralName: String = "books"
+
     override fun loadModel(
         userContext: LibraryUser,
         id: Long

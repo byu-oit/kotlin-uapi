@@ -32,11 +32,10 @@ class UAPIRuntime<UserContext : Any>(
     private val resources: MutableMap<String, IdentifiedResourceRuntime<UserContext, *, *>> = mutableMapOf()
 
     fun register(
-        name: String,
         resource: IdentifiedResource<UserContext, *, *>
     ) {
-        val runtime = IdentifiedResourceRuntime(name, resource, typeDictionary, validationEngine)
-        resources[name] = runtime
+        val runtime = IdentifiedResourceRuntime(resource.pluralName, resource, typeDictionary, validationEngine)
+        resources[resource.pluralName] = runtime
         //TODO: Validate resource
     }
 
@@ -76,9 +75,9 @@ class RuntimeInit<UserContext : Any> {
         scalars.add(this)
     }
 
-    private val resources: MutableList<Pair<String, IdentifiedResource<UserContext, *, *>>> = mutableListOf()
+    private val resources: MutableList<IdentifiedResource<UserContext, *, *>> = mutableListOf()
 
-    operator fun Pair<String, IdentifiedResource<UserContext, *, *>>.unaryPlus() {
+    operator fun IdentifiedResource<UserContext, *, *>.unaryPlus() {
         resources += this
     }
 
@@ -89,7 +88,7 @@ class RuntimeInit<UserContext : Any> {
             typeDictionary = typeDictionary,
             validationEngine = validationEngine
         )).also { r ->
-            resources.forEach { r.register(it.first, it.second) }
+            resources.forEach { r.register(it) }
         }
     }
 }

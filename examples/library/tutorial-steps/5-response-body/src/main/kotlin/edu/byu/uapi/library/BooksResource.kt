@@ -9,6 +9,8 @@ import edu.byu.uapi.server.resources.identified.fields
 
 class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
 
+    override val pluralName: String = "books"
+
     override fun loadModel(
         userContext: LibraryUser,
         id: Long

@@ -20,6 +20,11 @@ import kotlin.reflect.full.primaryConstructor
 
 interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
 
+    val pluralName: String
+
+    val singleName: String
+        get() = defaultSingleName()
+
     val idType: KClass<Id>
         get() = defaultIdType()
 
@@ -228,7 +233,10 @@ sealed class CreateResult<out Id : Any> {
         val errors: List<String>,
         val cause: Throwable? = null
     ) : CreateResult<Nothing>() {
-        constructor(code: Int, error: String) : this(code, listOf(error))
+        constructor(
+            code: Int,
+            error: String
+        ) : this(code, listOf(error))
     }
 }
 
@@ -249,7 +257,10 @@ sealed class UpdateResult {
         val errors: List<String>,
         val cause: Throwable? = null
     ) : UpdateResult() {
-        constructor(code: Int, error: String) : this(code, listOf(error))
+        constructor(
+            code: Int,
+            error: String
+        ) : this(code, listOf(error))
     }
 }
 
@@ -268,14 +279,17 @@ sealed class CreateWithIdResult {
         val errors: List<String>,
         val cause: Throwable? = null
     ) : CreateWithIdResult() {
-        constructor(code: Int, error: String) : this(code, listOf(error))
+        constructor(
+            code: Int,
+            error: String
+        ) : this(code, listOf(error))
     }
 }
 
 sealed class DeleteResult {
     object Success : DeleteResult()
     object AlreadyDeleted : DeleteResult()
-    object Unauthorized: DeleteResult()
+    object Unauthorized : DeleteResult()
     data class CannotBeDeleted(val reason: String) : DeleteResult()
     data class Error(
         val code: Int,
@@ -288,6 +302,13 @@ data class InputError(
     val field: String,
     val description: String
 )
+
+private fun IdentifiedResource<*, *, *>.defaultSingleName(): String {
+    if (pluralName.endsWith("s")) {
+        return pluralName.dropLast(1)
+    }
+    return pluralName
+}
 
 private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserContext, Id, Model>.defaultIdReader(
     dictionary: TypeDictionary,
