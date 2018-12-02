@@ -1,6 +1,7 @@
 package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.inputs.create
+import edu.byu.uapi.server.resources.Resource
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit
 import edu.byu.uapi.server.response.uapiResponse
@@ -8,6 +9,7 @@ import edu.byu.uapi.server.scalars.EnumScalarType
 import edu.byu.uapi.server.spi.*
 import edu.byu.uapi.server.spi.reflective.ReflectiveFilterParamReader
 import edu.byu.uapi.server.spi.reflective.ReflectiveIdParamReader
+import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.DarkMagic
 import edu.byu.uapi.server.util.DarkMagicException
 import edu.byu.uapi.spi.UAPITypeError
@@ -15,10 +17,12 @@ import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.*
 import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.spi.validation.Validator
+import edu.byu.uapi.utility.takeIfType
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
-interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListParams> {
+interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListParams>
+    : Resource<UserContext, Model, IdentifiedModel<Id, Model>> {
 
     val pluralName: String
 
@@ -43,10 +47,9 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
     @Throws(UAPITypeError::class)
     fun getIdReader(
-        dictionary: TypeDictionary,
-        paramPrefix: String
+        dictionary: TypeDictionary
     ): IdParamReader<Id> {
-        return defaultIdReader(dictionary, paramPrefix)
+        return defaultIdReader(dictionary)
     }
 
     fun list(
@@ -85,7 +88,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         fun handleCreate(
             userContext: UserContext,
             input: Input
-        ): CreateResult<Id>
+        ): CreateIdResult<Id>
 
         val createInput: KClass<Input>
             get() = defaultGetCreateInput()
@@ -147,7 +150,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
             userContext: UserContext,
             id: Id,
             input: Input
-        ): CreateWithIdResult
+        ): CreateResult
     }
 
     interface Simple<UserContext : Any, Id : Any, Model : Any> : ListResource<UserContext, Id, Model, ListParams.Empty> {
@@ -213,91 +216,6 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
     }
 }
 
-sealed class CreateResult<out Id : Any> {
-    data class Success<Id : Any>(val id: Id) : CreateResult<Id>()
-    object Unauthorized : CreateResult<Nothing>()
-    data class InvalidInput(val errors: List<InputError>) : CreateResult<Nothing>() {
-        constructor(
-            field: String,
-            description: String
-        ) : this(listOf(InputError(field, description)))
-    }
-
-    data class Error(
-        val code: Int,
-        val errors: List<String>,
-        val cause: Throwable? = null
-    ) : CreateResult<Nothing>() {
-        constructor(
-            code: Int,
-            error: String
-        ) : this(code, listOf(error))
-    }
-}
-
-sealed class UpdateResult {
-    object Success : UpdateResult()
-    data class InvalidInput(val errors: List<InputError>) : UpdateResult() {
-        constructor(
-            field: String,
-            description: String
-        ) : this(listOf(InputError(field, description)))
-    }
-
-    object Unauthorized : UpdateResult()
-    data class CannotBeUpdated(val reason: String) : UpdateResult()
-
-    data class Error(
-        val code: Int,
-        val errors: List<String>,
-        val cause: Throwable? = null
-    ) : UpdateResult() {
-        constructor(
-            code: Int,
-            error: String
-        ) : this(code, listOf(error))
-    }
-}
-
-sealed class CreateWithIdResult {
-    object Success : CreateWithIdResult()
-    object Unauthorized : CreateWithIdResult()
-    data class InvalidInput(val errors: List<InputError>) : CreateWithIdResult() {
-        constructor(
-            field: String,
-            description: String
-        ) : this(listOf(InputError(field, description)))
-    }
-
-    data class Error(
-        val code: Int,
-        val errors: List<String>,
-        val cause: Throwable? = null
-    ) : CreateWithIdResult() {
-        constructor(
-            code: Int,
-            error: String
-        ) : this(code, listOf(error))
-    }
-}
-
-sealed class DeleteResult {
-    object Success : DeleteResult()
-    object AlreadyDeleted : DeleteResult()
-    object Unauthorized : DeleteResult()
-    data class CannotBeDeleted(val reason: String) : DeleteResult()
-    data class Error(
-        val code: Int,
-        val errors: List<String>,
-        val cause: Throwable? = null
-    ) : DeleteResult()
-}
-
-data class InputError(
-    val field: String,
-    val description: String
-)
-
 private fun ListResource<*, *, *, *>.defaultSingleName(): String {
     if (pluralName.endsWith("s")) {
         return pluralName.dropLast(1)
@@ -306,22 +224,18 @@ private fun ListResource<*, *, *, *>.defaultSingleName(): String {
 }
 
 private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdReader(
-    dictionary: TypeDictionary,
-    paramPrefix: String
+    dictionary: TypeDictionary
 ): IdParamReader<Id> {
     val idType = this.idType
     if (dictionary.isScalarType(idType)) {
-        return ScalarTypeIdParamReader(paramPrefix, dictionary.requireScalarType(idType))
+        return ScalarTypeIdParamReader(this.singleName, dictionary.requireScalarType(idType))
     }
-    return ReflectiveIdParamReader.create(paramPrefix, idType, dictionary)
+    return ReflectiveIdParamReader.create(this.singleName, idType, dictionary)
 }
 
 private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdType(): KClass<Id> {
     return try {
-        val supertype = DarkMagic.findMatchingSupertype(this::class, ListResource::class)
-            ?: throw UAPITypeError.create(this::class, "Unable to get ListResource ID Type")
-        val idProjection = supertype.arguments[1]
-        DarkMagic.getConcreteType(idProjection)
+        DarkMagic.findSupertypeArgNamed(this::class, ListResource::class, "Id")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get ID type", ex)
     }
@@ -330,10 +244,7 @@ private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext,
 internal fun <Params : ListParams>
     ListResource<*, *, *, Params>.defaultListParamsType(): KClass<Params> {
     return try {
-        val listable = DarkMagic.findMatchingSupertype(this::class, ListResource::class)
-            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
-        val projection = listable.arguments[3]
-        DarkMagic.getConcreteType(projection)
+        DarkMagic.findSupertypeArgNamed(this::class, ListResource::class, "Params")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get list params type", ex)
     }
@@ -397,10 +308,7 @@ internal fun <SearchContext : Enum<SearchContext>>
     dictionary: TypeDictionary
 ): EnumScalarType<SearchContext> {
     val searchContextType: KClass<SearchContext> = try {
-        val withSearch = DarkMagic.findMatchingSupertype(this::class, ListResource.ListWithSearch::class)
-            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
-        val projection = withSearch.arguments[4]
-        DarkMagic.getConcreteType(projection)
+        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSearch::class, "SearchContext")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
     }
@@ -413,10 +321,7 @@ internal fun <SortProperty : Enum<SortProperty>>
     typeDictionary: TypeDictionary
 ): EnumScalarType<SortProperty> {
     val sortPropertyType: KClass<SortProperty> = try {
-        val withSearch = DarkMagic.findMatchingSupertype(this::class, ListResource.ListWithSort::class)
-            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
-        val projection = withSearch.arguments[4]
-        DarkMagic.getConcreteType(projection)
+        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSort::class, "SortProperty")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
     }
@@ -444,10 +349,7 @@ internal fun <Filters : Any>
     typeDictionary: TypeDictionary
 ): FilterParamsReader<Filters> {
     val filterType: KClass<Filters> = try {
-        val withFilters = DarkMagic.findMatchingSupertype(this::class, ListResource.ListWithFilters::class)
-            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
-        val projection = withFilters.arguments[4]
-        DarkMagic.getConcreteType(projection)
+        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithFilters::class, "Filters")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get list filters type", ex)
     }
@@ -457,11 +359,8 @@ internal fun <Filters : Any>
 @Throws(UAPITypeError::class)
 internal fun <Input : Any>
     ListResource.Creatable<*, *, *, Input>.defaultGetCreateInput(): KClass<Input> {
-    return try {
-        val create = DarkMagic.findMatchingSupertype(this::class, ListResource.Creatable::class)
-            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
-        val projection = create.arguments[3]
-        DarkMagic.getConcreteType(projection)
+    try {
+        return DarkMagic.findSupertypeArgNamed(this::class, ListResource.Creatable::class, "Input")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get create input type", ex)
     }
@@ -470,13 +369,10 @@ internal fun <Input : Any>
 @Throws(UAPITypeError::class)
 internal fun <Input : Any>
     ListResource.Updatable<*, *, *, Input>.defaultGetUpdateInput(): KClass<Input> {
-    return try {
-        val create = DarkMagic.findMatchingSupertype(this::class, ListResource.Updatable::class)
-            ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
-        val projection = create.arguments[3]
-        DarkMagic.getConcreteType(projection)
+    try {
+        return DarkMagic.findSupertypeArgNamed(this::class, ListResource.Updatable::class, "Input")
     } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get create input type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get update input type", ex)
     }
 }
 

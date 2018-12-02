@@ -21,11 +21,34 @@ class HttpListResource<UserContext : Any, Id : Any, Model : Any>(
     val resource: ListResourceRuntime<UserContext, Id, Model, *>
 ) {
     val routes: List<HttpRoute> by lazy {
-        val rootPath = listOf(StaticPathPart(resource.name))
+        val rootPath = listOf(StaticPathPart(resource.pluralName))
         val idPath = rootPath + resource.idReader.describe().toPathPart()
 
-        resource.availableOperations.map { handlerFor(it, rootPath, idPath) }
+        val list = resource.availableOperations.map { handlerFor(it, rootPath, idPath) }
+
+        val subresourceRoutes = resource.subresources.flatMap {
+//            subresourceHandlerFor(it, idPath)
+            emptyList<HttpRoute>()
+        }
+
+        list + subresourceRoutes
     }
+
+//    private fun subresourceHandlerFor(
+//        subresource: SubresourceRuntime<UserContext, IdentifiedModel<Id, Model>, Model>,
+//        idPath: List<PathPart>
+//    ): List<HttpRoute> {
+//        return when(subresource) {
+//            is SingletonSubresourceRuntime -> {
+//                val path = idPath + StaticPathPart(subresource.name)
+//                subresource.availableOperations.map { op ->
+//                    HttpRoute(
+//                        path,
+//                    )
+//                }
+//            }
+//        }
+//    }
 
     private fun handlerFor(
         op: ListResourceRequestHandler<UserContext, Id, Model, *, *>,

@@ -42,6 +42,10 @@
             <artifactId>aws-lambda-proxy-adapter</artifactId>
         </dependency>
         <dependency>
+            <groupId>edu.byu.uapi.kotlin.http</groupId>
+            <artifactId>spark-http-adapter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>edu.byu.uapi.kotlin.utilities</groupId>
             <artifactId>jwt-extensions</artifactId>
         </dependency>

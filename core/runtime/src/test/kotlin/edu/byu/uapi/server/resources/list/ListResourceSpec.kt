@@ -1,6 +1,10 @@
 package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.response.ResponseField
+import edu.byu.uapi.server.types.CreateIdResult
+import edu.byu.uapi.server.types.CreateResult
+import edu.byu.uapi.server.types.DeleteResult
+import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.spi.input.ListParams
 import io.kotlintest.data.forall
 import io.kotlintest.shouldBe
@@ -79,7 +83,7 @@ class ListResourceSpec : DescribeSpec() {
         override fun handleCreate(
             userContext: String,
             input: String
-        ): CreateResult<String> {
+        ): CreateIdResult<String> {
             TODO("not implemented")
         }
 
@@ -131,7 +135,7 @@ class ListResourceSpec : DescribeSpec() {
             userContext: String,
             id: String,
             input: String
-        ): CreateWithIdResult {
+        ): CreateResult {
             TODO("not implemented")
         }
 

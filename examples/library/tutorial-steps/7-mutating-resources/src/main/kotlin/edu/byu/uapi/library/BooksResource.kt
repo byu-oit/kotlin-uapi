@@ -1,7 +1,12 @@
 package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.*
-import edu.byu.uapi.server.resources.list.*
+import edu.byu.uapi.server.resources.list.ListResource
+import edu.byu.uapi.server.resources.list.fields
+import edu.byu.uapi.server.types.CreateIdResult
+import edu.byu.uapi.server.types.CreateResult
+import edu.byu.uapi.server.types.DeleteResult
+import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.spi.input.ListWithTotal
 import edu.byu.uapi.spi.input.UAPISortOrder
 
@@ -128,14 +133,14 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun handleCreate(
         userContext: LibraryUser,
         input: CreateBook
-    ): CreateResult<Long> {
+    ): CreateIdResult<Long> {
         val publisher = Library.getPublisher(input.publisherId)
-            ?: return CreateResult.InvalidInput("publisher_id", "No such publisher exists")
+            ?: return CreateIdResult.InvalidInput("publisher_id", "No such publisher exists")
         val authors = input.authorIds.map {
-            Library.getAuthor(it) ?: return CreateResult.InvalidInput("author_ids", "No such author exists")
+            Library.getAuthor(it) ?: return CreateIdResult.InvalidInput("author_ids", "No such author exists")
         }
         val genres = input.genreCodes.map {
-            Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
+            Library.getGenreByCode(it) ?: return CreateIdResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
         Library.createBook(NewBook(
@@ -150,7 +155,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             restricted = input.restricted
         ))
 
-        return CreateResult.Success(input.oclc)
+        return CreateIdResult.Success(input.oclc)
     }
 
     override fun canUserUpdate(
@@ -209,14 +214,14 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         userContext: LibraryUser,
         id: Long,
         input: UpdateBook
-    ): CreateWithIdResult {
+    ): CreateResult {
         val publisher = Library.getPublisher(input.publisherId)
-            ?: return CreateWithIdResult.InvalidInput("publisher_id", "No such publisher exists")
+            ?: return CreateResult.InvalidInput("publisher_id", "No such publisher exists")
         val authors = input.authorIds.map {
-            Library.getAuthor(it) ?: return CreateWithIdResult.InvalidInput("author_ids", "No such author exists")
+            Library.getAuthor(it) ?: return CreateResult.InvalidInput("author_ids", "No such author exists")
         }
         val genres = input.genreCodes.map {
-            Library.getGenreByCode(it) ?: return CreateWithIdResult.InvalidInput("genre_codes", "No such genre exists")
+            Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
         Library.createBook(NewBook(
@@ -231,7 +236,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             restricted = input.restricted
         ))
 
-        return CreateWithIdResult.Success
+        return CreateResult.Success
     }
 
     override fun canUserDelete(

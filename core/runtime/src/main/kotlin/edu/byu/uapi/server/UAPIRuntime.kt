@@ -3,8 +3,11 @@ package edu.byu.uapi.server
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.ListResourceRuntime
+import edu.byu.uapi.server.resources.Resource
+import edu.byu.uapi.server.subresources.Subresource
+import edu.byu.uapi.server.types.IdentifiedModel
+import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.requests.Headers
 import edu.byu.uapi.spi.scalars.ScalarType
 import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.validation.hibernate.HibernateValidationEngine
@@ -31,11 +34,24 @@ class UAPIRuntime<UserContext : Any>(
 
     private val resources: MutableMap<String, ListResourceRuntime<UserContext, *, *, *>> = mutableMapOf()
 
-    fun register(
-        resource: ListResource<UserContext, *, *, *>
+    fun <Id : Any, Model : Any> register(
+        resource: ListResource<UserContext, Id, Model, *>,
+        subresources: List<Subresource<UserContext, IdentifiedModel<Id, Model>, Model>> = emptyList()
     ) {
-        val runtime = ListResourceRuntime(resource.pluralName, resource, typeDictionary, validationEngine)
+        val runtime = ListResourceRuntime(resource, typeDictionary, validationEngine, emptyList())
         resources[resource.pluralName] = runtime
+        //TODO: Validate resource
+    }
+
+    internal fun <Model: Any, Parent: ModelHolder> register(mapping: ResourceMapping<UserContext, Model, Parent>) {
+        val (resource, subs) = mapping
+
+        if (resource !is ListResource<*, *, *, *>) {
+            TODO("Singleton resources are not yet supported")
+        }
+
+        val runtime = ListResourceRuntime(resource, typeDictionary, validationEngine, emptyList())
+//        resources[resource.pluralName] = runtime
         //TODO: Validate resource
     }
 
@@ -58,6 +74,11 @@ class UAPIRuntime<UserContext : Any>(
     }
 }
 
+internal data class ResourceMapping<UserContext : Any, Model: Any, Parent: ModelHolder>(
+    val resource: Resource<UserContext, Model, Parent>,
+    val subresources: List<Subresource<UserContext, Parent, Model>> = emptyList()
+)
+
 class RuntimeInit<UserContext : Any> {
 
     lateinit var userContextFactory: UserContextFactory<UserContext>
@@ -75,11 +96,17 @@ class RuntimeInit<UserContext : Any> {
         scalars.add(this)
     }
 
-    private val resources: MutableList<ListResource<UserContext, *, *, *>> = mutableListOf()
+    private val resources: MutableList<ResourceMapping<UserContext, *, *>> = mutableListOf()
 
-    operator fun ListResource<UserContext, *, *, *>.unaryPlus() {
-        resources += this
+    operator fun Resource<UserContext, *, *>.unaryPlus() {
+        resources += ResourceMapping(this)
     }
+
+    operator fun <Model : Any, SubresourceStyle: ModelHolder> Pair<Resource<UserContext, Model, SubresourceStyle>, List<Subresource<UserContext, SubresourceStyle, Model>>>.unaryPlus() {
+        resources += ResourceMapping(this.first, this.second)
+    }
+
+    infix fun <A, B> A.with(that: B): Pair<A, B> = this to that
 
     fun build(): UAPIRuntime<UserContext> {
         scalars.forEach { typeDictionary.registerScalarType(it) }
@@ -92,46 +119,3 @@ class RuntimeInit<UserContext : Any> {
         }
     }
 }
-
-typealias UserContextFactoryFunc<UserContext> = (UserContextAuthnInfo) -> UserContextResult<UserContext>
-
-interface UserContextFactory<out UserContext : Any> {
-    fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext>
-
-    companion object {
-        fun <UserContext : Any> from(fn: UserContextFactoryFunc<UserContext>): UserContextFactory<UserContext> {
-            return FunctionUserContextFactory(fn)
-        }
-    }
-
-    private class FunctionUserContextFactory<out UserContext : Any>(
-        private val fn: UserContextFactoryFunc<UserContext>
-    ) : UserContextFactory<UserContext> {
-        override fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext> {
-            return fn(authenticationInfo)
-        }
-    }
-
-}
-
-sealed class UserContextResult<out UserContext : Any> {
-    data class Success<out UserContext : Any>(
-        val result: UserContext
-    ) : UserContextResult<UserContext>()
-
-    data class Failure(
-        val messages: List<String>
-    ) : UserContextResult<Nothing>() {
-        constructor(message: String) : this(listOf(message))
-        constructor(vararg messages: String) : this(messages.toList())
-    }
-}
-
-interface UserContextAuthnInfo {
-    val headers: Headers
-    val queryParams: Map<String, Set<String>>
-    val requestUrl: String
-    val relativePath: String
-    val remoteIp: String
-}
-

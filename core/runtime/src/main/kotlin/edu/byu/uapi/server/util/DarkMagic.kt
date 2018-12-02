@@ -16,6 +16,24 @@ object DarkMagic {
         return me.supertypes.find { it.isSubtypeOf(star) }
     }
 
+    fun <Super: Any, Expected: Any> findSupertypeArgNamed(me: KClass<out Super>, type: KClass<Super>, name: String): KClass<Expected> {
+        val supertype = findMatchingSupertype(me, type) ?: throw DarkMagicException("Unable to find supertype $type on $me.")
+        val projection = getTypeParamNamed(supertype, name)
+        return DarkMagic.getConcreteType(projection)
+    }
+
+    fun getTypeParamNamed(me: KType, name: String): KTypeProjection {
+        val classifier = me.classifier ?: throw DarkMagicException("Type $me must be a valid Kotlin type")
+        if (classifier !is KClass<*>) {
+            throw DarkMagicException("Type $me must be a concrete class")
+        }
+        val paramIdx = classifier.typeParameters.indexOfFirst { it.name == name }
+        if (paramIdx < 0) {
+            throw DarkMagicException("Type $me does not have a type parameter named $name")
+        }
+        return me.arguments[paramIdx]
+    }
+
     @Suppress("FoldInitializerAndIfToElvis")
     fun <T: Any> getConcreteType(projection: KTypeProjection): KClass<T> {
         val type = projection.type ?: fail(projection, "must not be a '*' projection")
