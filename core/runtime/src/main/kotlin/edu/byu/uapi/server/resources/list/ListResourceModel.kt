@@ -1,16 +1,16 @@
-package edu.byu.uapi.server.resources.identified
+package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.schemas.*
 
-data class IdentifiedResourceModel(
+data class ListResourceModel(
     val name: String,
     val identifier: IdentifierModel,
     val responseModel: ResponseModel,
-    val mutations: IdentifiedResourceMutations,
+    val mutations: ListResourceMutations,
     val listViewModel: ListViewModel? = null
 )
 
-data class IdentifiedResourceMutations(
+data class ListResourceMutations(
     val create: CreateOperationModel?,
     val update: UpdateOperationModel?,
     val delete: DeleteOperationModel?

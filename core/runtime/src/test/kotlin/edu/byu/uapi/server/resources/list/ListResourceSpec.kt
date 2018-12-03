@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.resources.identified
+package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.spi.input.ListParams
@@ -8,14 +8,13 @@ import io.kotlintest.specs.DescribeSpec
 import io.kotlintest.tables.row
 import kotlin.reflect.KClass
 
-class IdentifiedResourceSpec : DescribeSpec() {
+class ListResourceSpec : DescribeSpec() {
     init {
         describe("operation interface detection") {
             val specializedInterfaces = arrayOf(
-                row(IdentifiedResource<String, String, String>::createOperation, IdentifiedResourceSpec::WithCreate),
-                row(IdentifiedResource<String, String, String>::updateOperation, IdentifiedResourceSpec::WithUpdate),
-                row(IdentifiedResource<String, String, String>::deleteOperation, IdentifiedResourceSpec::WithDelete),
-                row(IdentifiedResource<String, String, String>::listView, IdentifiedResourceSpec::WithListable)
+                row(ListResource<String, String, String, ListParams.Empty>::createOperation, ListResourceSpec::WithCreate),
+                row(ListResource<String, String, String, ListParams.Empty>::updateOperation, ListResourceSpec::WithUpdate),
+                row(ListResource<String, String, String, ListParams.Empty>::deleteOperation, ListResourceSpec::WithDelete)
             )
             it("should be null if the operation interface hasn't been implemented") {
                 forall(
@@ -36,7 +35,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
         }
     }
 
-    private open class Base : IdentifiedResource<String, String, String> {
+    private open class Base : ListResource<String, String, String, ListParams.Empty> {
         override val pluralName: String
             get() = "foo"
         override val responseFields: List<ResponseField<String, String, *>>
@@ -62,10 +61,17 @@ class IdentifiedResourceSpec : DescribeSpec() {
         override fun idFromModel(model: String): String {
             TODO("not implemented")
         }
+
+        override fun list(
+            userContext: String,
+            params: ListParams.Empty
+        ): List<String> {
+            TODO("not implemented")
+        }
     }
 
     private class WithCreate : Base(),
-                               IdentifiedResource.Creatable<String, String, String, String> {
+                               ListResource.Creatable<String, String, String, String> {
         override fun canUserCreate(userContext: String): Boolean {
             TODO("not implemented")
         }
@@ -82,7 +88,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private open class WithUpdate : Base(),
-                                    IdentifiedResource.Updatable<String, String, String, String> {
+                                    ListResource.Updatable<String, String, String, String> {
         override fun canUserUpdate(
             userContext: String,
             id: String,
@@ -113,7 +119,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private class WithCreateWithId : WithUpdate(),
-                                     IdentifiedResource.CreatableWithId<String, String, String, String> {
+                                     ListResource.CreatableWithId<String, String, String, String> {
         override fun canUserCreateWithId(
             userContext: String,
             id: String
@@ -132,7 +138,7 @@ class IdentifiedResourceSpec : DescribeSpec() {
     }
 
     private class WithDelete : Base(),
-                               IdentifiedResource.Deletable<String, String, String> {
+                               ListResource.Deletable<String, String, String> {
         override fun canUserDelete(
             userContext: String,
             id: String,
@@ -157,16 +163,6 @@ class IdentifiedResourceSpec : DescribeSpec() {
         }
     }
 
-    private class WithListable : Base(),
-                                 IdentifiedResource.Listable.Simple<String, String, String> {
-        override fun list(
-            userContext: String,
-            params: ListParams.Empty
-        ): List<String> {
-            TODO("not implemented")
-        }
-
-    }
 }
 
 

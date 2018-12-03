@@ -25,7 +25,7 @@ package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
-import edu.byu.uapi.server.resources.identified.IdentifiedResource
+import edu.byu.uapi.server.resources.identified.ListResource
 import edu.byu.uapi.server.resources.identified.fields
 import kotlin.reflect.KClass
 

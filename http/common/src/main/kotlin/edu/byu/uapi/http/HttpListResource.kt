@@ -5,7 +5,7 @@ import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
-import edu.byu.uapi.server.resources.identified.*
+import edu.byu.uapi.server.resources.list.*
 import edu.byu.uapi.server.types.GenericUAPIErrorResponse
 import edu.byu.uapi.server.types.UAPINotAuthenticatedError
 import edu.byu.uapi.server.types.UAPIResponse
@@ -15,10 +15,10 @@ import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
 import edu.byu.uapi.spi.requests.*
 
-class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
+class HttpListResource<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
     val config: HttpEngineConfig,
-    val resource: IdentifiedResourceRuntime<UserContext, Id, Model>
+    val resource: ListResourceRuntime<UserContext, Id, Model, *>
 ) {
     val routes: List<HttpRoute> by lazy {
         val rootPath = listOf(StaticPathPart(resource.name))
@@ -28,24 +28,24 @@ class HttpIdentifiedResource<UserContext : Any, Id : Any, Model : Any>(
     }
 
     private fun handlerFor(
-        op: IdentifiedResourceRequestHandler<UserContext, Id, Model, *>,
+        op: ListResourceRequestHandler<UserContext, Id, Model, *, *>,
         rootPath: List<PathPart>,
         idPath: List<PathPart>
     ): HttpRoute {
         return when (op) {
-            is IdentifiedResourceFetchHandler -> HttpRoute(
+            is ListResourceFetchHandler -> HttpRoute(
                 idPath, HttpMethod.GET, IdentifiedResourceFetchHttpHandler(runtime, op)
             )
-            is IdentifiedResourceListHandler<UserContext, Id, Model, *> -> HttpRoute(
+            is ListResourceListHandler<UserContext, Id, Model, *> -> HttpRoute(
                 rootPath, HttpMethod.GET, IdentifiedResourceListHttpHandler(runtime, op)
             )
-            is IdentifiedResourceCreateHandler<UserContext, Id, Model, *> -> HttpRoute(
+            is ListResourceCreateHandler<UserContext, Id, Model, *, *> -> HttpRoute(
                 rootPath, HttpMethod.POST, IdentifiedResourceCreateHttpHandler(runtime, op, config.jsonEngine)
             )
-            is IdentifiedResourceUpdateHandler<UserContext, Id, Model, *> -> HttpRoute(
+            is ListResourceUpdateHandler<UserContext, Id, Model, *, *> -> HttpRoute(
                 idPath, HttpMethod.PUT, IdentifiedResourceUpdateHttpHandler(runtime, op, config.jsonEngine)
             )
-            is IdentifiedResourceDeleteHandler<UserContext, Id, Model> -> HttpRoute(
+            is ListResourceDeleteHandler<UserContext, Id, Model, *> -> HttpRoute(
                 idPath, HttpMethod.DELETE, IdentifiedResourceDeleteHttpHandler(runtime, op)
             )
         }
@@ -129,13 +129,13 @@ class HttpUserContextAuthnInfo(
 
 class IdentifiedResourceFetchHttpHandler<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
-    val handler: IdentifiedResourceFetchHandler<UserContext, Id, Model>
+    val handler: ListResourceFetchHandler<UserContext, Id, Model, *>
 ) : AuthenticatedHandler<UserContext>(runtime) {
     override fun handleAuthenticated(
         request: HttpRequest,
         userContext: UserContext
     ): HttpResponse {
-        val response = handler.handle(FetchIdentifiedResource(
+        val response = handler.handle(FetchListResource(
             request.asRequestContext(),
             userContext,
             request.path.asIdParams(),
@@ -147,13 +147,13 @@ class IdentifiedResourceFetchHttpHandler<UserContext : Any, Id : Any, Model : An
 
 class IdentifiedResourceListHttpHandler<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
-    val handler: IdentifiedResourceListHandler<UserContext, Id, Model, *>
+    val handler: ListResourceListHandler<UserContext, Id, Model, *>
 ) : AuthenticatedHandler<UserContext>(runtime) {
     override fun handleAuthenticated(
         request: HttpRequest,
         userContext: UserContext
     ): HttpResponse {
-        val response = handler.handle(ListIdentifiedResource(
+        val response = handler.handle(ListListResource(
             request.asRequestContext(),
             userContext,
             request.query.asQueryParams()
@@ -164,7 +164,7 @@ class IdentifiedResourceListHttpHandler<UserContext : Any, Id : Any, Model : Any
 
 class IdentifiedResourceCreateHttpHandler<UserContext: Any, Id: Any, Model: Any>(
     val runtime: UAPIRuntime<UserContext>,
-    val handler: IdentifiedResourceCreateHandler<UserContext, Id, Model, *>,
+    val handler: ListResourceCreateHandler<UserContext, Id, Model, *, *>,
     val jsonEngine: JsonEngine<*, *>
 ): AuthenticatedHandler<UserContext>(runtime) {
     override fun handleAuthenticated(
@@ -178,7 +178,7 @@ class IdentifiedResourceCreateHttpHandler<UserContext: Any, Id: Any, Model: Any>
         ))
 
         val wrappedBody = jsonEngine.resourceBody(body, runtime.typeDictionary)
-        val response = handler.handle(CreateIdentifiedResource(
+        val response = handler.handle(CreateListResource(
             request.asRequestContext(),
             userContext,
             wrappedBody
@@ -189,7 +189,7 @@ class IdentifiedResourceCreateHttpHandler<UserContext: Any, Id: Any, Model: Any>
 
 class IdentifiedResourceUpdateHttpHandler<UserContext: Any, Id: Any, Model: Any>(
     val runtime: UAPIRuntime<UserContext>,
-    val handler: IdentifiedResourceUpdateHandler<UserContext, Id, Model, *>,
+    val handler: ListResourceUpdateHandler<UserContext, Id, Model, *, *>,
     val jsonEngine: JsonEngine<*, *>
 ): AuthenticatedHandler<UserContext>(runtime) {
     override fun handleAuthenticated(
@@ -203,7 +203,7 @@ class IdentifiedResourceUpdateHttpHandler<UserContext: Any, Id: Any, Model: Any>
         ))
 
         val wrappedBody = jsonEngine.resourceBody(body, runtime.typeDictionary)
-        val response = handler.handle(UpdateIdentifiedResource(
+        val response = handler.handle(UpdateListResource(
             request.asRequestContext(),
             userContext,
             request.path.asIdParams(),
@@ -215,13 +215,13 @@ class IdentifiedResourceUpdateHttpHandler<UserContext: Any, Id: Any, Model: Any>
 
 class IdentifiedResourceDeleteHttpHandler<UserContext: Any, Id: Any, Model: Any>(
     val runtime: UAPIRuntime<UserContext>,
-    val handler: IdentifiedResourceDeleteHandler<UserContext, Id, Model>
+    val handler: ListResourceDeleteHandler<UserContext, Id, Model, *>
 ): AuthenticatedHandler<UserContext>(runtime) {
     override fun handleAuthenticated(
         request: HttpRequest,
         userContext: UserContext
     ): HttpResponse {
-        val response = handler.handle(DeleteIdentifiedResource(
+        val response = handler.handle(DeleteListResource(
             request.asRequestContext(),
             userContext,
             request.path.asIdParams()

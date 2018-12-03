@@ -1,5 +1,5 @@
 diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 4-creating-a-resource/pom.xml 5-response-body/pom.xml
---- 4-creating-a-resource/pom.xml	2018-11-14 10:45:11.000000000 -0700
+--- 4-creating-a-resource/pom.xml	2018-11-30 12:49:35.000000000 -0700
 +++ 5-response-body/pom.xml	2018-11-14 10:45:11.000000000 -0700
 @@ -4,11 +4,11 @@
      <modelVersion>4.0.0</modelVersion>
@@ -16,8 +16,8 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 4-creating-a-resource/pom.xml 5-r
          <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
          <kotlin.version>1.3.10</kotlin.version>
 diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt 5-response-body/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt
---- 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-11-14 10:28:58.000000000 -0700
-+++ 5-response-body/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-11-14 10:28:58.000000000 -0700
+--- 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-12-03 12:54:04.000000000 -0700
++++ 5-response-body/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-12-03 12:56:47.000000000 -0700
 @@ -1,6 +1,8 @@
  package edu.byu.uapi.library
  
@@ -25,9 +25,9 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 4-creating-a-resource/src/main/ko
  import edu.byu.uapi.kotlin.examples.library.Book
 +import edu.byu.uapi.kotlin.examples.library.Genre
  import edu.byu.uapi.kotlin.examples.library.Library
- import edu.byu.uapi.server.resources.identified.IdentifiedResource
+ import edu.byu.uapi.server.resources.identified.ListResource
  import edu.byu.uapi.server.resources.identified.fields
-@@ -27,12 +29,57 @@
+@@ -37,12 +39,57 @@
      }
  
      override val responseFields = fields {
@@ -47,7 +47,7 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 4-creating-a-resource/src/main/ko
          }
 -    }
 +        value<Int>("publisher_id") {
-+            getValue { book -> book.publisher.publisherId }
++            getValue { book -> book.publisher.id }
 +            displayLabel = "Publisher"
 +            modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
  

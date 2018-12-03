@@ -2,15 +2,16 @@ package edu.byu.uapi.kotlin.examples.library.impl
 
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
-import edu.byu.uapi.server.resources.identified.IdentifiedResource
+import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.uapiResponse
+import edu.byu.uapi.spi.input.ListParams
 
 /**
  * Created by Scott Hutchings on 9/17/2018.
  * kotlin-uapi-dsl-pom
  */
-class BookResource : IdentifiedResource<
+class BookResource : ListResource.Simple<
     MyUserContext, // user info
     Long, // id
     Book // model
@@ -35,6 +36,13 @@ class BookResource : IdentifiedResource<
 
     override fun idFromModel(model: Book): Long {
         return model.oclc
+    }
+
+    override fun list(
+        userContext: MyUserContext,
+        params: ListParams.Empty
+    ): List<Book> {
+        TODO("not implemented")
     }
 
     override val responseFields: List<ResponseField<MyUserContext, Book, *>>

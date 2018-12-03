@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.resources.identified
+package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.response.ResponseField
@@ -18,7 +18,7 @@ import edu.byu.uapi.spi.validation.Validator
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
 
-interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
+interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListParams> {
 
     val pluralName: String
 
@@ -49,6 +49,19 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         return defaultIdReader(dictionary, paramPrefix)
     }
 
+    fun list(
+        userContext: UserContext,
+        params: Params
+    ): List<Model>
+
+    val listParamsType: KClass<Params>
+        get() = defaultListParamsType()
+
+    @Throws(UAPITypeError::class)
+    fun getListParamReader(dictionary: TypeDictionary): ListParamReader<Params> {
+        return defaultGetListParamReader(dictionary)
+    }
+
     // TODO: Maybe it would be better to have a map of types to properties definitions/renderers? That'll especially help with trees of objects.
     //   Then again, it's not THAT hard to share around a list representing the properties for a given type...
     val responseFields: List<ResponseField<UserContext, Model, *>>
@@ -60,9 +73,6 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
         get() = this.takeIfType()
 
     val deleteOperation: Deletable<UserContext, Id, Model>?
-        get() = this.takeIfType()
-
-    val listView: Listable<UserContext, Id, Model, *>?
         get() = this.takeIfType()
 
     interface Creatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
@@ -98,83 +108,6 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             id: Id,
             model: Model
         ): DeleteResult
-    }
-
-    interface Listable<UserContext : Any, Id : Any, Model : Any, Params : ListParams> {
-        fun list(
-            userContext: UserContext,
-            params: Params
-        ): List<Model>
-
-        val listParamsType: KClass<Params>
-            get() = defaultListParamsType()
-
-        @Throws(UAPITypeError::class)
-        fun getListParamReader(dictionary: TypeDictionary): ListParamReader<Params> {
-            return defaultGetListParamReader(dictionary)
-        }
-
-        interface Simple<UserContext : Any, Id : Any, Model : Any> : Listable<UserContext, Id, Model, ListParams.Empty> {
-            override val listParamsType: KClass<ListParams.Empty>
-                get() = ListParams.Empty::class
-
-            override fun getListParamReader(dictionary: TypeDictionary): ListParamReader<ListParams.Empty> {
-                return EmptyListParamReader
-            }
-        }
-
-        interface WithSubset<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :
-            Listable<UserContext, Id, Model, CollectionParams> {
-
-            override fun list(
-                userContext: UserContext,
-                params: CollectionParams
-            ): ListWithTotal<Model>
-
-            val listDefaultSubsetSize: Int
-            val listMaxSubsetSize: Int
-        }
-
-        interface WithSearch<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSearch<SearchContext>, SearchContext : Enum<SearchContext>>
-            : Listable<UserContext, Id, Model, CollectionParams> {
-
-            fun listSearchContexts(value: SearchContext): Collection<String>
-
-            @Throws(UAPITypeError::class)
-            fun getListSearchParamReader(dictionary: TypeDictionary): SearchParamsReader<SearchContext> {
-                return defaultListSearchParamReader(dictionary)
-            }
-
-            @Throws(UAPITypeError::class)
-            fun getListSearchContextType(dictionary: TypeDictionary): EnumScalarType<SearchContext> {
-                return defaultListSearchContextType(dictionary)
-            }
-        }
-
-        interface WithSort<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSort<SortProperty>, SortProperty : Enum<SortProperty>>
-            : Listable<UserContext, Id, Model, CollectionParams> {
-
-            val listDefaultSortProperties: List<SortProperty>
-            val listDefaultSortOrder: UAPISortOrder
-
-            @Throws(UAPITypeError::class)
-            fun getListSortPropertyType(typeDictionary: TypeDictionary): EnumScalarType<SortProperty> {
-                return defaultListSortPropertyType(typeDictionary)
-            }
-
-            @Throws(UAPITypeError::class)
-            fun getListSortParamsReader(typeDictionary: TypeDictionary): SortParamsReader<SortProperty> {
-                return defaultListSortParamsReader(typeDictionary)
-            }
-        }
-
-        interface WithFilters<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
-            : Listable<UserContext, Id, Model, CollectionParams> {
-            @Throws(UAPITypeError::class)
-            fun getListFilterParamReader(typeDictionary: TypeDictionary): FilterParamsReader<Filters> {
-                return defaultListFilterParamReader(typeDictionary)
-            }
-        }
     }
 
     interface Updatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
@@ -215,6 +148,68 @@ interface IdentifiedResource<UserContext : Any, Id : Any, Model : Any> {
             id: Id,
             input: Input
         ): CreateWithIdResult
+    }
+
+    interface Simple<UserContext : Any, Id : Any, Model : Any> : ListResource<UserContext, Id, Model, ListParams.Empty> {
+        override val listParamsType: KClass<ListParams.Empty>
+            get() = ListParams.Empty::class
+
+        override fun getListParamReader(dictionary: TypeDictionary): ListParamReader<ListParams.Empty> {
+            return EmptyListParamReader
+        }
+    }
+
+    interface ListWithSubset<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :
+        ListResource<UserContext, Id, Model, CollectionParams> {
+
+        override fun list(
+            userContext: UserContext,
+            params: CollectionParams
+        ): ListWithTotal<Model>
+
+        val listDefaultSubsetSize: Int
+        val listMaxSubsetSize: Int
+    }
+
+    interface ListWithSearch<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSearch<SearchContext>, SearchContext : Enum<SearchContext>>
+        : ListResource<UserContext, Id, Model, CollectionParams> {
+
+        fun listSearchContexts(value: SearchContext): Collection<String>
+
+        @Throws(UAPITypeError::class)
+        fun getListSearchParamReader(dictionary: TypeDictionary): SearchParamsReader<SearchContext> {
+            return defaultListSearchParamReader(dictionary)
+        }
+
+        @Throws(UAPITypeError::class)
+        fun getListSearchContextType(dictionary: TypeDictionary): EnumScalarType<SearchContext> {
+            return defaultListSearchContextType(dictionary)
+        }
+    }
+
+    interface ListWithSort<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSort<SortProperty>, SortProperty : Enum<SortProperty>>
+        : ListResource<UserContext, Id, Model, CollectionParams> {
+
+        val listDefaultSortProperties: List<SortProperty>
+        val listDefaultSortOrder: UAPISortOrder
+
+        @Throws(UAPITypeError::class)
+        fun getListSortPropertyType(typeDictionary: TypeDictionary): EnumScalarType<SortProperty> {
+            return defaultListSortPropertyType(typeDictionary)
+        }
+
+        @Throws(UAPITypeError::class)
+        fun getListSortParamsReader(typeDictionary: TypeDictionary): SortParamsReader<SortProperty> {
+            return defaultListSortParamsReader(typeDictionary)
+        }
+    }
+
+    interface ListWithFilters<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
+        : ListResource<UserContext, Id, Model, CollectionParams> {
+        @Throws(UAPITypeError::class)
+        fun getListFilterParamReader(typeDictionary: TypeDictionary): FilterParamsReader<Filters> {
+            return defaultListFilterParamReader(typeDictionary)
+        }
     }
 }
 
@@ -303,14 +298,14 @@ data class InputError(
     val description: String
 )
 
-private fun IdentifiedResource<*, *, *>.defaultSingleName(): String {
+private fun ListResource<*, *, *, *>.defaultSingleName(): String {
     if (pluralName.endsWith("s")) {
         return pluralName.dropLast(1)
     }
     return pluralName
 }
 
-private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserContext, Id, Model>.defaultIdReader(
+private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdReader(
     dictionary: TypeDictionary,
     paramPrefix: String
 ): IdParamReader<Id> {
@@ -321,10 +316,10 @@ private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserCo
     return ReflectiveIdParamReader.create(paramPrefix, idType, dictionary)
 }
 
-private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserContext, Id, Model>.defaultIdType(): KClass<Id> {
+private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdType(): KClass<Id> {
     return try {
-        val supertype = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource::class)
-            ?: throw UAPITypeError.create(this::class, "Unable to get IdentifiedResource ID Type")
+        val supertype = DarkMagic.findMatchingSupertype(this::class, ListResource::class)
+            ?: throw UAPITypeError.create(this::class, "Unable to get ListResource ID Type")
         val idProjection = supertype.arguments[1]
         DarkMagic.getConcreteType(idProjection)
     } catch (ex: DarkMagicException) {
@@ -333,9 +328,9 @@ private fun <Id : Any, Model : Any, UserContext : Any> IdentifiedResource<UserCo
 }
 
 internal fun <Params : ListParams>
-    IdentifiedResource.Listable<*, *, *, Params>.defaultListParamsType(): KClass<Params> {
+    ListResource<*, *, *, Params>.defaultListParamsType(): KClass<Params> {
     return try {
-        val listable = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable::class)
+        val listable = DarkMagic.findMatchingSupertype(this::class, ListResource::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = listable.arguments[3]
         DarkMagic.getConcreteType(projection)
@@ -346,7 +341,7 @@ internal fun <Params : ListParams>
 
 @Throws(UAPITypeError::class)
 internal fun <Params : ListParams>
-    IdentifiedResource.Listable<*, *, *, Params>.defaultGetListParamReader(
+    ListResource<*, *, *, Params>.defaultGetListParamReader(
     dictionary: TypeDictionary
 ): ListParamReader<Params> {
     if (listParamsType == ListParams.Empty::class) {
@@ -359,10 +354,10 @@ internal fun <Params : ListParams>
     val ctor = listParamsType.primaryConstructor
         ?: throw UAPITypeError.create(listParamsType, "List parameter type must have a primary constructor.")
 
-    val search = this.takeIfType<IdentifiedResource.Listable.WithSearch<*, *, *, *, *>>()?.getListSearchParamReader(dictionary)
-    val filter = this.takeIfType<IdentifiedResource.Listable.WithFilters<*, *, *, *, *>>()?.getListFilterParamReader(dictionary)
-    val sort = this.takeIfType<IdentifiedResource.Listable.WithSort<*, *, *, *, *>>()?.getListSortParamsReader(dictionary)
-    val subset = this.takeIfType<IdentifiedResource.Listable.WithSubset<*, *, *, *>>()?.let { it ->
+    val search = this.takeIfType<ListResource.ListWithSearch<*, *, *, *, *>>()?.getListSearchParamReader(dictionary)
+    val filter = this.takeIfType<ListResource.ListWithFilters<*, *, *, *, *>>()?.getListFilterParamReader(dictionary)
+    val sort = this.takeIfType<ListResource.ListWithSort<*, *, *, *, *>>()?.getListSortParamsReader(dictionary)
+    val subset = this.takeIfType<ListResource.ListWithSubset<*, *, *, *>>()?.let { it ->
         SubsetParamsReader(
             defaultSize = it.listDefaultSubsetSize,
             maxSize = it.listMaxSubsetSize
@@ -380,7 +375,7 @@ internal fun <Params : ListParams>
 
 @Throws(UAPITypeError::class)
 internal fun <SearchContext : Enum<SearchContext>>
-    IdentifiedResource.Listable.WithSearch<*, *, *, *, SearchContext>.defaultListSearchParamReader(
+    ListResource.ListWithSearch<*, *, *, *, SearchContext>.defaultListSearchParamReader(
     dictionary: TypeDictionary
 ): SearchParamsReader<SearchContext> {
     val contextType = getListSearchContextType(dictionary)
@@ -398,11 +393,11 @@ internal fun <SearchContext : Enum<SearchContext>>
 
 @Throws(UAPITypeError::class)
 internal fun <SearchContext : Enum<SearchContext>>
-    IdentifiedResource.Listable.WithSearch<*, *, *, *, SearchContext>.defaultListSearchContextType(
+    ListResource.ListWithSearch<*, *, *, *, SearchContext>.defaultListSearchContextType(
     dictionary: TypeDictionary
 ): EnumScalarType<SearchContext> {
     val searchContextType: KClass<SearchContext> = try {
-        val withSearch = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable.WithSearch::class)
+        val withSearch = DarkMagic.findMatchingSupertype(this::class, ListResource.ListWithSearch::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = withSearch.arguments[4]
         DarkMagic.getConcreteType(projection)
@@ -414,11 +409,11 @@ internal fun <SearchContext : Enum<SearchContext>>
 
 @Throws(UAPITypeError::class)
 internal fun <SortProperty : Enum<SortProperty>>
-    IdentifiedResource.Listable.WithSort<*, *, *, *, SortProperty>.defaultListSortPropertyType(
+    ListResource.ListWithSort<*, *, *, *, SortProperty>.defaultListSortPropertyType(
     typeDictionary: TypeDictionary
 ): EnumScalarType<SortProperty> {
     val sortPropertyType: KClass<SortProperty> = try {
-        val withSearch = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable.WithSort::class)
+        val withSearch = DarkMagic.findMatchingSupertype(this::class, ListResource.ListWithSort::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = withSearch.arguments[4]
         DarkMagic.getConcreteType(projection)
@@ -430,7 +425,7 @@ internal fun <SortProperty : Enum<SortProperty>>
 
 @Throws(UAPITypeError::class)
 internal fun <SortProperty : Enum<SortProperty>>
-    IdentifiedResource.Listable.WithSort<*, *, *, *, SortProperty>.defaultListSortParamsReader(
+    ListResource.ListWithSort<*, *, *, *, SortProperty>.defaultListSortParamsReader(
     typeDictionary: TypeDictionary
 ): SortParamsReader<SortProperty> {
     val sortPropType = getListSortPropertyType(typeDictionary)
@@ -445,11 +440,11 @@ internal fun <SortProperty : Enum<SortProperty>>
 
 @Throws(UAPITypeError::class)
 internal fun <Filters : Any>
-    IdentifiedResource.Listable.WithFilters<*, *, *, *, Filters>.defaultListFilterParamReader(
+    ListResource.ListWithFilters<*, *, *, *, Filters>.defaultListFilterParamReader(
     typeDictionary: TypeDictionary
 ): FilterParamsReader<Filters> {
     val filterType: KClass<Filters> = try {
-        val withFilters = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Listable.WithFilters::class)
+        val withFilters = DarkMagic.findMatchingSupertype(this::class, ListResource.ListWithFilters::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = withFilters.arguments[4]
         DarkMagic.getConcreteType(projection)
@@ -461,9 +456,9 @@ internal fun <Filters : Any>
 
 @Throws(UAPITypeError::class)
 internal fun <Input : Any>
-    IdentifiedResource.Creatable<*, *, *, Input>.defaultGetCreateInput(): KClass<Input> {
+    ListResource.Creatable<*, *, *, Input>.defaultGetCreateInput(): KClass<Input> {
     return try {
-        val create = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Creatable::class)
+        val create = DarkMagic.findMatchingSupertype(this::class, ListResource.Creatable::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = create.arguments[3]
         DarkMagic.getConcreteType(projection)
@@ -474,9 +469,9 @@ internal fun <Input : Any>
 
 @Throws(UAPITypeError::class)
 internal fun <Input : Any>
-    IdentifiedResource.Updatable<*, *, *, Input>.defaultGetUpdateInput(): KClass<Input> {
+    ListResource.Updatable<*, *, *, Input>.defaultGetUpdateInput(): KClass<Input> {
     return try {
-        val create = DarkMagic.findMatchingSupertype(this::class, IdentifiedResource.Updatable::class)
+        val create = DarkMagic.findMatchingSupertype(this::class, ListResource.Updatable::class)
             ?: throw DarkMagicException("This shouldn't be possible! Somebody broke the compiler!")
         val projection = create.arguments[3]
         DarkMagic.getConcreteType(projection)
@@ -485,5 +480,5 @@ internal fun <Input : Any>
     }
 }
 
-inline fun <UserContext : Any, Model : Any> IdentifiedResource<UserContext, *, Model>.fields(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
+inline fun <UserContext : Any, Model : Any> ListResource<UserContext, *, Model, *>.fields(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
     : List<ResponseField<UserContext, Model, *>> = uapiResponse(fn)

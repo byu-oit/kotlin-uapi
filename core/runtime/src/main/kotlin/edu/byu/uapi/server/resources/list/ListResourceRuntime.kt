@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.resources.identified
+package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.schemas.*
@@ -23,9 +23,9 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.primaryConstructor
 
-class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
+class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params: ListParams>(
     val name: String,
-    internal val resource: IdentifiedResource<UserContext, Id, Model>,
+    internal val resource: ListResource<UserContext, Id, Model, Params>,
     val typeDictionary: TypeDictionary,
     val validationEngine: ValidationEngine
 ) {
@@ -33,7 +33,7 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
     // TODO fun validateResource(validation: Validating)
 
     companion object {
-        private val LOG = loggerFor<IdentifiedResourceRuntime<*, *, *>>()
+        private val LOG = loggerFor<ListResourceRuntime<*, *, *, *>>()
     }
 
     val idReader: IdParamReader<Id> = resource.getIdReader(typeDictionary, this.name + "_")
@@ -42,19 +42,19 @@ class IdentifiedResourceRuntime<UserContext : Any, Id : Any, Model : Any>(
         LOG.debug("Initializing runtime")
     }
 
-    val model: IdentifiedResourceModel by lazy {
+    val model: ListResourceModel by lazy {
         introspect(this)
     }
 
-    val availableOperations: Set<IdentifiedResourceRequestHandler<UserContext, Id, Model, *>> by lazy {
-        val ops: MutableSet<IdentifiedResourceRequestHandler<UserContext, Id, Model, *>> = mutableSetOf()
+    val availableOperations: Set<ListResourceRequestHandler<UserContext, Id, Model, Params, *>> by lazy {
+        val ops: MutableSet<ListResourceRequestHandler<UserContext, Id, Model, Params, *>> = mutableSetOf()
 
-        ops.add(IdentifiedResourceFetchHandler(this))
+        ops.add(ListResourceFetchHandler(this))
+        ops.add(ListResourceListHandler(this))
 
-        resource.listView?.also { ops.add(IdentifiedResourceListHandler(this, it)) }
-        resource.createOperation?.also { ops.add(IdentifiedResourceCreateHandler(this, it)) }
-        resource.updateOperation?.also { ops.add(IdentifiedResourceUpdateHandler(this, it)) }
-        resource.deleteOperation?.also { ops.add(IdentifiedResourceDeleteHandler(this, it)) }
+        resource.createOperation?.also { ops.add(ListResourceCreateHandler(this, it)) }
+        resource.updateOperation?.also { ops.add(ListResourceUpdateHandler(this, it)) }
+        resource.deleteOperation?.also { ops.add(ListResourceDeleteHandler(this, it)) }
 
         Collections.unmodifiableSet(ops)
     }
@@ -72,41 +72,36 @@ inline fun <reified T> Any.takeIfType(): T? {
     }
 }
 
-private fun introspect(runtime: IdentifiedResourceRuntime<*, *, *>): IdentifiedResourceModel {
+private fun introspect(runtime: ListResourceRuntime<*, *, *, *>): ListResourceModel {
     val resource = runtime.resource
     val name = runtime.name
 
-    return IdentifiedResourceModel(
-        name = name,
-        identifier = introspectIdentifier(name, resource.idType),
-        responseModel = introspectResponseModel(resource.responseFields),
-        listViewModel = introspectListView(resource.listView),
-        mutations = IdentifiedResourceMutations(
-            introspect(resource.createOperation),
-            introspect(resource.updateOperation),
-            introspect(resource.deleteOperation)
-        )
-    )
+    TODO()
+//    return ListResourceModel(
+//        name = name,
+//        identifier = introspectIdentifier(name, resource.idType),
+//        responseModel = introspectResponseModel(resource.responseFields),
+//        listViewModel = introspectListView(resource.listView),
+//        mutations = ListResourceMutations(
+//            introspect(resource.createOperation),
+//            introspect(resource.updateOperation),
+//            introspect(resource.deleteOperation)
+//        )
+//    )
 }
 
-fun introspect(deleteOperation: IdentifiedResource.Deletable<*, *, *>?): DeleteOperationModel? {
+fun introspect(deleteOperation: ListResource.Deletable<*, *, *>?): DeleteOperationModel? {
     TODO("not implemented")
 }
 
 fun introspect(
-    updateOperation: IdentifiedResource.Updatable<*, *, *, *>?
+    updateOperation: ListResource.Updatable<*, *, *, *>?
 ): UpdateOperationModel? {
     TODO()
 }
 
-fun introspect(runtime: IdentifiedResource.Creatable<*, *, *, *>?): CreateOperationModel? {
+fun introspect(runtime: ListResource.Creatable<*, *, *, *>?): CreateOperationModel? {
     TODO()
-}
-
-fun introspectListView(
-    listView: IdentifiedResource.Listable<*, *, *, *>?
-): ListViewModel? {
-    TODO("not implemented")
 }
 
 private fun introspectResponseModel(responseFields: List<ResponseField<*, *, *>>): ResponseModel {
@@ -166,8 +161,8 @@ private fun scalarTypeFor(type: KClass<out Any>): UAPIScalarType? {
     }
 }
 
-sealed class IdentifiedResourceRequestHandler<UserContext : Any, Id : Any, Model : Any, Request : IdentifiedResourceRequest<UserContext>>(
-    val runtime: IdentifiedResourceRuntime<UserContext, Id, Model>
+sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams, Request : ListResourceRequest<UserContext>>(
+    val runtime: ListResourceRuntime<UserContext, Id, Model, Params>
 ) {
     val resource = runtime.resource
 
@@ -249,11 +244,11 @@ sealed class IdentifiedResourceRequestHandler<UserContext : Any, Id : Any, Model
     abstract fun handle(request: Request): UAPIResponse<*>
 }
 
-class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>(
-    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>
-) : IdentifiedResourceRequestHandler<UserContext, Id, Model, FetchIdentifiedResource<UserContext>>(runtime) {
+class ListResourceFetchHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams>(
+    runtime: ListResourceRuntime<UserContext, Id, Model, Params>
+) : ListResourceRequestHandler<UserContext, Id, Model, Params, FetchListResource<UserContext>>(runtime) {
     override fun handle(
-        request: FetchIdentifiedResource<UserContext>
+        request: FetchListResource<UserContext>
     ): UAPIResponse<*> {
         val id = getId(request.idParams)
         val userContext = request.userContext
@@ -266,16 +261,15 @@ class IdentifiedResourceFetchHandler<UserContext : Any, Id : Any, Model : Any>(
     }
 }
 
-class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
-    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
-    private val listView: IdentifiedResource.Listable<UserContext, Id, Model, Params>
-) : IdentifiedResourceRequestHandler<UserContext, Id, Model, ListIdentifiedResource<UserContext>>(runtime) {
-    private val paramReader: ListParamReader<Params> = listView.getListParamReader(runtime.typeDictionary)
+class ListResourceListHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
+    runtime: ListResourceRuntime<UserContext, Id, Model, Params>
+) : ListResourceRequestHandler<UserContext, Id, Model, Params, ListListResource<UserContext>>(runtime) {
+    private val paramReader: ListParamReader<Params> = resource.getListParamReader(runtime.typeDictionary)
 
-    override fun handle(request: ListIdentifiedResource<UserContext>): UAPIResponse<*> {
+    override fun handle(request: ListListResource<UserContext>): UAPIResponse<*> {
         val params = paramReader.read(request.queryParams)
 
-        val result = listView.list(request.userContext, params)
+        val result = resource.list(request.userContext, params)
 
         val meta = buildCollectionMetadata(result, params)
 
@@ -316,18 +310,18 @@ class IdentifiedResourceListHandler<UserContext : Any, Id : Any, Model : Any, Pa
     }
 }
 
-class IdentifiedResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Input : Any>(
-    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
-    private val operation: IdentifiedResource.Creatable<UserContext, Id, Model, Input>
-) : IdentifiedResourceRequestHandler<UserContext, Id, Model, CreateIdentifiedResource<UserContext>>(runtime) {
+class ListResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams, Input : Any>(
+    runtime: ListResourceRuntime<UserContext, Id, Model, Params>,
+    private val operation: ListResource.Creatable<UserContext, Id, Model, Input>
+) : ListResourceRequestHandler<UserContext, Id, Model, Params, CreateListResource<UserContext>>(runtime) {
 
     companion object {
-        private val LOG = loggerFor<IdentifiedResourceCreateHandler<*, *, *, *>>()
+        private val LOG = loggerFor<ListResourceCreateHandler<*, *, *, *, *>>()
     }
 
     private val inputType = operation.createInput
 
-    override fun handle(request: CreateIdentifiedResource<UserContext>): UAPIResponse<*> {
+    override fun handle(request: CreateListResource<UserContext>): UAPIResponse<*> {
         LOG.debug { "Got request to create ${runtime.name}" }
         val userContext = request.userContext
 
@@ -377,20 +371,20 @@ class IdentifiedResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, 
     }
 }
 
-class IdentifiedResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Input : Any>(
-    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
-    private val operation: IdentifiedResource.Updatable<UserContext, Id, Model, Input>
-) : IdentifiedResourceRequestHandler<UserContext, Id, Model, UpdateIdentifiedResource<UserContext>>(runtime) {
+class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams, Input : Any>(
+    runtime: ListResourceRuntime<UserContext, Id, Model, Params>,
+    private val operation: ListResource.Updatable<UserContext, Id, Model, Input>
+) : ListResourceRequestHandler<UserContext, Id, Model, Params, UpdateListResource<UserContext>>(runtime) {
 
     companion object {
-        private val LOG = loggerFor<IdentifiedResourceCreateHandler<*, *, *, *>>()
+        private val LOG = loggerFor<ListResourceCreateHandler<*, *, *, *, *>>()
     }
 
     private val inputType = operation.updateInput
-    private val createWithId = operation.takeIfType<IdentifiedResource.CreatableWithId<UserContext, Id, Model, Input>>()
+    private val createWithId = operation.takeIfType<ListResource.CreatableWithId<UserContext, Id, Model, Input>>()
     private val validator = operation.getUpdateValidator(runtime.validationEngine)
 
-    override fun handle(request: UpdateIdentifiedResource<UserContext>): UAPIResponse<*> {
+    override fun handle(request: UpdateListResource<UserContext>): UAPIResponse<*> {
         LOG.debug { "Got request to update ${runtime.name}" }
         val userContext = request.userContext
 
@@ -479,7 +473,7 @@ class IdentifiedResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, 
     }
 
     private fun doCreate(
-        operation: IdentifiedResource.CreatableWithId<UserContext, Id, Model, Input>,
+        operation: ListResource.CreatableWithId<UserContext, Id, Model, Input>,
         userContext: UserContext,
         id: Id,
         input: Input
@@ -530,16 +524,16 @@ class IdentifiedResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, 
     }
 }
 
-class IdentifiedResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any>(
-    runtime: IdentifiedResourceRuntime<UserContext, Id, Model>,
-    val operation: IdentifiedResource.Deletable<UserContext, Id, Model>
-) : IdentifiedResourceRequestHandler<UserContext, Id, Model, DeleteIdentifiedResource<UserContext>>(runtime) {
+class ListResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams>(
+    runtime: ListResourceRuntime<UserContext, Id, Model, Params>,
+    val operation: ListResource.Deletable<UserContext, Id, Model>
+) : ListResourceRequestHandler<UserContext, Id, Model, Params, DeleteListResource<UserContext>>(runtime) {
     companion object {
-        private val LOG = loggerFor<IdentifiedResourceDeleteHandler<*, *, *>>()
+        private val LOG = loggerFor<ListResourceDeleteHandler<*, *, *, *>>()
     }
 
     override fun handle(
-        request: DeleteIdentifiedResource<UserContext>
+        request: DeleteListResource<UserContext>
     ): UAPIResponse<*> {
         val id = getId(request.idParams)
         val userContext = request.userContext

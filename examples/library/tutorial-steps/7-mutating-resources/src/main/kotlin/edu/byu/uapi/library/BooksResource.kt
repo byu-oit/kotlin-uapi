@@ -1,19 +1,19 @@
 package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.*
-import edu.byu.uapi.server.resources.identified.*
+import edu.byu.uapi.server.resources.list.*
 import edu.byu.uapi.spi.input.ListWithTotal
 import edu.byu.uapi.spi.input.UAPISortOrder
 
-class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
-                      IdentifiedResource.Listable.WithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
-                      IdentifiedResource.Listable.WithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
-                      IdentifiedResource.Listable.WithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
-                      IdentifiedResource.Listable.WithSubset<LibraryUser, Long, Book, BookListParams>,
-                      IdentifiedResource.Creatable<LibraryUser, Long, Book, CreateBook>,
-                      IdentifiedResource.Updatable<LibraryUser, Long, Book, UpdateBook>,
-                      IdentifiedResource.CreatableWithId<LibraryUser, Long, Book, UpdateBook>,
-                      IdentifiedResource.Deletable<LibraryUser, Long, Book> {
+class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
+                      ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
+                      ListResource.ListWithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
+                      ListResource.ListWithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
+                      ListResource.ListWithSubset<LibraryUser, Long, Book, BookListParams>,
+                      ListResource.Creatable<LibraryUser, Long, Book, CreateBook>,
+                      ListResource.Updatable<LibraryUser, Long, Book, UpdateBook>,
+                      ListResource.CreatableWithId<LibraryUser, Long, Book, UpdateBook>,
+                      ListResource.Deletable<LibraryUser, Long, Book> {
 
     override val pluralName: String = "books"
 
@@ -34,6 +34,37 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
         model: Book
     ): Boolean {
         return userContext.canViewBook(model)
+    }
+
+    override fun list(
+        userContext: LibraryUser,
+        params: BookListParams
+    ): ListWithTotal<Book> {
+        val search = params.search?.run { context.toDomain(text) }
+        val result = Library.listBooks(
+            includeRestricted = userContext.canViewRestrictedBooks,
+            sortColumns = params.sort.properties.map { it.domain },
+            sortAscending = params.sort.order == UAPISortOrder.ASCENDING,
+            filters = params.filters?.toDomain(),
+            search = search,
+            subsetSize = params.subset.subsetSize,
+            subsetStart = params.subset.subsetStartOffset
+        )
+        return ListWithTotal(
+            totalItems = result.totalItems,
+            values = result.list
+        )
+    }
+
+    override val listDefaultSortProperties: List<BookSortProperty> = listOf(BookSortProperty.TITLE, BookSortProperty.OCLC)
+    override val listDefaultSortOrder: UAPISortOrder = UAPISortOrder.ASCENDING
+    override val listDefaultSubsetSize: Int = 50
+    override val listMaxSubsetSize: Int = 100
+    override fun listSearchContexts(value: BookSearchContext) = when (value) {
+        BookSearchContext.TITLES -> listOf("title", "subtitles")
+        BookSearchContext.AUTHORS -> listOf("authors.name")
+        BookSearchContext.GENRES -> listOf("genreCodes.codes", "genreCodes.name")
+        BookSearchContext.CONTROL_NUMBERS -> listOf("oclc", "isbn")
     }
 
     override val responseFields = fields {
@@ -88,37 +119,6 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book>,
             doc = "Whether the book is shelved in the Restricted Section"
             modifiable { libraryUser, book, value -> libraryUser.canModifyBooks }
         }
-    }
-
-    override fun list(
-        userContext: LibraryUser,
-        params: BookListParams
-    ): ListWithTotal<Book> {
-        val search = params.search?.run { context.toDomain(text) }
-        val result = Library.listBooks(
-            includeRestricted = userContext.canViewRestrictedBooks,
-            sortColumns = params.sort.properties.map { it.domain },
-            sortAscending = params.sort.order == UAPISortOrder.ASCENDING,
-            filters = params.filters?.toDomain(),
-            search = search,
-            subsetSize = params.subset.subsetSize,
-            subsetStart = params.subset.subsetStartOffset
-        )
-        return ListWithTotal(
-            totalItems = result.totalItems,
-            values = result.list
-        )
-    }
-
-    override val listDefaultSortProperties: List<BookSortProperty> = listOf(BookSortProperty.TITLE, BookSortProperty.OCLC)
-    override val listDefaultSortOrder: UAPISortOrder = UAPISortOrder.ASCENDING
-    override val listDefaultSubsetSize: Int = 50
-    override val listMaxSubsetSize: Int = 100
-    override fun listSearchContexts(value: BookSearchContext) = when (value) {
-        BookSearchContext.TITLES -> listOf("title", "subtitles")
-        BookSearchContext.AUTHORS -> listOf("authors.name")
-        BookSearchContext.GENRES -> listOf("genreCodes.codes", "genreCodes.name")
-        BookSearchContext.CONTROL_NUMBERS -> listOf("oclc", "isbn")
     }
 
     override fun canUserCreate(userContext: LibraryUser): Boolean {

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-steps=(1-initial-setup 2-main-class 3-user-context 4-creating-a-resource 5-response-body)
+mvn clean
+
+steps=(1-initial-setup 2-main-class 3-user-context 4-creating-a-resource 5-response-body 6-listing-resources 7-mutating-resources)
 
 prev=""
 for step in "${steps[@]}"

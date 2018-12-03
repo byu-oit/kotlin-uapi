@@ -1,6 +1,6 @@
 diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 3-user-context/pom.xml 4-creating-a-resource/pom.xml
 --- 3-user-context/pom.xml	2018-11-14 10:45:11.000000000 -0700
-+++ 4-creating-a-resource/pom.xml	2018-11-14 10:45:11.000000000 -0700
++++ 4-creating-a-resource/pom.xml	2018-11-30 12:49:35.000000000 -0700
 @@ -4,11 +4,11 @@
      <modelVersion>4.0.0</modelVersion>
  
@@ -30,7 +30,7 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 3-user-context/pom.xml 4-creating
      <build>
 diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 3-user-context/src/main/kotlin/LibraryApp.kt 4-creating-a-resource/src/main/kotlin/LibraryApp.kt
 --- 3-user-context/src/main/kotlin/LibraryApp.kt	2018-11-16 14:41:26.000000000 -0700
-+++ 4-creating-a-resource/src/main/kotlin/LibraryApp.kt	2018-11-16 14:41:26.000000000 -0700
++++ 4-creating-a-resource/src/main/kotlin/LibraryApp.kt	2018-11-30 16:26:09.000000000 -0700
 @@ -1,4 +1,5 @@
  import edu.byu.uapi.http.spark.startSpark
 +import edu.byu.uapi.library.BooksResource
@@ -41,22 +41,25 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 3-user-context/src/main/kotlin/Li
      val runtime = UAPIRuntime(actualUserFactory)
  
      // All of our configuration is going to go here
-+    runtime.register("books", BooksResource())
++    runtime.register(BooksResource())
  
      runtime.startSpark(
          port = 8080
 diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 3-user-context/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt
 --- 3-user-context/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	1969-12-31 17:00:00.000000000 -0700
-+++ 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-11-14 10:28:58.000000000 -0700
-@@ -0,0 +1,38 @@
++++ 4-creating-a-resource/src/main/kotlin/edu/byu/uapi/library/BooksResource.kt	2018-12-03 12:54:04.000000000 -0700
+@@ -0,0 +1,48 @@
 +package edu.byu.uapi.library
 +
 +import edu.byu.uapi.kotlin.examples.library.Book
 +import edu.byu.uapi.kotlin.examples.library.Library
-+import edu.byu.uapi.server.resources.identified.IdentifiedResource
++import edu.byu.uapi.server.resources.identified.ListResource
 +import edu.byu.uapi.server.resources.identified.fields
++import edu.byu.uapi.spi.input.ListParams
 +
-+class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
++class BooksResource : ListResource.SimpleList<LibraryUser, Long, Book> {
++
++    override val pluralName: String = "books"
 +
 +    override fun loadModel(
 +        userContext: LibraryUser,
@@ -75,6 +78,13 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 3-user-context/src/main/kotlin/ed
 +        model: Book
 +    ): Boolean {
 +        return userContext.canViewBook(model)
++    }
++
++    override fun list(
++        userContext: LibraryUser,
++        params: ListParams.Empty
++    ): List<Book> {
++        return Library.listBooks(userContext.canViewRestrictedBooks).list
 +    }
 +
 +    override val responseFields = fields {

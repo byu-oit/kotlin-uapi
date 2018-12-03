@@ -35,7 +35,7 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
     ) {
         checkInitialized()
         val resources = runtime.resources().values.map {
-            HttpIdentifiedResource(runtime, config, it)
+            HttpListResource(runtime, config, it)
         }
         val routes = resources.flatMap { it.routes }
 

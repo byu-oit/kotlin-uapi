@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.resources.identified
+package edu.byu.uapi.server.resources.list
 
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -6,6 +6,7 @@ import com.nhaarman.mockitokotlin2.mock
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.spi.input.IdParamReader
+import edu.byu.uapi.spi.input.ListParams
 import edu.byu.uapi.spi.validation.ValidationEngine
 import io.kotlintest.Description
 import io.kotlintest.data.forall
@@ -13,16 +14,16 @@ import io.kotlintest.specs.DescribeSpec
 import io.kotlintest.tables.row
 import kotlin.reflect.KClass
 
-class IdentifiedResourceRuntimeSpec : DescribeSpec() {
+class ListResourceRuntimeSpec : DescribeSpec() {
 
-    private lateinit var resource: IdentifiedResource<User, String, Foo>
-    private lateinit var create: IdentifiedResource.Creatable<User, String, Foo, NewFoo>
-    private lateinit var update: IdentifiedResource.Updatable<User, String, Foo, Foo>
-    private lateinit var delete: IdentifiedResource.Deletable<User, String, Foo>
-    private lateinit var list: IdentifiedResource.Listable.Simple<User, String, Foo>
+    private lateinit var resource: ListResource<User, String, Foo, *>
+    private lateinit var create: ListResource.Creatable<User, String, Foo, NewFoo>
+    private lateinit var update: ListResource.Updatable<User, String, Foo, Foo>
+    private lateinit var delete: ListResource.Deletable<User, String, Foo>
+    private lateinit var list: ListResource.Simple<User, String, Foo>
     private lateinit var idReader: IdParamReader<String>
 
-    private lateinit var fixture: IdentifiedResourceRuntime<User, String, Foo>
+    private lateinit var fixture: ListResourceRuntime<User, String, Foo, *>
 
     override fun beforeTest(description: Description) {
         super.beforeTest(description)
@@ -41,11 +42,10 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
             on { it.createOperation } doReturn create
             on { it.updateOperation } doReturn update
             on { it.deleteOperation } doReturn delete
-            on { it.listView } doReturn list
             on { it.idType } doReturn String::class
         }
 
-        fixture = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary(), ValidationEngine.noop())
+        fixture = ListResourceRuntime("foo", resource, DefaultTypeDictionary(), ValidationEngine.noop())
     }
 
     init {
@@ -53,19 +53,18 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
             context("!availableOperations") {
                 it("always includes 'FETCH'") {
                     val foo = FooResource()
-                    val runtime = IdentifiedResourceRuntime("foo", foo, DefaultTypeDictionary(), ValidationEngine.noop())
-//                    runtime.availableOperations should containExactly(IdentifiedResourceOperation.FETCH)
+                    val runtime = ListResourceRuntime("foo", foo, DefaultTypeDictionary(), ValidationEngine.noop())
+//                    runtime.availableOperations should containExactly(ListResourceOperation.FETCH)
                 }
                 it("should find all provided operations") {
                     forall(
-                        row(setOf(IdentifiedResourceOperation.CREATE), settable(create = create)),
-                        row(setOf(IdentifiedResourceOperation.UPDATE), settable(update = update)),
-                        row(setOf(IdentifiedResourceOperation.DELETE), settable(delete = delete)),
-                        row(setOf(IdentifiedResourceOperation.LIST), settable(list = list)),
+                        row(setOf(ListResourceOperation.CREATE), settable(create = create)),
+                        row(setOf(ListResourceOperation.UPDATE), settable(update = update)),
+                        row(setOf(ListResourceOperation.DELETE), settable(delete = delete)),
 
                         row(
                             setOf(
-                                IdentifiedResourceOperation.CREATE, IdentifiedResourceOperation.UPDATE, IdentifiedResourceOperation.DELETE
+                                ListResourceOperation.CREATE, ListResourceOperation.UPDATE, ListResourceOperation.DELETE
                             ),
                             settable(
                                 create = create, update = update, delete = delete
@@ -73,15 +72,15 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
                         ),
                         row(
                             setOf(
-                                IdentifiedResourceOperation.CREATE, IdentifiedResourceOperation.UPDATE, IdentifiedResourceOperation.DELETE, IdentifiedResourceOperation.LIST
+                                ListResourceOperation.CREATE, ListResourceOperation.UPDATE, ListResourceOperation.DELETE, ListResourceOperation.LIST
                             ),
                             settable(
-                                create = create, update = update, delete = delete, list = list
+                                create = create, update = update, delete = delete
                             )
                         )
                     ) { ops, resource ->
-                        val runtime = IdentifiedResourceRuntime("foo", resource, DefaultTypeDictionary(), ValidationEngine.noop())
-                        val expected = (ops + IdentifiedResourceOperation.FETCH).toTypedArray()
+                        val runtime = ListResourceRuntime("foo", resource, DefaultTypeDictionary(), ValidationEngine.noop())
+                        val expected = (ops + ListResourceOperation.FETCH).toTypedArray()
 
 //                        runtime.availableOperations should containExactlyInAnyOrder(*expected)
                     }
@@ -144,7 +143,8 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
     private data class Foo(val value: String)
     private data class NewFoo(val value: String)
 
-    private open class FooResource(val model: Foo? = Foo("bar"), val canUserView: Boolean = true) : IdentifiedResource<User, String, Foo> {
+    private open class FooResource(val model: Foo? = Foo("bar"), val canUserView: Boolean = true) : ListResource.Simple<User, String, Foo> {
+
         override val pluralName: String
             get() = "foos"
         override val responseFields: List<ResponseField<User, Foo, *>>
@@ -163,20 +163,25 @@ class IdentifiedResourceRuntimeSpec : DescribeSpec() {
             return model.value
         }
 
+         override fun list(
+            userContext: User,
+            params: ListParams.Empty
+        ): List<Foo> {
+            TODO("not implemented")
+        }
+
     }
 
     private class SettableOpsResource(
-        val base: IdentifiedResource<User, String, Foo> = FooResource(),
-        override val createOperation: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
-        override val updateOperation: IdentifiedResource.Updatable<User, String, Foo, *>? = null,
-        override val deleteOperation: IdentifiedResource.Deletable<User, String, Foo>? = null,
-        override val listView: IdentifiedResource.Listable<User, String, Foo, *>? = null
-    ) : IdentifiedResource<User, String, Foo> by base
+        val base: ListResource<User, String, Foo, ListParams.Empty> = FooResource(),
+        override val createOperation: ListResource.Creatable<User, String, Foo, *>? = null,
+        override val updateOperation: ListResource.Updatable<User, String, Foo, *>? = null,
+        override val deleteOperation: ListResource.Deletable<User, String, Foo>? = null
+    ) : ListResource<User, String, Foo, ListParams.Empty> by base
 
     private fun settable(
-        create: IdentifiedResource.Creatable<User, String, Foo, *>? = null,
-        update: IdentifiedResource.Updatable<User, String, Foo, *>? = null,
-        delete: IdentifiedResource.Deletable<User, String, Foo>? = null,
-        list: IdentifiedResource.Listable<User, String, Foo, *>? = null
-    ) = SettableOpsResource(FooResource(), create, update, delete, list)
+        create: ListResource.Creatable<User, String, Foo, *>? = null,
+        update: ListResource.Updatable<User, String, Foo, *>? = null,
+        delete: ListResource.Deletable<User, String, Foo>? = null
+    ) = SettableOpsResource(FooResource(), create, update, delete)
 }

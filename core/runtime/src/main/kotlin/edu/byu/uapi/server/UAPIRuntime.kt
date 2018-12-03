@@ -1,8 +1,8 @@
 package edu.byu.uapi.server
 
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
-import edu.byu.uapi.server.resources.identified.IdentifiedResource
-import edu.byu.uapi.server.resources.identified.IdentifiedResourceRuntime
+import edu.byu.uapi.server.resources.list.ListResource
+import edu.byu.uapi.server.resources.list.ListResourceRuntime
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.requests.Headers
 import edu.byu.uapi.spi.scalars.ScalarType
@@ -29,17 +29,17 @@ class UAPIRuntime<UserContext : Any>(
     val typeDictionary = options.typeDictionary
     val validationEngine = options.validationEngine
 
-    private val resources: MutableMap<String, IdentifiedResourceRuntime<UserContext, *, *>> = mutableMapOf()
+    private val resources: MutableMap<String, ListResourceRuntime<UserContext, *, *, *>> = mutableMapOf()
 
     fun register(
-        resource: IdentifiedResource<UserContext, *, *>
+        resource: ListResource<UserContext, *, *, *>
     ) {
-        val runtime = IdentifiedResourceRuntime(resource.pluralName, resource, typeDictionary, validationEngine)
+        val runtime = ListResourceRuntime(resource.pluralName, resource, typeDictionary, validationEngine)
         resources[resource.pluralName] = runtime
         //TODO: Validate resource
     }
 
-    fun resources(): Map<String, IdentifiedResourceRuntime<UserContext, *, *>> = Collections.unmodifiableMap(resources)
+    fun resources(): Map<String, ListResourceRuntime<UserContext, *, *, *>> = Collections.unmodifiableMap(resources)
 
     data class Options<UserContext : Any>(
         val userContextFactory: UserContextFactory<UserContext>,
@@ -75,9 +75,9 @@ class RuntimeInit<UserContext : Any> {
         scalars.add(this)
     }
 
-    private val resources: MutableList<IdentifiedResource<UserContext, *, *>> = mutableListOf()
+    private val resources: MutableList<ListResource<UserContext, *, *, *>> = mutableListOf()
 
-    operator fun IdentifiedResource<UserContext, *, *>.unaryPlus() {
+    operator fun ListResource<UserContext, *, *, *>.unaryPlus() {
         resources += this
     }
 

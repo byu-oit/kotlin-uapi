@@ -8,8 +8,8 @@ import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
-import edu.byu.uapi.server.resources.identified.IdentifiedResource
-import edu.byu.uapi.server.resources.identified.fields
+import edu.byu.uapi.server.resources.list.ListResource
+import edu.byu.uapi.server.resources.list.fields
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.*
 import edu.byu.uapi.spi.requests.IdParams
@@ -62,8 +62,7 @@ fun getGreeting(lang: Language) = when (lang) {
     Language.IT -> "Ciao"
 }
 
-class GreetingResource : IdentifiedResource<HelloWorldUser, String, Greeting>,
-                         IdentifiedResource.Listable.Simple<HelloWorldUser, String, Greeting> {
+class GreetingResource : ListResource.Simple<HelloWorldUser, String, Greeting> {
 
     override val pluralName = "greetings"
 
@@ -123,10 +122,9 @@ class GreetingResource : IdentifiedResource<HelloWorldUser, String, Greeting>,
         }
     }
 
-    override val createOperation: IdentifiedResource.Creatable<HelloWorldUser, String, Greeting, *>? = null
-    override val updateOperation: IdentifiedResource.Updatable<HelloWorldUser, String, Greeting, *>? = null
-    override val deleteOperation: IdentifiedResource.Deletable<HelloWorldUser, String, Greeting>? = null
-    override val listView: IdentifiedResource.Listable<HelloWorldUser, String, Greeting, *>? = this
+    override val createOperation: ListResource.Creatable<HelloWorldUser, String, Greeting, *>? = null
+    override val updateOperation: ListResource.Updatable<HelloWorldUser, String, Greeting, *>? = null
+    override val deleteOperation: ListResource.Deletable<HelloWorldUser, String, Greeting>? = null
 
     override fun getListParamReader(dictionary: TypeDictionary): ListParamReader<ListParams.Empty> {
         return EmptyListParamReader

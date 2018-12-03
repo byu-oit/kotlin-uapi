@@ -4,10 +4,11 @@ import edu.byu.uapi.kotlin.examples.library.Author
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
-import edu.byu.uapi.server.resources.identified.IdentifiedResource
-import edu.byu.uapi.server.resources.identified.fields
+import edu.byu.uapi.server.resources.list.ListResource
+import edu.byu.uapi.server.resources.list.fields
+import edu.byu.uapi.spi.input.ListParams
 
-class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
+class BooksResource : ListResource.Simple<LibraryUser, Long, Book> {
 
     override val pluralName: String = "books"
 
@@ -28,6 +29,13 @@ class BooksResource : IdentifiedResource<LibraryUser, Long, Book> {
         model: Book
     ): Boolean {
         return userContext.canViewBook(model)
+    }
+
+    override fun list(
+        userContext: LibraryUser,
+        params: ListParams.Empty
+    ): List<Book> {
+        return Library.listBooks(userContext.canViewRestrictedBooks).list
     }
 
     override val responseFields = fields {

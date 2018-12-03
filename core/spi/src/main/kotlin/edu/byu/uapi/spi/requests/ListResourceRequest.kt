@@ -1,43 +1,43 @@
 package edu.byu.uapi.spi.requests
 
-sealed class IdentifiedResourceRequest<UserContext : Any> {
+sealed class ListResourceRequest<UserContext : Any> {
     abstract val requestContext: RequestContext
     abstract val userContext: UserContext
 }
 
-sealed class IdentifiedResourceWithIdRequest<UserContext: Any>: IdentifiedResourceRequest<UserContext>() {
+sealed class ListResourceWithIdRequest<UserContext: Any>: ListResourceRequest<UserContext>() {
     abstract val idParams: IdParams
 }
 
-data class FetchIdentifiedResource<UserContext : Any>(
+data class FetchListResource<UserContext : Any>(
     override val requestContext: RequestContext,
     override val userContext: UserContext,
     override val idParams: IdParams,
     val queryParams: QueryParams
-) : IdentifiedResourceWithIdRequest<UserContext>()
+) : ListResourceWithIdRequest<UserContext>()
 
-data class ListIdentifiedResource<UserContext : Any>(
+data class ListListResource<UserContext : Any>(
     override val requestContext: RequestContext,
     override val userContext: UserContext,
     val queryParams: QueryParams
-) : IdentifiedResourceRequest<UserContext>()
+) : ListResourceRequest<UserContext>()
 
-data class CreateIdentifiedResource<UserContext : Any>(
+data class CreateListResource<UserContext : Any>(
     override val requestContext: RequestContext,
     override val userContext: UserContext,
     val body: RequestBody
-) : IdentifiedResourceRequest<UserContext>()
+) : ListResourceRequest<UserContext>()
 
-data class UpdateIdentifiedResource<UserContext : Any>(
+data class UpdateListResource<UserContext : Any>(
     override val requestContext: RequestContext,
     override val userContext: UserContext,
     override val idParams: IdParams,
     val body: RequestBody
-) : IdentifiedResourceWithIdRequest<UserContext>()
+) : ListResourceWithIdRequest<UserContext>()
 
-data class DeleteIdentifiedResource<UserContext : Any>(
+data class DeleteListResource<UserContext : Any>(
     override val requestContext: RequestContext,
     override val userContext: UserContext,
     override val idParams: IdParams
-) : IdentifiedResourceWithIdRequest<UserContext>()
+) : ListResourceWithIdRequest<UserContext>()
 
