@@ -6,7 +6,7 @@ import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
-import edu.byu.uapi.server.subresources.singleton.SingletonSubresource
+import edu.byu.uapi.server.subresources.list.fields
 import edu.byu.uapi.server.subresources.singleton.fields
 import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
@@ -20,7 +20,7 @@ import java.util.*
 import kotlin.reflect.KClass
 
 val helloWorldRuntime = UAPIRuntime(HelloWorldUserFactory()).also {
-    it.register(GreetingResource(), listOf(FooSubresource()))
+    it.register(GreetingResource(), listOf(FooSubresource(), BarSubresource()))
 }
 
 class HelloWorldUserFactory : UserContextFactory<HelloWorldUser> {
@@ -57,10 +57,10 @@ private val foos = mutableMapOf(
     Language.IT to Foo("sbarro")
 )
 
-class FooSubresource : SingletonSubresource<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo>,
-                       SingletonSubresource.Updatable<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo, Foo>,
-                       SingletonSubresource.Creatable<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo, Foo>,
-                       SingletonSubresource.Deletable<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo> {
+class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String, Greeting, Foo>,
+                       ListResource.SingletonSubresource.Updatable<HelloWorldUser, String, Greeting, Foo, Foo>,
+                       ListResource.SingletonSubresource.Creatable<HelloWorldUser, String, Greeting, Foo, Foo>,
+                       ListResource.SingletonSubresource.Deletable<HelloWorldUser, String, Greeting, Foo> {
     override val name: String = "foo"
 
     override fun loadModel(
@@ -217,4 +217,63 @@ class GreetingResource : ListResource.Simple<HelloWorldUser, String, Greeting> {
     }
 
     override val listParamsType: KClass<ListParams.Empty> = ListParams.Empty::class
+}
+
+data class Bar(
+    val id: BarId,
+    val baz: String
+)
+
+data class BarId(
+    val str: String,
+    val num: Int
+)
+
+private val bars = listOf(
+    Bar(BarId("a", 1), "Mars"),
+    Bar(BarId("a", 2), "Milky Way"),
+    Bar(BarId("b", 1), "Baby Ruth")
+).associateBy { it.id }.toMutableMap()
+
+class BarSubresource: ListResource.ListSubresource.Simple<HelloWorldUser, String, Greeting, BarId, Bar> {
+    override val pluralName: String = "bars"
+
+    override fun loadModel(
+        userContext: HelloWorldUser,
+        parent: IdentifiedModel<String, Greeting>,
+        id: BarId
+    ): Bar? = bars[id]
+
+    override fun canUserViewModel(
+        userContext: HelloWorldUser,
+        parent: IdentifiedModel<String, Greeting>,
+        id: BarId,
+        model: Bar
+    ): Boolean {
+        return true
+    }
+
+    override fun idFromModel(model: Bar): BarId {
+        return model.id
+    }
+
+    override fun list(
+        userContext: HelloWorldUser,
+        parent: IdentifiedModel<String, Greeting>,
+        params: ListParams.Empty
+    ): List<Bar> {
+        return bars.values.toList()
+    }
+
+    override val responseFields = fields {
+        value(Bar::id, BarId::str) {
+            key = true
+        }
+        value(Bar::id, BarId::num) {
+            key = true
+        }
+
+        value(Bar::baz) {}
+    }
+
 }

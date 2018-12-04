@@ -1,7 +1,6 @@
-package edu.byu.uapi.server.resources.list
+package edu.byu.uapi.server.subresources.list
 
 import edu.byu.uapi.server.inputs.create
-import edu.byu.uapi.server.resources.Resource
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit
 import edu.byu.uapi.server.response.uapiResponse
@@ -9,9 +8,10 @@ import edu.byu.uapi.server.scalars.EnumScalarType
 import edu.byu.uapi.server.spi.*
 import edu.byu.uapi.server.spi.reflective.ReflectiveFilterParamReader
 import edu.byu.uapi.server.spi.reflective.ReflectiveIdParamReader
+import edu.byu.uapi.server.subresources.Subresource
 import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
-import edu.byu.uapi.server.types.IdentifiedModel
+import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.server.util.DarkMagic
 import edu.byu.uapi.server.util.DarkMagicException
@@ -23,11 +23,9 @@ import edu.byu.uapi.spi.validation.Validator
 import edu.byu.uapi.utility.takeIfType
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
-import edu.byu.uapi.server.subresources.list.ListSubresource as IListSubresource
-import edu.byu.uapi.server.subresources.singleton.SingletonSubresource as ISingletonSubresource
 
-interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListParams>
-    : Resource<UserContext, Model, IdentifiedModel<Id, Model>> {
+interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Params : ListParams>
+    : Subresource<UserContext, Parent, Model> {
 
     val pluralName: String
 
@@ -39,11 +37,13 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
     fun loadModel(
         userContext: UserContext,
+        parent: Parent,
         id: Id
     ): Model?
 
     fun canUserViewModel(
         userContext: UserContext,
+        parent: Parent,
         id: Id,
         model: Model
     ): Boolean
@@ -59,6 +59,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
     fun list(
         userContext: UserContext,
+        parent: Parent,
         params: Params
     ): List<Model>
 
@@ -74,17 +75,20 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
     //   Then again, it's not THAT hard to share around a list representing the properties for a given type...
     val responseFields: List<ResponseField<UserContext, Model, *>>
 
-    val createOperation: Creatable<UserContext, Id, Model, *>?
+    val createOperation: Creatable<UserContext, Parent, Id, Model, *>?
         get() = this.takeIfType()
 
-    val updateOperation: Updatable<UserContext, Id, Model, *>?
+    val updateOperation: Updatable<UserContext, Parent, Id, Model, *>?
         get() = this.takeIfType()
 
-    val deleteOperation: Deletable<UserContext, Id, Model>?
+    val deleteOperation: Deletable<UserContext, Parent, Id, Model>?
         get() = this.takeIfType()
 
-    interface Creatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
-        fun canUserCreate(userContext: UserContext): Boolean
+    interface Creatable<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Input : Any> {
+        fun canUserCreate(
+            userContext: UserContext,
+            parent: Parent
+        ): Boolean
 
         fun getCreateValidator(validationEngine: ValidationEngine): Validator<Input> {
             return validationEngine.validatorFor(createInput)
@@ -92,6 +96,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
         fun handleCreate(
             userContext: UserContext,
+            parent: Parent,
             input: Input
         ): CreateResult<Model>
 
@@ -99,33 +104,38 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
             get() = defaultGetCreateInput()
     }
 
-    interface Deletable<UserContext : Any, Id : Any, Model : Any> {
+    interface Deletable<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any> {
         fun canUserDelete(
             userContext: UserContext,
+            parent: Parent,
             id: Id,
             model: Model
         ): Boolean
 
         fun canBeDeleted(
+            parent: Parent,
             id: Id,
             model: Model
         ): Boolean
 
         fun handleDelete(
             userContext: UserContext,
+            parent: Parent,
             id: Id,
             model: Model
         ): DeleteResult
     }
 
-    interface Updatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
+    interface Updatable<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Input : Any> {
         fun canUserUpdate(
             userContext: UserContext,
+            parent: Parent,
             id: Id,
             model: Model
         ): Boolean
 
         fun canBeUpdated(
+            parent: Parent,
             id: Id,
             model: Model
         ): Boolean
@@ -136,6 +146,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
         fun handleUpdate(
             userContext: UserContext,
+            parent: Parent,
             id: Id,
             model: Model,
             input: Input
@@ -145,20 +156,22 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
             get() = this.defaultGetUpdateInput()
     }
 
-    interface CreatableWithId<UserContext : Any, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Id, Model, Input> {
+    interface CreatableWithId<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Parent, Id, Model, Input> {
         fun canUserCreateWithId(
             userContext: UserContext,
+            parent: Parent,
             id: Id
         ): Boolean
 
         fun handleCreateWithId(
             userContext: UserContext,
+            parent: Parent,
             id: Id,
             input: Input
         ): CreateResult<Model>
     }
 
-    interface Simple<UserContext : Any, Id : Any, Model : Any> : ListResource<UserContext, Id, Model, ListParams.Empty> {
+    interface Simple<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any> : ListSubresource<UserContext, Parent, Id, Model, ListParams.Empty> {
         override val listParamsType: KClass<ListParams.Empty>
             get() = ListParams.Empty::class
 
@@ -167,11 +180,12 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         }
     }
 
-    interface ListWithSubset<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :
-        ListResource<UserContext, Id, Model, CollectionParams> {
+    interface ListWithSubset<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :
+        ListSubresource<UserContext, Parent, Id, Model, CollectionParams> {
 
         override fun list(
             userContext: UserContext,
+            parent: Parent,
             params: CollectionParams
         ): ListWithTotal<Model>
 
@@ -179,8 +193,8 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         val listMaxSubsetSize: Int
     }
 
-    interface ListWithSearch<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSearch<SearchContext>, SearchContext : Enum<SearchContext>>
-        : ListResource<UserContext, Id, Model, CollectionParams> {
+    interface ListWithSearch<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, CollectionParams : ListParams.WithSearch<SearchContext>, SearchContext : Enum<SearchContext>>
+        : ListSubresource<UserContext, Parent, Id, Model, CollectionParams> {
 
         fun listSearchContexts(value: SearchContext): Collection<String>
 
@@ -195,8 +209,8 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         }
     }
 
-    interface ListWithSort<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSort<SortProperty>, SortProperty : Enum<SortProperty>>
-        : ListResource<UserContext, Id, Model, CollectionParams> {
+    interface ListWithSort<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, CollectionParams : ListParams.WithSort<SortProperty>, SortProperty : Enum<SortProperty>>
+        : ListSubresource<UserContext, Parent, Id, Model, CollectionParams> {
 
         val listDefaultSortProperties: List<SortProperty>
         val listDefaultSortOrder: UAPISortOrder
@@ -212,74 +226,45 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         }
     }
 
-    interface ListWithFilters<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
-        : ListResource<UserContext, Id, Model, CollectionParams> {
+    interface ListWithFilters<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
+        : ListSubresource<UserContext, Parent, Id, Model, CollectionParams> {
         @Throws(UAPITypeError::class)
         fun getListFilterParamReader(typeDictionary: TypeDictionary): FilterParamsReader<Filters> {
             return defaultListFilterParamReader(typeDictionary)
         }
     }
-
-
-    // Subresource interface aliases - makes subresources a little nicer!
-    interface SingletonSubresource<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any> : ISingletonSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Model> {
-        interface Updatable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any, Input : Any> : ISingletonSubresource.Updatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model, Input>
-        interface Creatable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any, Input : Any> : ISingletonSubresource.Creatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model, Input>
-        interface Deletable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any> : ISingletonSubresource.Deletable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model>
-    }
-
-    interface ListSubresource<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Params : ListParams> : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Params> {
-        interface Creatable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> : IListSubresource.Creatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
-        interface Updatable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> : IListSubresource.Updatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
-        interface CreatableWithId<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> : IListSubresource.CreatableWithId<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
-        interface Deletable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any> : IListSubresource.Deletable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model>
-
-        interface Simple<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any> : IListSubresource.Simple<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model>
-
-        interface ListWithSubset<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :
-            IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
-
-        interface ListWithSearch<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSearch<SearchContext>, SearchContext : Enum<SearchContext>>
-            : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
-
-        interface ListWithSort<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSort<SortProperty>, SortProperty : Enum<SortProperty>>
-            : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
-
-        interface ListWithFilters<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
-            : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
-    }
 }
 
-private fun ListResource<*, *, *, *>.defaultSingleName(): String {
+private fun ListSubresource<*, *, *, *, *>.defaultSingleName(): String {
     if (pluralName.endsWith("s")) {
         return pluralName.dropLast(1)
     }
     return pluralName
 }
 
-private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdReader(
+private fun <Id : Any, Model : Any, UserContext : Any> ListSubresource<UserContext, *, Id, Model, *>.defaultIdReader(
     dictionary: TypeDictionary
 ): IdParamReader<Id> {
-    val prefix = this.singleName + "_"
     val idType = this.idType
+    val prefix = this.singleName + "_"
     if (dictionary.isScalarType(idType)) {
         return ScalarTypeIdParamReader(prefix, dictionary.requireScalarType(idType))
     }
     return ReflectiveIdParamReader.create(prefix, idType, dictionary)
 }
 
-private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdType(): KClass<Id> {
+private fun <Id : Any, Model : Any, UserContext : Any> ListSubresource<UserContext, *, Id, Model, *>.defaultIdType(): KClass<Id> {
     return try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource::class, "Id")
+        DarkMagic.findSupertypeArgNamed(this::class, ListSubresource::class, "Id")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get ID type", ex)
     }
 }
 
 internal fun <Params : ListParams>
-    ListResource<*, *, *, Params>.defaultListParamsType(): KClass<Params> {
+    ListSubresource<*, *, *, *, Params>.defaultListParamsType(): KClass<Params> {
     return try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource::class, "Params")
+        DarkMagic.findSupertypeArgNamed(this::class, ListSubresource::class, "Params")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get list params type", ex)
     }
@@ -287,7 +272,7 @@ internal fun <Params : ListParams>
 
 @Throws(UAPITypeError::class)
 internal fun <Params : ListParams>
-    ListResource<*, *, *, Params>.defaultGetListParamReader(
+    ListSubresource<*, *, *, *, Params>.defaultGetListParamReader(
     dictionary: TypeDictionary
 ): ListParamReader<Params> {
     if (listParamsType == ListParams.Empty::class) {
@@ -300,10 +285,10 @@ internal fun <Params : ListParams>
     val ctor = listParamsType.primaryConstructor
         ?: throw UAPITypeError.create(listParamsType, "List parameter type must have a primary constructor.")
 
-    val search = this.takeIfType<ListResource.ListWithSearch<*, *, *, *, *>>()?.getListSearchParamReader(dictionary)
-    val filter = this.takeIfType<ListResource.ListWithFilters<*, *, *, *, *>>()?.getListFilterParamReader(dictionary)
-    val sort = this.takeIfType<ListResource.ListWithSort<*, *, *, *, *>>()?.getListSortParamsReader(dictionary)
-    val subset = this.takeIfType<ListResource.ListWithSubset<*, *, *, *>>()?.let { it ->
+    val search = this.takeIfType<ListSubresource.ListWithSearch<*, *, *, *, *, *>>()?.getListSearchParamReader(dictionary)
+    val filter = this.takeIfType<ListSubresource.ListWithFilters<*, *, *, *, *, *>>()?.getListFilterParamReader(dictionary)
+    val sort = this.takeIfType<ListSubresource.ListWithSort<*, *, *, *, *, *>>()?.getListSortParamsReader(dictionary)
+    val subset = this.takeIfType<ListSubresource.ListWithSubset<*, *, *, *, *>>()?.let { it ->
         SubsetParamsReader(
             defaultSize = it.listDefaultSubsetSize,
             maxSize = it.listMaxSubsetSize
@@ -321,7 +306,7 @@ internal fun <Params : ListParams>
 
 @Throws(UAPITypeError::class)
 internal fun <SearchContext : Enum<SearchContext>>
-    ListResource.ListWithSearch<*, *, *, *, SearchContext>.defaultListSearchParamReader(
+    ListSubresource.ListWithSearch<*, *, *, *, *, SearchContext>.defaultListSearchParamReader(
     dictionary: TypeDictionary
 ): SearchParamsReader<SearchContext> {
     val contextType = getListSearchContextType(dictionary)
@@ -339,11 +324,11 @@ internal fun <SearchContext : Enum<SearchContext>>
 
 @Throws(UAPITypeError::class)
 internal fun <SearchContext : Enum<SearchContext>>
-    ListResource.ListWithSearch<*, *, *, *, SearchContext>.defaultListSearchContextType(
+    ListSubresource.ListWithSearch<*, *, *, *, *, SearchContext>.defaultListSearchContextType(
     dictionary: TypeDictionary
 ): EnumScalarType<SearchContext> {
     val searchContextType: KClass<SearchContext> = try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSearch::class, "SearchContext")
+        DarkMagic.findSupertypeArgNamed(this::class, ListSubresource.ListWithSearch::class, "SearchContext")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
     }
@@ -352,11 +337,11 @@ internal fun <SearchContext : Enum<SearchContext>>
 
 @Throws(UAPITypeError::class)
 internal fun <SortProperty : Enum<SortProperty>>
-    ListResource.ListWithSort<*, *, *, *, SortProperty>.defaultListSortPropertyType(
+    ListSubresource.ListWithSort<*, *, *, *, *, SortProperty>.defaultListSortPropertyType(
     typeDictionary: TypeDictionary
 ): EnumScalarType<SortProperty> {
     val sortPropertyType: KClass<SortProperty> = try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSort::class, "SortProperty")
+        DarkMagic.findSupertypeArgNamed(this::class, ListSubresource.ListWithSort::class, "SortProperty")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
     }
@@ -365,7 +350,7 @@ internal fun <SortProperty : Enum<SortProperty>>
 
 @Throws(UAPITypeError::class)
 internal fun <SortProperty : Enum<SortProperty>>
-    ListResource.ListWithSort<*, *, *, *, SortProperty>.defaultListSortParamsReader(
+    ListSubresource.ListWithSort<*, *, *, *, *, SortProperty>.defaultListSortParamsReader(
     typeDictionary: TypeDictionary
 ): SortParamsReader<SortProperty> {
     val sortPropType = getListSortPropertyType(typeDictionary)
@@ -380,11 +365,11 @@ internal fun <SortProperty : Enum<SortProperty>>
 
 @Throws(UAPITypeError::class)
 internal fun <Filters : Any>
-    ListResource.ListWithFilters<*, *, *, *, Filters>.defaultListFilterParamReader(
+    ListSubresource.ListWithFilters<*, *, *, *, *, Filters>.defaultListFilterParamReader(
     typeDictionary: TypeDictionary
 ): FilterParamsReader<Filters> {
     val filterType: KClass<Filters> = try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithFilters::class, "Filters")
+        DarkMagic.findSupertypeArgNamed(this::class, ListSubresource.ListWithFilters::class, "Filters")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get list filters type", ex)
     }
@@ -393,9 +378,9 @@ internal fun <Filters : Any>
 
 @Throws(UAPITypeError::class)
 internal fun <Input : Any>
-    ListResource.Creatable<*, *, *, Input>.defaultGetCreateInput(): KClass<Input> {
+    ListSubresource.Creatable<*, *, *, *, Input>.defaultGetCreateInput(): KClass<Input> {
     try {
-        return DarkMagic.findSupertypeArgNamed(this::class, ListResource.Creatable::class, "Input")
+        return DarkMagic.findSupertypeArgNamed(this::class, ListSubresource.Creatable::class, "Input")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get create input type", ex)
     }
@@ -403,13 +388,13 @@ internal fun <Input : Any>
 
 @Throws(UAPITypeError::class)
 internal fun <Input : Any>
-    ListResource.Updatable<*, *, *, Input>.defaultGetUpdateInput(): KClass<Input> {
+    ListSubresource.Updatable<*, *, *, *, Input>.defaultGetUpdateInput(): KClass<Input> {
     try {
-        return DarkMagic.findSupertypeArgNamed(this::class, ListResource.Updatable::class, "Input")
+        return DarkMagic.findSupertypeArgNamed(this::class, ListSubresource.Updatable::class, "Input")
     } catch (ex: DarkMagicException) {
         throw UAPITypeError.create(this::class, "Unable to get update input type", ex)
     }
 }
 
-inline fun <UserContext : Any, Model : Any> ListResource<UserContext, *, Model, *>.fields(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
+inline fun <UserContext : Any, Model : Any> ListSubresource<UserContext, *, *, Model, *>.fields(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)
     : List<ResponseField<UserContext, Model, *>> = uapiResponse(fn)

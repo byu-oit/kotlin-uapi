@@ -77,7 +77,7 @@ class HttpListResource<UserContext : Any, Id : Any, Model : Any>(
     }
 }
 
-private fun IdParamMeta.toPathPart(): PathPart {
+fun IdParamMeta.toPathPart(): PathPart {
     val params = this.idParams
     return if (params.size == 1) {
         SimplePathVariablePart(params.first().name)

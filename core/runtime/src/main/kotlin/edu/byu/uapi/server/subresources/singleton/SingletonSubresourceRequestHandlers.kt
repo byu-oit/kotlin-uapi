@@ -1,48 +1,13 @@
 package edu.byu.uapi.server.subresources.singleton
 
 import edu.byu.uapi.server.subresources.ParentResult
-import edu.byu.uapi.server.subresources.SubresourceParent
+import edu.byu.uapi.server.subresources.SingletonSubresourceRuntime
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.debug
 import edu.byu.uapi.server.util.info
 import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.server.util.warn
-import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.utility.takeIfType
-import java.util.*
-
-sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any>
-
-class SingletonSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any>(
-    internal val subresource: SingletonSubresource<UserContext, Parent, Model>,
-    val parent: SubresourceParent<UserContext, Parent>,
-    val typeDictionary: TypeDictionary,
-    val validationEngine: ValidationEngine
-) : SubresourceRuntime<UserContext, Parent, Model>() {
-    val name = subresource.name
-
-    companion object {
-        private val LOG = loggerFor<SingletonSubresourceRuntime<*, *, *>>()
-    }
-
-    init {
-        LOG.debug("Initializing $name runtime")
-    }
-
-    val availableOperations: Set<SingletonSubresourceRequestHandler<UserContext, Parent, Model, *>> by lazy {
-        val ops: MutableSet<SingletonSubresourceRequestHandler<UserContext, Parent, Model, *>> = mutableSetOf()
-
-        ops.add(SingletonSubresourceFetchHandler(this))
-
-        subresource.updateMutation?.also { ops.add(SingletonSubresourceUpdateHandler(this, it)) }
-        subresource.deleteMutation?.also { ops.add(SingletonSubresourceDeleteHandler(this, it)) }
-
-        Collections.unmodifiableSet(ops)
-    }
-
-}
-
 
 sealed class SingletonSubresourceRequestHandler<UserContext : Any, Parent : ModelHolder, Model : Any, Request : SingletonSubresourceRequest<UserContext>>(
 ) {
@@ -51,7 +16,7 @@ sealed class SingletonSubresourceRequestHandler<UserContext : Any, Parent : Mode
         get() = runtime.subresource
 
     fun handle(request: Request): UAPIResponse<*> {
-        return when (val parent = runtime.parent.getParentModel(request.userContext, request.parentParams)) {
+        return when (val parent = runtime.parent.getParentModel(request.userContext, request.parentIdParams)) {
             is ParentResult.Success -> handle(request, parent.value)
             ParentResult.DoesNotExist -> UAPINotFoundError
             ParentResult.NotAuthorized -> UAPINotAuthorizedError
@@ -100,9 +65,9 @@ sealed class SingletonSubresourceRequestHandler<UserContext : Any, Parent : Mode
 
 class SingletonSubresourceFetchHandler<UserContext : Any, Parent : ModelHolder, Model : Any>(
     override val runtime: SingletonSubresourceRuntime<UserContext, Parent, Model>
-) : SingletonSubresourceRequestHandler<UserContext, Parent, Model, FetchSingletonSubresource<UserContext>>() {
+) : SingletonSubresourceRequestHandler<UserContext, Parent, Model, SingletonSubresourceRequest.Fetch<UserContext>>() {
     override fun handle(
-        request: FetchSingletonSubresource<UserContext>,
+        request: SingletonSubresourceRequest.Fetch<UserContext>,
         parent: Parent
     ): UAPIResponse<*> {
         val user = request.userContext
@@ -119,13 +84,13 @@ class SingletonSubresourceFetchHandler<UserContext : Any, Parent : ModelHolder, 
 class SingletonSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder, Model : Any>(
     override val runtime: SingletonSubresourceRuntime<UserContext, Parent, Model>,
     val mutation: SingletonSubresource.Deletable<UserContext, Parent, Model>
-) : SingletonSubresourceRequestHandler<UserContext, Parent, Model, DeleteSingletonSubresource<UserContext>>() {
+) : SingletonSubresourceRequestHandler<UserContext, Parent, Model, SingletonSubresourceRequest.Delete<UserContext>>() {
     companion object {
         private val LOG = loggerFor<SingletonSubresourceDeleteHandler<*, *, *>>()
     }
 
     override fun handle(
-        request: DeleteSingletonSubresource<UserContext>,
+        request: SingletonSubresourceRequest.Delete<UserContext>,
         parent: Parent
     ): UAPIResponse<*> {
         val user = request.userContext
@@ -182,12 +147,10 @@ class SingletonSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder,
     }
 }
 
-
-
 class SingletonSubresourceUpdateHandler<UserContext : Any, Parent: ModelHolder, Model : Any, Input : Any>(
     override val runtime: SingletonSubresourceRuntime<UserContext, Parent, Model>,
     private val operation: SingletonSubresource.Updatable<UserContext, Parent, Model, Input>
-) : SingletonSubresourceRequestHandler<UserContext, Parent, Model, UpdateSingletonSubresource<UserContext>>() {
+) : SingletonSubresourceRequestHandler<UserContext, Parent, Model, SingletonSubresourceRequest.Update<UserContext>>() {
 
     companion object {
         private val LOG = loggerFor<SingletonSubresourceUpdateHandler<*, *, *, *>>()
@@ -197,7 +160,7 @@ class SingletonSubresourceUpdateHandler<UserContext : Any, Parent: ModelHolder, 
     private val createWithId = operation.takeIfType<SingletonSubresource.Creatable<UserContext, Parent, Model, Input>>()
     private val validator = operation.getUpdateValidator(runtime.validationEngine)
 
-    override fun handle(request: UpdateSingletonSubresource<UserContext>, parent: Parent): UAPIResponse<*> {
+    override fun handle(request: SingletonSubresourceRequest.Update<UserContext>, parent: Parent): UAPIResponse<*> {
         LOG.debug { "Got request to update ${subresource.name}" }
         val userContext = request.userContext
 
@@ -326,5 +289,3 @@ class SingletonSubresourceUpdateHandler<UserContext : Any, Parent: ModelHolder, 
         }
     }
 }
-
-

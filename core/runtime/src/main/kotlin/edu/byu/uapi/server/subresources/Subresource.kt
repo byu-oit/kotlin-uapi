@@ -1,8 +1,7 @@
 package edu.byu.uapi.server.subresources
 
+import edu.byu.uapi.server.subresources.list.ListSubresource
 import edu.byu.uapi.server.subresources.singleton.SingletonSubresource
-import edu.byu.uapi.server.subresources.singleton.SingletonSubresourceRuntime
-import edu.byu.uapi.server.subresources.singleton.SubresourceRuntime
 import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.requests.IdParams
@@ -19,6 +18,7 @@ fun <UserContext : Any, Parent : ModelHolder, Model : Any> Subresource<UserConte
 ): SubresourceRuntime<UserContext, Parent, Model> {
     return when {
         this is SingletonSubresource -> SingletonSubresourceRuntime(this, parent, typeDictionary, validationEngine)
+        this is ListSubresource<UserContext, Parent, *, Model, *> -> ListSubresourceRuntime(this, parent, typeDictionary, validationEngine)
         else -> throw IllegalStateException("Unknown subresource type: ${this::class.qualifiedName}")
     }
 }

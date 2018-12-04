@@ -7,24 +7,24 @@ import edu.byu.uapi.spi.requests.RequestContext
 sealed class SingletonSubresourceRequest<UserContext : Any> {
     abstract val requestContext: RequestContext
     abstract val userContext: UserContext
-    abstract val parentParams: IdParams
+    abstract val parentIdParams: IdParams
+
+    data class Fetch<UserContext : Any>(
+        override val requestContext: RequestContext,
+        override val userContext: UserContext,
+        override val parentIdParams: IdParams
+    ) : SingletonSubresourceRequest<UserContext>()
+
+    data class Update<UserContext : Any>(
+        override val requestContext: RequestContext,
+        override val userContext: UserContext,
+        override val parentIdParams: IdParams,
+        val body: RequestBody
+    ) : SingletonSubresourceRequest<UserContext>()
+
+    data class Delete<UserContext : Any>(
+        override val requestContext: RequestContext,
+        override val userContext: UserContext,
+        override val parentIdParams: IdParams
+    ) : SingletonSubresourceRequest<UserContext>()
 }
-
-data class FetchSingletonSubresource<UserContext : Any>(
-    override val requestContext: RequestContext,
-    override val userContext: UserContext,
-    override val parentParams: IdParams
-) : SingletonSubresourceRequest<UserContext>()
-
-data class UpdateSingletonSubresource<UserContext : Any>(
-    override val requestContext: RequestContext,
-    override val userContext: UserContext,
-    override val parentParams: IdParams,
-    val body: RequestBody
-) : SingletonSubresourceRequest<UserContext>()
-
-data class DeleteSingletonSubresource<UserContext : Any>(
-    override val requestContext: RequestContext,
-    override val userContext: UserContext,
-    override val parentParams: IdParams
-) : SingletonSubresourceRequest<UserContext>()

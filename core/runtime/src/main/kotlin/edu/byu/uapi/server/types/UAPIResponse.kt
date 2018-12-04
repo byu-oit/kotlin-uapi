@@ -29,6 +29,16 @@ data class UAPIFieldsetsCollectionResponse(
     }
 }
 
+data class UAPISubresourceCollectionResponse(
+    val values: List<UAPIPropertiesResponse>,
+    override val metadata: CollectionMetadata,
+    override val links: UAPILinks
+) : UAPIResponse<CollectionMetadata>() {
+    override fun renderExtras(renderer: Renderer<*>) {
+        renderer.treeArray(SpecConstants.Collections.Response.KEY_VALUES, values)
+    }
+}
+
 data class UAPIPropertiesResponse(
     val properties: Map<String, UAPIProperty>,
     override val metadata: UAPIResourceMeta,
