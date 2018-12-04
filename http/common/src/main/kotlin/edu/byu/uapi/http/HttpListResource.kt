@@ -20,15 +20,17 @@ class HttpListResource<UserContext : Any, Id : Any, Model : Any>(
     val config: HttpEngineConfig,
     val resource: ListResourceRuntime<UserContext, Id, Model, *>
 ) {
+
+   val httpSubresources = resource.subresources.map { it.toHttp(runtime, config) }
+
     val routes: List<HttpRoute> by lazy {
         val rootPath = listOf(StaticPathPart(resource.pluralName))
         val idPath = rootPath + resource.idReader.describe().toPathPart()
 
         val list = resource.availableOperations.map { handlerFor(it, rootPath, idPath) }
 
-        val subresourceRoutes = resource.subresources.flatMap {
-//            subresourceHandlerFor(it, idPath)
-            emptyList<HttpRoute>()
+        val subresourceRoutes = httpSubresources.flatMap {
+            it.getRoutes(idPath)
         }
 
         list + subresourceRoutes
@@ -253,11 +255,11 @@ class IdentifiedResourceDeleteHttpHandler<UserContext: Any, Id: Any, Model: Any>
     }
 }
 
-private fun HttpPathParams.asIdParams(): IdParams {
+fun HttpPathParams.asIdParams(): IdParams {
     return this.mapValues { StringIdParam(it.key, it.value) }
 }
 
-private fun HttpQueryParams.asQueryParams(): QueryParams {
+fun HttpQueryParams.asQueryParams(): QueryParams {
     return this.mapValues { StringSetQueryParam(it.key, it.value) }
 }
 

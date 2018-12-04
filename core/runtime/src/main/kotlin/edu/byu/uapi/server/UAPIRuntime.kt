@@ -3,7 +3,7 @@ package edu.byu.uapi.server
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.ListResourceRuntime
-import edu.byu.uapi.server.resources.Resource
+import edu.byu.uapi.server.resources.list.ResourceRuntime
 import edu.byu.uapi.server.subresources.Subresource
 import edu.byu.uapi.server.types.IdentifiedModel
 import edu.byu.uapi.server.types.ModelHolder
@@ -32,30 +32,22 @@ class UAPIRuntime<UserContext : Any>(
     val typeDictionary = options.typeDictionary
     val validationEngine = options.validationEngine
 
-    private val resources: MutableMap<String, ListResourceRuntime<UserContext, *, *, *>> = mutableMapOf()
+    private val resources: MutableList<ResourceRuntime<UserContext, *>> = mutableListOf()
 
     fun <Id : Any, Model : Any> register(
         resource: ListResource<UserContext, Id, Model, *>,
         subresources: List<Subresource<UserContext, IdentifiedModel<Id, Model>, Model>> = emptyList()
     ) {
-        val runtime = ListResourceRuntime(resource, typeDictionary, validationEngine, emptyList())
-        resources[resource.pluralName] = runtime
+        register(ResourceMapping.List(resource, subresources))
+    }
+
+    internal fun <Model : Any, Parent : ModelHolder> register(mapping: ResourceMapping<UserContext, Model, Parent>) {
+        val runtime = mapping.toRuntime(typeDictionary, validationEngine)
+        resources += runtime
         //TODO: Validate resource
     }
 
-    internal fun <Model: Any, Parent: ModelHolder> register(mapping: ResourceMapping<UserContext, Model, Parent>) {
-        val (resource, subs) = mapping
-
-        if (resource !is ListResource<*, *, *, *>) {
-            TODO("Singleton resources are not yet supported")
-        }
-
-        val runtime = ListResourceRuntime(resource, typeDictionary, validationEngine, emptyList())
-//        resources[resource.pluralName] = runtime
-        //TODO: Validate resource
-    }
-
-    fun resources(): Map<String, ListResourceRuntime<UserContext, *, *, *>> = Collections.unmodifiableMap(resources)
+    fun resources(): List<ResourceRuntime<UserContext, *>> = Collections.unmodifiableList(resources)
 
     data class Options<UserContext : Any>(
         val userContextFactory: UserContextFactory<UserContext>,
@@ -74,10 +66,31 @@ class UAPIRuntime<UserContext : Any>(
     }
 }
 
-internal data class ResourceMapping<UserContext : Any, Model: Any, Parent: ModelHolder>(
-    val resource: Resource<UserContext, Model, Parent>,
-    val subresources: List<Subresource<UserContext, Parent, Model>> = emptyList()
-)
+internal sealed class ResourceMapping<UserContext : Any, Model : Any, Parent : ModelHolder> {
+
+    abstract fun toRuntime(
+        typeDictionary: TypeDictionary,
+        validationEngine: ValidationEngine
+    ): ResourceRuntime<UserContext, Parent>
+
+    data class List<UserContext : Any, Id : Any, Model : Any>(
+        val resource: ListResource<UserContext, Id, Model, *>,
+        val subresources: kotlin.collections.List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = emptyList()
+    ) : ResourceMapping<UserContext, Model, IdentifiedModel<Id, Model>>() {
+        override fun toRuntime(
+            typeDictionary: TypeDictionary,
+            validationEngine: ValidationEngine
+        ): ResourceRuntime<UserContext, IdentifiedModel<Id, Model>> {
+            return ListResourceRuntime(
+                this.resource,
+                typeDictionary,
+                validationEngine,
+                subresources
+            )
+        }
+    }
+
+}
 
 class RuntimeInit<UserContext : Any> {
 
@@ -98,12 +111,12 @@ class RuntimeInit<UserContext : Any> {
 
     private val resources: MutableList<ResourceMapping<UserContext, *, *>> = mutableListOf()
 
-    operator fun Resource<UserContext, *, *>.unaryPlus() {
-        resources += ResourceMapping(this)
+    operator fun <Id : Any, Model : Any> ListResource<UserContext, Id, Model, *>.unaryPlus() {
+        resources += ResourceMapping.List(this)
     }
 
-    operator fun <Model : Any, SubresourceStyle: ModelHolder> Pair<Resource<UserContext, Model, SubresourceStyle>, List<Subresource<UserContext, SubresourceStyle, Model>>>.unaryPlus() {
-        resources += ResourceMapping(this.first, this.second)
+    operator fun <Model : Any, Id : Any> Pair<ListResource<UserContext, Id, Model, *>, List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>>>.unaryPlus() {
+        resources += ResourceMapping.List(this.first, this.second)
     }
 
     infix fun <A, B> A.with(that: B): Pair<A, B> = this to that

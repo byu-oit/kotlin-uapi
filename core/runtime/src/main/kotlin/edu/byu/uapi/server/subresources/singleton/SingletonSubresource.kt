@@ -27,6 +27,7 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
 
     fun canUserViewModel(
         userContext: UserContext,
+        parent: Parent,
         model: Model
     ): Boolean
 

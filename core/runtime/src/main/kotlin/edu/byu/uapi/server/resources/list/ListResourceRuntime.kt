@@ -1,22 +1,30 @@
 package edu.byu.uapi.server.resources.list
 
+import edu.byu.uapi.server.subresources.ParentResult
 import edu.byu.uapi.server.subresources.Subresource
+import edu.byu.uapi.server.subresources.SubresourceParent
 import edu.byu.uapi.server.subresources.createRuntime
 import edu.byu.uapi.server.types.IdentifiedModel
+import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamReader
 import edu.byu.uapi.spi.input.ListParams
+import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.validation.ValidationEngine
 import java.util.*
 
-class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params: ListParams>(
+sealed class ResourceRuntime<UserContext: Any, ModelStyle: ModelHolder>: SubresourceParent<UserContext, ModelStyle> {
+
+}
+
+class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
     internal val resource: ListResource<UserContext, Id, Model, Params>,
     val typeDictionary: TypeDictionary,
     val validationEngine: ValidationEngine,
-    subresourceList: List<Subresource<UserContext, IdentifiedModel<Id, Model>, Model>> = emptyList()
-) {
+    subresourceList: List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = emptyList()
+) : ResourceRuntime<UserContext, IdentifiedModel<Id, Model>>() {
 
     val pluralName = resource.pluralName
     val singleName = resource.singleName
@@ -53,5 +61,16 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params: List
     val availableFieldsets = setOf(SpecConstants.FieldSets.VALUE_BASIC)
     val availableContexts = emptyMap<String, Set<String>>()
 
-    val subresources = subresourceList.map { it.createRuntime(typeDictionary, validationEngine) }
+    val subresources = subresourceList.map { it.createRuntime(this, typeDictionary, validationEngine) }
+
+    override fun getParentModel(
+        user: UserContext,
+        idParams: IdParams
+    ): ParentResult<IdentifiedModel<Id, Model>> {
+        val id = idReader.read(idParams)
+        val model = resource.loadModel(user, id) ?: return ParentResult.DoesNotExist
+        val authorized = resource.canUserViewModel(user, id, model)
+        if (!authorized) return ParentResult.NotAuthorized
+        return ParentResult.Success(IdentifiedModel.Simple(id, model))
+    }
 }

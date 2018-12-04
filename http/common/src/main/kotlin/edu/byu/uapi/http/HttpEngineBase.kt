@@ -2,6 +2,7 @@ package edu.byu.uapi.http
 
 import edu.byu.uapi.http.json.JsonEngine
 import edu.byu.uapi.server.UAPIRuntime
+import edu.byu.uapi.server.resources.list.ListResourceRuntime
 import org.slf4j.LoggerFactory
 
 abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
@@ -34,8 +35,10 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
         rootPath: String = ""
     ) {
         checkInitialized()
-        val resources = runtime.resources().values.map {
-            HttpListResource(runtime, config, it)
+        val resources = runtime.resources().map {
+            when (it) {
+                is ListResourceRuntime<UserContext, *, *, *> -> HttpListResource(runtime, config, it)
+            }
         }
         val routes = resources.flatMap { it.routes }
 

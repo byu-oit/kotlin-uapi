@@ -19,10 +19,12 @@ import edu.byu.uapi.spi.scalars.ScalarFormat
 import java.util.*
 import kotlin.reflect.KClass
 
-val helloWorldRuntime = UAPIRuntime<HelloWorldUser> {
-    userContextFactory = HelloWorldUserFactory()
+val helloWorldRuntime by lazy {
+    UAPIRuntime<HelloWorldUser> {
+        userContextFactory = HelloWorldUserFactory()
 
-    +GreetingResource() with listOf(FooSubresource())
+        + (GreetingResource() with listOf(FooSubresource()))
+    }
 }
 
 class HelloWorldUserFactory : UserContextFactory<HelloWorldUser> {
@@ -74,6 +76,7 @@ class FooSubresource : SingletonSubresource<HelloWorldUser, IdentifiedModel<Stri
 
     override fun canUserViewModel(
         userContext: HelloWorldUser,
+        parent: IdentifiedModel<String, Greeting>,
         model: Foo
     ): Boolean {
         return true

@@ -1,22 +1,32 @@
 package edu.byu.uapi.http
 
 import edu.byu.uapi.server.UAPIRuntime
-import edu.byu.uapi.server.subresources.singleton.SingletonSubresourceFetchHandler
-import edu.byu.uapi.server.subresources.singleton.SingletonSubresourceRequestHandler
-import edu.byu.uapi.server.subresources.singleton.SingletonSubresourceRuntime
+import edu.byu.uapi.server.subresources.singleton.*
 import edu.byu.uapi.server.types.ModelHolder
+
+sealed class HttpSubresource {
+    abstract fun getRoutes(rootPath: List<PathPart>): List<HttpRoute>
+}
+
+fun <UserContext: Any, Parent: ModelHolder, Model: Any> SubresourceRuntime<UserContext, Parent, Model>.toHttp(
+    runtime: UAPIRuntime<UserContext>,
+    config: HttpEngineConfig
+): HttpSubresource {
+    return when(this) {
+        is SingletonSubresourceRuntime -> HttpSingletonSubresource(runtime, config, this)
+    }
+}
 
 class HttpSingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
     val config: HttpEngineConfig,
-    val subresource: SingletonSubresourceRuntime<UserContext, Parent, Model>,
-    val rootPath: List<PathPart>
-) {
+    val subresource: SingletonSubresourceRuntime<UserContext, Parent, Model>
+): HttpSubresource() {
 
-    val routes: List<HttpRoute> by lazy {
+    override fun getRoutes(rootPath: List<PathPart>): List<HttpRoute> {
         val path = rootPath + StaticPathPart(subresource.name)
 
-        subresource.availableOperations.map { handlerFor(it, path) }
+        return subresource.availableOperations.map { handlerFor(it, path) }
     }
 
     private fun handlerFor(
@@ -25,10 +35,9 @@ class HttpSingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
     ): HttpRoute {
         return when (op) {
             is SingletonSubresourceFetchHandler -> {
-//                HttpRoute(
-//                    path, HttpMethod.GET,
-//                )
-                TODO()
+                HttpRoute(
+                    path, HttpMethod.GET, SingletonSubresourceFetchHttpHandler(runtime, op)
+                )
             }
         }
     }
@@ -43,13 +52,12 @@ class SingletonSubresourceFetchHttpHandler<UserContext: Any, Parent: ModelHolder
         request: HttpRequest,
         userContext: UserContext
     ): HttpResponse {
-//        val response = handler.handle(FetchSingletonSubresource(
-//            request.asRequestContext(),
-//            userContext,
-//
-//        ))
-        TODO("not implemented")
+        val response = handler.handle(FetchSingletonSubresource(
+            request.asRequestContext(),
+            userContext,
+            request.path.asIdParams()
+        ))
+        return response.toHttpResponse()
     }
-
 }
 

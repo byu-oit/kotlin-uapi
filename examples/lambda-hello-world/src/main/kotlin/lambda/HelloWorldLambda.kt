@@ -12,7 +12,10 @@ class HelloWorldLambda : UAPILambdaHandler(
     LambdaConfig(JavaxJsonTreeEngine)
 ) {
     init {
-        Configurator.defaultConfig().level(Level.DEBUG).activate()
+        Configurator.defaultConfig()
+            .level("edu.byu", Level.DEBUG)
+            .level(Level.INFO)
+            .activate()
     }
 
     override fun setup(engine: LambdaProxyEngine) {
