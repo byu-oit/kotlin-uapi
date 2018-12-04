@@ -23,11 +23,20 @@ object PathParamDecorators {
 }
 
 fun List<PathPart>.stringify(paramDecorator: PathParamDecorator): String {
+    return this.stringify(paramDecorator) { part, pd ->
+        part.names.joinToString(separator = ",", transform = pd)
+    }
+}
+
+fun List<PathPart>.stringify(
+    paramDecorator: PathParamDecorator,
+    handleCompound: (CompoundPathVariablePart, PathParamDecorator) -> String
+): String {
     return this.joinToString(separator = "/", prefix = "/") { part ->
         when (part) {
             is StaticPathPart -> part.part
             is SimplePathVariablePart -> paramDecorator(part.name)
-            is CompoundPathVariablePart -> part.names.joinToString(separator = ",", transform = paramDecorator)
+            is CompoundPathVariablePart -> handleCompound(part, paramDecorator)
         }
     }
 }

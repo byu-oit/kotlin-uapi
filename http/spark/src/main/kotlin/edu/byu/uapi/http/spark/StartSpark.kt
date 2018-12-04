@@ -71,7 +71,7 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
     ) {
         server.optionalPath(rootPath) {
             routes.forEach {
-                LOG.info { "Adding route ${it.method} $rootPath${it.pathParts.stringify(PathParamDecorators.COLON)}" }
+                LOG.info { "Adding route ${it.method} $rootPath${it.pathParts.stringifySpark()}" }
                 server.addRoute(it.method.toSpark(), it.toSpark(config, runtime.typeDictionary))
             }
         }
@@ -86,6 +86,12 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
         } else {
             this.path(rootPath) { group() }
         }
+    }
+}
+
+fun List<PathPart>.stringifySpark(): String {
+    return this.stringify(PathParamDecorators.COLON) { part, decorator ->
+        decorator.invoke(part.names.joinToString(separator = COMPOUND_PARAM_SEPARATOR, prefix = COMPOUND_PARAM_PREFIX))
     }
 }
 
@@ -106,7 +112,7 @@ private fun HttpRoute.toSpark(
     config: SparkConfig,
     typeDictionary: TypeDictionary
 ): RouteImpl {
-    val path = pathParts.stringify(PathParamDecorators.COLON)
+    val path = this.pathParts.stringifySpark()
     return RouteImpl.create(path, this.handler.toSpark(config, typeDictionary))
 }
 
@@ -165,7 +171,6 @@ inline fun <Output : Any> JsonEngine<Output, Writer>.renderWithFile(
     render: (Renderer<Output>) -> Unit
 ): InputStream {
     val file = File.createTempFile("uapi-runtime-render-buffer", ".tmp.json")
-    println(file)
     file.deleteOnExit()
 
     file.bufferedWriter().use {
