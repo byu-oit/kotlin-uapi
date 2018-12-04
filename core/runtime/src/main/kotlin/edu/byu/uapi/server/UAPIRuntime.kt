@@ -36,7 +36,7 @@ class UAPIRuntime<UserContext : Any>(
 
     fun <Id : Any, Model : Any> register(
         resource: ListResource<UserContext, Id, Model, *>,
-        subresources: List<Subresource<UserContext, IdentifiedModel<Id, Model>, Model>> = emptyList()
+        subresources: List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = emptyList()
     ) {
         register(ResourceMapping.List(resource, subresources))
     }

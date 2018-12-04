@@ -19,12 +19,8 @@ import edu.byu.uapi.spi.scalars.ScalarFormat
 import java.util.*
 import kotlin.reflect.KClass
 
-val helloWorldRuntime by lazy {
-    UAPIRuntime<HelloWorldUser> {
-        userContextFactory = HelloWorldUserFactory()
-
-        + (GreetingResource() with listOf(FooSubresource()))
-    }
+val helloWorldRuntime = UAPIRuntime(HelloWorldUserFactory()).also {
+    it.register(GreetingResource(), listOf(FooSubresource()))
 }
 
 class HelloWorldUserFactory : UserContextFactory<HelloWorldUser> {
