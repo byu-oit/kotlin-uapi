@@ -1,7 +1,6 @@
 package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.response.ResponseField
-import edu.byu.uapi.server.types.CreateIdResult
 import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.UpdateResult
@@ -83,7 +82,7 @@ class ListResourceSpec : DescribeSpec() {
         override fun handleCreate(
             userContext: String,
             input: String
-        ): CreateIdResult<String> {
+        ): CreateResult<String> {
             TODO("not implemented")
         }
 
@@ -113,7 +112,7 @@ class ListResourceSpec : DescribeSpec() {
             id: String,
             model: String,
             input: String
-        ): UpdateResult {
+        ): UpdateResult<String> {
             TODO("not implemented")
         }
 
@@ -135,7 +134,7 @@ class ListResourceSpec : DescribeSpec() {
             userContext: String,
             id: String,
             input: String
-        ): CreateResult {
+        ): CreateResult<String> {
             TODO("not implemented")
         }
 

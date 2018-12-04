@@ -12,25 +12,16 @@ import edu.byu.uapi.spi.input.ListWithTotal
 import edu.byu.uapi.spi.requests.*
 import edu.byu.uapi.utility.takeIfType
 
-sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams, Request : ListResourceRequest<UserContext>>(
+sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams, Request : ListResourceRequest<UserContext>>(
     val runtime: ListResourceRuntime<UserContext, Id, Model, Params>
 ) {
     val resource = runtime.resource
 
-    internal fun idToBasic(
-        userContext: UserContext,
-        id: Id,
-        validationResponse: ValidationResponse = ValidationResponse.OK
-    ): UAPIPropertiesResponse {
-        val model = resource.loadModel(userContext, id) ?: throw IllegalStateException() //TODO: Prettier error message
-        return modelToBasic(userContext, id, model, validationResponse)
-    }
-
     internal fun modelToBasic(
         userContext: UserContext,
-        id: Id,
         model: Model,
-        validationResponse: ValidationResponse = ValidationResponse.OK
+        validationResponse: ValidationResponse = ValidationResponse.OK,
+        id: Id = resource.idFromModel(model)
     ): UAPIPropertiesResponse {
         return UAPIPropertiesResponse(
             metadata = UAPIResourceMeta(validationResponse = validationResponse),
@@ -85,7 +76,11 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
         requestedContexts: Set<String>
     ): Map<String, UAPIResponse<*>> {
         //TODO(Return fieldsets other than basic)
-        return mapOf(SpecConstants.FieldSets.VALUE_BASIC to modelToBasic(userContext, id, model))
+        return mapOf(SpecConstants.FieldSets.VALUE_BASIC to modelToBasic(
+            userContext = userContext,
+            model = model,
+            id = id
+        ))
     }
 
     fun getId(idParams: IdParams): Id {
@@ -95,7 +90,7 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
     abstract fun handle(request: Request): UAPIResponse<*>
 }
 
-class ListResourceFetchHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams>(
+class ListResourceFetchHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
     runtime: ListResourceRuntime<UserContext, Id, Model, Params>
 ) : ListResourceRequestHandler<UserContext, Id, Model, Params, FetchListResource<UserContext>>(runtime) {
     override fun handle(
@@ -161,7 +156,7 @@ class ListResourceListHandler<UserContext : Any, Id : Any, Model : Any, Params :
     }
 }
 
-class ListResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams, Input : Any>(
+class ListResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams, Input : Any>(
     runtime: ListResourceRuntime<UserContext, Id, Model, Params>,
     private val operation: ListResource.Creatable<UserContext, Id, Model, Input>
 ) : ListResourceRequestHandler<UserContext, Id, Model, Params, CreateListResource<UserContext>>(runtime) {
@@ -194,25 +189,28 @@ class ListResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Params
             )
         }
         return when (val result = operation.handleCreate(userContext, input)) {
-            is CreateIdResult.Success -> {
-                LOG.info { "Successfully created ${resource.singleName} ${result.id}" }
-                super.idToBasic(
+            is CreateResult.Success -> {
+                val model = result.model
+                val id = resource.idFromModel(model)
+                LOG.info { "Successfully created ${resource.singleName} $id" }
+                super.modelToBasic(
                     userContext = userContext,
-                    id = result.id,
+                    id = id,
+                    model = model,
                     validationResponse = ValidationResponse(201, "Created")
                 )
             }
-            CreateIdResult.Unauthorized -> {
+            CreateResult.Unauthorized -> {
                 LOG.warn { "Unauthorized request to create ${resource.singleName} (caught in handleCreate)! User Context was $userContext" }
                 UAPINotAuthorizedError
             }
-            is CreateIdResult.InvalidInput -> {
+            is CreateResult.InvalidInput -> {
                 LOG.warn { "Invalid create ${resource.singleName} request body: ${result.errors.map { "${it.field}: ${it.description}" }}" }
                 GenericUAPIErrorResponse(
                     400, "Bad Request", result.errors.map { "The value for ${it.field} is invalid: ${it.description}" }
                 )
             }
-            is CreateIdResult.Error -> {
+            is CreateResult.Error -> {
                 LOG.error("Error(s) creating ${resource.singleName}: ${result.errors.joinToString()}", result.cause)
                 GenericUAPIErrorResponse(
                     result.code, "Error", result.errors
@@ -222,7 +220,7 @@ class ListResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Params
     }
 }
 
-class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams, Input : Any>(
+class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams, Input : Any>(
     runtime: ListResourceRuntime<UserContext, Id, Model, Params>,
     private val operation: ListResource.Updatable<UserContext, Id, Model, Input>
 ) : ListResourceRequestHandler<UserContext, Id, Model, Params, UpdateListResource<UserContext>>(runtime) {
@@ -260,14 +258,16 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
     private fun handleUpdateResult(
         userContext: UserContext,
         id: Id,
-        result: UpdateResult
+        result: UpdateResult<Model>
     ): UAPIResponse<*> {
         return when (result) {
-            UpdateResult.Success -> {
+            is UpdateResult.Success -> {
+                val model = result.model
                 LOG.info { "Successfully updated ${resource.singleName} $id" }
-                super.idToBasic(
+                super.modelToBasic(
                     userContext = userContext,
                     id = id,
+                    model = model,
                     validationResponse = ValidationResponse(200, "OK")
                 )
             }
@@ -290,7 +290,7 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
                 )
             }
             is UpdateResult.Error -> {
-                LOG.warn("Unknown error udpating ${resource.singleName} $id: code ${result.code} ${result.errors.joinToString()}", result.cause)
+                LOG.warn("Unknown error updating ${resource.singleName} $id: code ${result.code} ${result.errors.joinToString()}", result.cause)
                 GenericUAPIErrorResponse(
                     statusCode = result.code,
                     message = "Error",
@@ -305,7 +305,7 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
         id: Id,
         model: Model,
         input: Input
-    ): UpdateResult {
+    ): UpdateResult<Model> {
         val authorized = operation.canUserUpdate(userContext, id, model)
         if (!authorized) {
             return UpdateResult.Unauthorized
@@ -328,7 +328,7 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
         userContext: UserContext,
         id: Id,
         input: Input
-    ): CreateResult {
+    ): CreateResult<Model> {
         val authorized = operation.canUserCreateWithId(userContext, id)
         if (!authorized) {
             return CreateResult.Unauthorized
@@ -344,14 +344,15 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
     private fun handleCreateResult(
         userContext: UserContext,
         id: Id,
-        result: CreateResult
+        result: CreateResult<Model>
     ): UAPIResponse<*> {
         return when (result) {
             is CreateResult.Success -> {
                 LOG.info { "Successfully created ${resource.singleName} $id" }
-                super.idToBasic(
+                super.modelToBasic(
                     userContext = userContext,
                     id = id,
+                    model = result.model,
                     validationResponse = ValidationResponse(201, "Created")
                 )
             }
@@ -375,7 +376,7 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
     }
 }
 
-class ListResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any, Params: ListParams>(
+class ListResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
     runtime: ListResourceRuntime<UserContext, Id, Model, Params>,
     val operation: ListResource.Deletable<UserContext, Id, Model>
 ) : ListResourceRequestHandler<UserContext, Id, Model, Params, DeleteListResource<UserContext>>(runtime) {

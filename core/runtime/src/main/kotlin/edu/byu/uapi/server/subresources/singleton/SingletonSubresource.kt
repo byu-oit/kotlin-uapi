@@ -14,6 +14,7 @@ import edu.byu.uapi.server.util.DarkMagicException
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.spi.validation.Validator
+import edu.byu.uapi.utility.takeIfType
 import kotlin.reflect.KClass
 
 interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : Any>: Subresource<UserContext, Parent, Model> {
@@ -33,6 +34,11 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
 
     val responseFields: List<ResponseField<UserContext, Model, *>>
 
+    val updateMutation: Updatable<UserContext, Parent, Model, *>?
+        get() = this.takeIfType()
+    val deleteMutation: Deletable<UserContext, Parent, Model>?
+        get() = this.takeIfType()
+
     interface Updatable<UserContext : Any, Parent : ModelHolder, Model : Any, Input : Any> {
         fun canUserUpdate(
             userContext: UserContext,
@@ -50,7 +56,7 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
             parent: Parent,
             model: Model,
             input: Input
-        ): UpdateResult
+        ): UpdateResult<Model>
 
         val updateInput: KClass<Input>
             get() {
@@ -78,10 +84,10 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
             userContext: UserContext,
             parent: Parent,
             input: Input
-        ): CreateResult
+        ): CreateResult<Model>
     }
 
-    interface Deletable<UserContext: Any, Parent: ModelHolder, Model: Any, Input: Any> {
+    interface Deletable<UserContext: Any, Parent: ModelHolder, Model: Any> {
         fun canUserDelete(
             userContext: UserContext,
             parent: Parent,

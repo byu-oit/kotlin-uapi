@@ -64,7 +64,7 @@ private val foos = mutableMapOf(
 class FooSubresource : SingletonSubresource<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo>,
                        SingletonSubresource.Updatable<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo, Foo>,
                        SingletonSubresource.Creatable<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo, Foo>,
-                       SingletonSubresource.Deletable<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo, Foo> {
+                       SingletonSubresource.Deletable<HelloWorldUser, IdentifiedModel<String, Greeting>, Foo> {
     override val name: String = "foo"
 
     override fun loadModel(
@@ -107,9 +107,9 @@ class FooSubresource : SingletonSubresource<HelloWorldUser, IdentifiedModel<Stri
         parent: IdentifiedModel<String, Greeting>,
         model: Foo,
         input: Foo
-    ): UpdateResult {
+    ): UpdateResult<Foo> {
         foos[parent.model.lang] = input
-        return UpdateResult.Success
+        return UpdateResult.Success(input)
     }
 
     override fun canUserCreate(
@@ -123,9 +123,9 @@ class FooSubresource : SingletonSubresource<HelloWorldUser, IdentifiedModel<Stri
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         input: Foo
-    ): CreateResult {
+    ): CreateResult<Foo> {
         foos[parent.model.lang] = input
-        return CreateResult.Success
+        return CreateResult.Success(input)
     }
 
     override fun canUserDelete(

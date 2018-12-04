@@ -9,7 +9,10 @@ import edu.byu.uapi.server.scalars.EnumScalarType
 import edu.byu.uapi.server.spi.*
 import edu.byu.uapi.server.spi.reflective.ReflectiveFilterParamReader
 import edu.byu.uapi.server.spi.reflective.ReflectiveIdParamReader
-import edu.byu.uapi.server.types.*
+import edu.byu.uapi.server.types.CreateResult
+import edu.byu.uapi.server.types.DeleteResult
+import edu.byu.uapi.server.types.IdentifiedModel
+import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.server.util.DarkMagic
 import edu.byu.uapi.server.util.DarkMagicException
 import edu.byu.uapi.spi.UAPITypeError
@@ -88,7 +91,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         fun handleCreate(
             userContext: UserContext,
             input: Input
-        ): CreateIdResult<Id>
+        ): CreateResult<Model>
 
         val createInput: KClass<Input>
             get() = defaultGetCreateInput()
@@ -134,7 +137,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
             id: Id,
             model: Model,
             input: Input
-        ): UpdateResult
+        ): UpdateResult<Model>
 
         val updateInput: KClass<Input>
             get() = this.defaultGetUpdateInput()
@@ -150,7 +153,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
             userContext: UserContext,
             id: Id,
             input: Input
-        ): CreateResult
+        ): CreateResult<Model>
     }
 
     interface Simple<UserContext : Any, Id : Any, Model : Any> : ListResource<UserContext, Id, Model, ListParams.Empty> {

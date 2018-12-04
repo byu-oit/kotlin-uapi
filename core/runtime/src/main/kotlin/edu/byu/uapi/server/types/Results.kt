@@ -1,9 +1,11 @@
 package edu.byu.uapi.server.types
 
-sealed class CreateIdResult<out Id : Any> {
-    data class Success<Id : Any>(val id: Id) : CreateIdResult<Id>()
-    object Unauthorized : CreateIdResult<Nothing>()
-    data class InvalidInput(override val errors: List<InputError>) : CreateIdResult<Nothing>(),
+sealed class CreateResult<out Model: Any> {
+    data class Success<Model: Any>(
+        val model: Model
+    ) : CreateResult<Model>()
+    object Unauthorized : CreateResult<Nothing>()
+    data class InvalidInput(override val errors: List<InputError>) : CreateResult<Nothing>(),
                                                                      InvalidInputResult {
         constructor(
             field: String,
@@ -15,7 +17,7 @@ sealed class CreateIdResult<out Id : Any> {
         override val code: Int,
         override val errors: List<String>,
         override val cause: Throwable? = null
-    ) : CreateIdResult<Nothing>(),
+    ) : CreateResult<Nothing>(),
         ErrorResult {
         constructor(
             code: Int,
@@ -24,9 +26,11 @@ sealed class CreateIdResult<out Id : Any> {
     }
 }
 
-sealed class UpdateResult {
-    object Success : UpdateResult()
-    data class InvalidInput(override val errors: List<InputError>) : UpdateResult(),
+sealed class UpdateResult<out Model: Any> {
+    data class Success<Model: Any>(
+        val model: Model
+    ): UpdateResult<Model>()
+    data class InvalidInput(override val errors: List<InputError>) : UpdateResult<Nothing>(),
                                                                      InvalidInputResult {
         constructor(
             field: String,
@@ -34,38 +38,14 @@ sealed class UpdateResult {
         ) : this(listOf(InputError(field, description)))
     }
 
-    object Unauthorized : UpdateResult()
-    data class CannotBeUpdated(val reason: String) : UpdateResult()
+    object Unauthorized : UpdateResult<Nothing>()
+    data class CannotBeUpdated(val reason: String) : UpdateResult<Nothing>()
 
     data class Error(
         override val code: Int,
         override val errors: List<String>,
         override val cause: Throwable? = null
-    ) : UpdateResult(),
-        ErrorResult {
-        constructor(
-            code: Int,
-            error: String
-        ) : this(code, listOf(error))
-    }
-}
-
-sealed class CreateResult {
-    object Success : CreateResult()
-    object Unauthorized : CreateResult()
-    data class InvalidInput(override val errors: List<InputError>) : CreateResult(),
-                                                                     InvalidInputResult {
-        constructor(
-            field: String,
-            description: String
-        ) : this(listOf(InputError(field, description)))
-    }
-
-    data class Error(
-        override val code: Int,
-        override val errors: List<String>,
-        override val cause: Throwable? = null
-    ) : CreateResult(),
+    ) : UpdateResult<Nothing>(),
         ErrorResult {
         constructor(
             code: Int,

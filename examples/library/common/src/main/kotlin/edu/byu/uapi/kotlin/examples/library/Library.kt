@@ -206,7 +206,7 @@ object Library {
         }
     }
 
-    fun createBook(book: NewBook): Long {
+    fun createBook(book: NewBook): Book {
         return DB.openConnection().use { conn ->
             conn.prepareStatement("""
                 insert into library.book
@@ -230,7 +230,7 @@ object Library {
                 setBookGenres(conn, id, book.genres)
                 setBookSubtitles(conn, id, book.subtitles)
 
-                id
+                getBookById(id)!!
             }
         }
     }
@@ -321,7 +321,7 @@ object Library {
         }
     }
 
-    fun updateBook(newBook: NewBook) {
+    fun updateBook(newBook: NewBook): Book {
         TODO("not implemented")
     }
 
@@ -380,6 +380,5 @@ fun main(args: Array<String>) {
         restricted = false
     ))
     println(result)
-    println(Library.getBookById(result))
     Library.deleteBook(11)
 }

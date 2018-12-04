@@ -3,7 +3,6 @@ package edu.byu.uapi.library
 import edu.byu.uapi.kotlin.examples.library.*
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
-import edu.byu.uapi.server.types.CreateIdResult
 import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.UpdateResult
@@ -133,17 +132,17 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun handleCreate(
         userContext: LibraryUser,
         input: CreateBook
-    ): CreateIdResult<Long> {
+    ): CreateResult<Book> {
         val publisher = Library.getPublisher(input.publisherId)
-            ?: return CreateIdResult.InvalidInput("publisher_id", "No such publisher exists")
+            ?: return CreateResult.InvalidInput("publisher_id", "No such publisher exists")
         val authors = input.authorIds.map {
-            Library.getAuthor(it) ?: return CreateIdResult.InvalidInput("author_ids", "No such author exists")
+            Library.getAuthor(it) ?: return CreateResult.InvalidInput("author_ids", "No such author exists")
         }
         val genres = input.genreCodes.map {
-            Library.getGenreByCode(it) ?: return CreateIdResult.InvalidInput("genre_codes", "No such genre exists")
+            Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
-        Library.createBook(NewBook(
+        val created = Library.createBook(NewBook(
             oclc = input.oclc,
             isbn = input.isbn,
             title = input.title,
@@ -155,7 +154,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             restricted = input.restricted
         ))
 
-        return CreateIdResult.Success(input.oclc)
+        return CreateResult.Success(created)
     }
 
     override fun canUserUpdate(
@@ -178,7 +177,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         id: Long,
         model: Book,
         input: UpdateBook
-    ): UpdateResult {
+    ): UpdateResult<Book> {
         val publisher = Library.getPublisher(input.publisherId)
             ?: return UpdateResult.InvalidInput("publisher_id", "No such publisher exists")
         val authors = input.authorIds.map {
@@ -188,7 +187,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             Library.getGenreByCode(it) ?: return UpdateResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
-        Library.updateBook(NewBook(
+        val updated = Library.updateBook(NewBook(
             oclc = id,
             isbn = input.isbn,
             title = input.title,
@@ -200,7 +199,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             restricted = input.restricted
         ))
 
-        return UpdateResult.Success
+        return UpdateResult.Success(updated)
     }
 
     override fun canUserCreateWithId(
@@ -214,7 +213,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         userContext: LibraryUser,
         id: Long,
         input: UpdateBook
-    ): CreateResult {
+    ): CreateResult<Book> {
         val publisher = Library.getPublisher(input.publisherId)
             ?: return CreateResult.InvalidInput("publisher_id", "No such publisher exists")
         val authors = input.authorIds.map {
@@ -224,7 +223,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
-        Library.createBook(NewBook(
+        val created = Library.createBook(NewBook(
             oclc = id,
             isbn = input.isbn,
             title = input.title,
@@ -236,7 +235,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             restricted = input.restricted
         ))
 
-        return CreateResult.Success
+        return CreateResult.Success(created)
     }
 
     override fun canUserDelete(
