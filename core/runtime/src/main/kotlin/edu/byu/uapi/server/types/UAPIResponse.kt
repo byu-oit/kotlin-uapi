@@ -82,6 +82,7 @@ data class GenericUAPIErrorResponse(
 data class UAPIBadRequestError(
     val messages: List<String>
 ): UAPIResponse<UAPIErrorMetadata>() {
+    constructor(message: String): this(listOf(message))
     override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
         validationResponse = ValidationResponse(400, "Bad Request"),
         validationInformation = messages

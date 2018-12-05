@@ -12,7 +12,7 @@ import edu.byu.uapi.server.UAPIRuntime
 fun main(args: Array<String>) {
     val runtime = UAPIRuntime(MyUserContextFactory())
 
-    runtime.register(BookResource())
+    runtime.resource(BookResource())
 
     runtime.startSpark()
 

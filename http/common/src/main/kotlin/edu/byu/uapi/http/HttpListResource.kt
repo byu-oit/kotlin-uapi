@@ -21,7 +21,7 @@ class HttpListResource<UserContext : Any, Id : Any, Model : Any>(
     val resource: ListResourceRuntime<UserContext, Id, Model, *>
 ) {
 
-   val httpSubresources = resource.subresources.map { it.toHttp(runtime, config) }
+   val httpSubresources = resource.subresources.values.map { it.toHttp(runtime, config) }
 
     val routes: List<HttpRoute> by lazy {
         val rootPath = listOf(StaticPathPart(resource.pluralName))

@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.resources.list
 
+import edu.byu.uapi.server.subresources.SubresourceRuntime
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.debug
 import edu.byu.uapi.server.util.info
@@ -51,13 +52,14 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
     }
 
     internal fun buildFieldsetResponse(
+        requestContext: RequestContext,
         userContext: UserContext,
         id: Id,
         model: Model,
         requestedFieldsets: Set<String>,
         requestedContexts: Set<String>
     ): UAPIFieldsetsResponse {
-        val loadedFieldsets = loadFieldsets(userContext, id, model, requestedFieldsets, requestedContexts)
+        val loadedFieldsets = loadFieldsets(requestContext, userContext, id, model, requestedFieldsets, requestedContexts)
 
         return UAPIFieldsetsResponse(
             fieldsets = loadedFieldsets,
@@ -69,18 +71,39 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
     }
 
     internal fun loadFieldsets(
+        requestContext: RequestContext,
         userContext: UserContext,
         id: Id,
         model: Model,
         requestedFieldsets: Set<String>,
         requestedContexts: Set<String>
     ): Map<String, UAPIResponse<*>> {
+        val fieldsets = requestedFieldsets.ifEmpty { setOf(SpecConstants.FieldSets.VALUE_BASIC) }
+
+        fieldsets.associateWith { loadFieldset(requestContext, userContext, id, model, it) }
+
         //TODO(Return fieldsets other than basic)
         return mapOf(SpecConstants.FieldSets.VALUE_BASIC to modelToBasic(
             userContext = userContext,
             model = model,
             id = id
         ))
+    }
+
+    internal fun loadFieldset(
+        requestContext: RequestContext,
+        userContext: UserContext,
+        id: Id,
+        model: Model,
+        fieldsetName: String
+    ): UAPIResponse<*> {
+        if (fieldsetName == SpecConstants.FieldSets.VALUE_BASIC) {
+            return modelToBasic(
+                userContext = userContext, id = id, model = model
+            )
+        }
+        val sub: SubresourceRuntime<UserContext, IdentifiedModel<Id, Model>, *> = runtime.subresources[fieldsetName] ?: return UAPIBadRequestError("Invalid fieldset name")
+        return sub.handleBasicFetch(requestContext, userContext, IdentifiedModel.Simple(id, model))
     }
 
     fun getId(idParams: IdParams): Id {
@@ -103,7 +126,7 @@ class ListResourceFetchHandler<UserContext : Any, Id : Any, Model : Any, Params 
         if (!resource.canUserViewModel(userContext, id, model)) {
             return UAPINotAuthorizedError
         }
-        return buildFieldsetResponse(userContext, id, model, runtime.availableFieldsets, setOf()) // TODO: Fieldsets
+        return buildFieldsetResponse(request.requestContext, userContext, id, model, runtime.availableFieldsets, setOf()) // TODO: Fieldsets
     }
 }
 
@@ -120,7 +143,7 @@ class ListResourceListHandler<UserContext : Any, Id : Any, Model : Any, Params :
         val meta = buildCollectionMetadata(result, params)
 
         return UAPIFieldsetsCollectionResponse(
-            result.map { buildFieldsetResponse(request.userContext, resource.idFromModel(it), it, runtime.availableFieldsets, setOf()) },
+            result.map { buildFieldsetResponse(request.requestContext, request.userContext, resource.idFromModel(it), it, runtime.availableFieldsets, setOf()) },
             meta,
             emptyMap() //TODO: Links
         )

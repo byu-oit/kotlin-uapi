@@ -8,25 +8,16 @@ import edu.byu.uapi.server.subresources.Subresource
 import edu.byu.uapi.server.types.IdentifiedModel
 import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.spi.dictionary.TypeDictionary
-import edu.byu.uapi.spi.scalars.ScalarType
 import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.validation.hibernate.HibernateValidationEngine
 import java.util.*
+import kotlin.reflect.KClass
 
 class UAPIRuntime<UserContext : Any>(
     options: Options<UserContext>
 ) {
 
     constructor(userContextFactory: UserContextFactory<UserContext>) : this(Options(userContextFactory))
-//    constructor(init: RuntimeInit<UserContext>.() -> Unit) : this(RuntimeInit<UserContext>().apply { init() }.build())
-
-    companion object {
-        inline operator fun <UserContext : Any> invoke(init: RuntimeInit<UserContext>.() -> Unit): UAPIRuntime<UserContext> {
-            val ri = RuntimeInit<UserContext>()
-            ri.init()
-            return ri.build()
-        }
-    }
 
     val userContextFactory = options.userContextFactory
     val typeDictionary = options.typeDictionary
@@ -34,17 +25,29 @@ class UAPIRuntime<UserContext : Any>(
 
     private val resources: MutableList<ResourceRuntime<UserContext, *>> = mutableListOf()
 
-    fun <Id : Any, Model : Any> register(
+    fun <Id : Any, Model : Any> resource(
         resource: ListResource<UserContext, Id, Model, *>,
-        subresources: List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = emptyList()
+        init: SimpleResourceInit<UserContext, IdentifiedModel<Id, Model>>.() -> Unit = {}
     ) {
-        register(ResourceMapping.List(resource, subresources))
+        SimpleResourceInitImpl(resource).also {
+            init(it)
+            resources.add(it.createRuntime(this))
+        }
     }
 
-    internal fun <Model : Any, Parent : ModelHolder> register(mapping: ResourceMapping<UserContext, Model, Parent>) {
-        val runtime = mapping.toRuntime(typeDictionary, validationEngine)
-        resources += runtime
-        //TODO: Validate resource
+    fun <Id : Any, Model : Any, ContextNames : Enum<ContextNames>> resourceWithContexts(
+        resource: ListResource<UserContext, Id, Model, *>,
+        contextType: KClass<ContextNames>,
+        init: ResourceWithContextsInit<UserContext, IdentifiedModel<Id, Model>, ContextNames>.() -> Unit = {}
+    ) {
+        ResourceWithContextsInitImpl(resource, contextType).also {
+            init(it)
+            resources.add(it.createRuntime(this))
+        }
+    }
+
+    internal fun addResource(resource: ResourceRuntime<UserContext, *>) {
+        resources.add(resource)
     }
 
     fun resources(): List<ResourceRuntime<UserContext, *>> = Collections.unmodifiableList(resources)
@@ -89,46 +92,86 @@ internal sealed class ResourceMapping<UserContext : Any, Model : Any, Parent : M
             )
         }
     }
-
 }
 
-class RuntimeInit<UserContext : Any> {
+interface SimpleResourceInit<UserContext : Any, ParentType : ModelHolder> {
+    fun subresource(subresource: Subresource<UserContext, ParentType, *>)
+}
 
-    lateinit var userContextFactory: UserContextFactory<UserContext>
+interface ResourceWithContextsInit<UserContext : Any, ParentType : ModelHolder, ContextNames : Enum<ContextNames>>
+    : SimpleResourceInit<UserContext, ParentType> {
 
-//    fun userContextFactory(factoryFunc: UserContextFactoryFunc<UserContext>) {
-//        userContextFactory = UserContextFactory.from(factoryFunc)
-//    }
+    fun subresource(pair: Pair<Subresource<UserContext, ParentType, *>, Set<ContextNames>>)
 
-    var typeDictionary: TypeDictionary = DefaultTypeDictionary()
-    var validationEngine: ValidationEngine = HibernateValidationEngine
+    fun subresource(
+        subresource: Subresource<UserContext, ParentType, *>,
+        vararg contexts: ContextNames
+    )
 
-    private val scalars: MutableList<ScalarType<*>> = mutableListOf()
+    fun subresource(
+        subresource: Subresource<UserContext, ParentType, *>,
+        contexts: Iterable<ContextNames>
+    )
+}
 
-    operator fun ScalarType<*>.unaryPlus() {
-        scalars.add(this)
+internal interface InternalListResourceInit<UserContext : Any, Id : Any, Model : Any>
+    : SimpleResourceInit<UserContext, IdentifiedModel<Id, Model>> {
+
+    fun createRuntime(runtime: UAPIRuntime<UserContext>): ListResourceRuntime<UserContext, Id, Model, *>
+}
+
+internal class SimpleResourceInitImpl<UserContext : Any, Id : Any, Model : Any>(
+    internal val resource: ListResource<UserContext, Id, Model, *>
+) : InternalListResourceInit<UserContext, Id, Model>,
+    SimpleResourceInit<UserContext, IdentifiedModel<Id, Model>> {
+
+    internal val subresources: MutableList<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = mutableListOf()
+
+    override fun subresource(subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>) {
+        subresources.add(subresource)
     }
 
-    private val resources: MutableList<ResourceMapping<UserContext, *, *>> = mutableListOf()
+    override fun createRuntime(runtime: UAPIRuntime<UserContext>): ListResourceRuntime<UserContext, Id, Model, *> {
+        return ListResourceRuntime(
+            resource,
+            runtime.typeDictionary,
+            runtime.validationEngine,
+            subresources.toList()
+        )
+    }
+}
 
-    operator fun <Id : Any, Model : Any> ListResource<UserContext, Id, Model, *>.unaryPlus() {
-        resources += ResourceMapping.List(this)
+internal class ResourceWithContextsInitImpl<UserContext : Any, Id : Any, Model : Any, ContextNames : Enum<ContextNames>>(
+    internal val resource: ListResource<UserContext, Id, Model, *>,
+    internal val contextType: KClass<ContextNames>
+) : InternalListResourceInit<UserContext, Id, Model>,
+    ResourceWithContextsInit<UserContext, IdentifiedModel<Id, Model>, ContextNames> {
+
+    override fun subresource(pair: Pair<Subresource<UserContext, IdentifiedModel<Id, Model>, *>, Set<ContextNames>>) {
+        this.subresource(pair.first, pair.second)
     }
 
-    operator fun <Model : Any, Id : Any> Pair<ListResource<UserContext, Id, Model, *>, List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>>>.unaryPlus() {
-        resources += ResourceMapping.List(this.first, this.second)
+    override fun subresource(
+        subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>,
+        vararg contexts: ContextNames
+    ) {
+        this.subresource(subresource, contexts.toSet())
     }
 
-    infix fun <A, B> A.with(that: B): Pair<A, B> = this to that
+    override fun subresource(
+        subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>,
+        contexts: Iterable<ContextNames>
+    ) {
+        subresources[subresource] = contexts.toSet()
+    }
 
-    fun build(): UAPIRuntime<UserContext> {
-        scalars.forEach { typeDictionary.registerScalarType(it) }
-        return UAPIRuntime(UAPIRuntime.Options(
-            userContextFactory = userContextFactory,
-            typeDictionary = typeDictionary,
-            validationEngine = validationEngine
-        )).also { r ->
-            resources.forEach { r.register(it) }
-        }
+    internal val subresources: MutableMap<Subresource<UserContext, IdentifiedModel<Id, Model>, *>, Set<ContextNames>> = mutableMapOf()
+
+    override fun subresource(subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>) {
+        this.subresource(subresource, emptySet())
+    }
+
+    override fun createRuntime(runtime: UAPIRuntime<UserContext>): ListResourceRuntime<UserContext, Id, Model, *> {
+        TODO("not implemented")
     }
 }

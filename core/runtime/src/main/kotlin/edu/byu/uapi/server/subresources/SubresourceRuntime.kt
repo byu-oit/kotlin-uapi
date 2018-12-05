@@ -2,14 +2,23 @@ package edu.byu.uapi.server.subresources
 
 import edu.byu.uapi.server.subresources.list.*
 import edu.byu.uapi.server.subresources.singleton.*
-import edu.byu.uapi.server.types.ModelHolder
+import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.ListParams
+import edu.byu.uapi.spi.requests.RequestContext
 import edu.byu.uapi.spi.validation.ValidationEngine
 import java.util.*
 
-sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any>
+sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any> {
+    abstract fun handleBasicFetch(
+        requestContext: RequestContext,
+        userContext: UserContext,
+        parent: Parent
+    ): UAPIResponse<*>
+
+    abstract val fieldsetName: String
+}
 
 class SingletonSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any>(
     internal val subresource: SingletonSubresource<UserContext, Parent, Model>,
@@ -17,7 +26,9 @@ class SingletonSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model
     val typeDictionary: TypeDictionary,
     val validationEngine: ValidationEngine
 ) : SubresourceRuntime<UserContext, Parent, Model>() {
+
     val name = subresource.name
+    override val fieldsetName: String = name
 
     companion object {
         private val LOG = loggerFor<SingletonSubresourceRuntime<*, *, *>>()
@@ -37,6 +48,52 @@ class SingletonSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model
 
         Collections.unmodifiableSet(ops)
     }
+
+    override fun handleBasicFetch(
+        requestContext: RequestContext,
+        userContext: UserContext,
+        parent: Parent
+    ): UAPIResponse<*> {
+        val model = subresource.loadModel(userContext, parent) ?: return UAPINotFoundError
+
+        if (!subresource.canUserViewModel(userContext, parent, model)) {
+            return UAPINotAuthorizedError
+        }
+        return buildResponse(userContext, parent, model)
+    }
+
+    internal fun buildResponse(
+        user: UserContext,
+        parent: Parent,
+        model: Model,
+        validationResponse: ValidationResponse = ValidationResponse.OK
+    ): UAPIPropertiesResponse {
+        return UAPIPropertiesResponse(
+            metadata = UAPIResourceMeta(validationResponse),
+            links = generateLinks(user, parent, model),
+            properties = modelToProperties(user, parent, model)
+        )
+    }
+
+    private fun modelToProperties(
+        user: UserContext,
+        parent: Parent,
+        model: Model
+    ): Map<String, UAPIProperty> {
+        return subresource.responseFields.map { f ->
+            f.name to f.toProp(user, model)
+        }.toMap()
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    internal fun generateLinks(
+        userContext: UserContext,
+        parent: Parent,
+        model: Model
+    ): UAPILinks {
+        //TODO generate links
+        return emptyMap()
+    }
 }
 
 class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Params : ListParams>(
@@ -46,6 +103,7 @@ class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, 
     val validationEngine: ValidationEngine
 ) : SubresourceRuntime<UserContext, Parent, Model>() {
     val pluralName = subresource.pluralName
+    override val fieldsetName: String = pluralName
 
     companion object {
         private val LOG = loggerFor<ListSubresourceRuntime<*, *, *, *, *>>()
@@ -66,7 +124,13 @@ class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, 
         Collections.unmodifiableSet(ops)
     }
 
-
+    override fun handleBasicFetch(
+        requestContext: RequestContext,
+        userContext: UserContext,
+        parent: Parent
+    ): UAPIResponse<*> {
+        TODO("not implemented")
+    }
 }
 
 

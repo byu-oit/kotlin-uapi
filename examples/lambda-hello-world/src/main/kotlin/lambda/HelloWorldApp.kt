@@ -19,8 +19,19 @@ import edu.byu.uapi.spi.scalars.ScalarFormat
 import java.util.*
 import kotlin.reflect.KClass
 
+enum class GreetingContexts {
+    FOO, BAZ
+}
+
 val helloWorldRuntime = UAPIRuntime(HelloWorldUserFactory()).also {
-    it.register(GreetingResource(), listOf(FooSubresource(), BarSubresource()))
+    it.resource(GreetingResource()) {
+        subresource(FooSubresource())
+        subresource(BarSubresource())
+    }
+//    it.resourceWithContexts(GreetingResource(), GreetingContexts::class) {
+//        subresource(FooSubresource(), GreetingContexts.FOO, GreetingContexts.BAZ)
+//        subresource(BarSubresource(), GreetingContexts.FOO)
+//    }
 }
 
 class HelloWorldUserFactory : UserContextFactory<HelloWorldUser> {

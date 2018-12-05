@@ -34,33 +34,8 @@ sealed class SingletonSubresourceRequestHandler<UserContext : Any, Parent : Mode
         model: Model,
         validationResponse: ValidationResponse = ValidationResponse.OK
     ): UAPIPropertiesResponse {
-        return UAPIPropertiesResponse(
-            metadata = UAPIResourceMeta(validationResponse),
-            links = generateLinks(user, parent, model),
-            properties = modelToProperties(user, parent, model)
-        )
+        return runtime.buildResponse(user, parent, model, validationResponse)
     }
-
-    private fun modelToProperties(
-        user: UserContext,
-        parent: Parent,
-        model: Model
-    ): Map<String, UAPIProperty> {
-        return subresource.responseFields.map { f ->
-            f.name to f.toProp(user, model)
-        }.toMap()
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    internal fun generateLinks(
-        userContext: UserContext,
-        parent: Parent,
-        model: Model
-    ): UAPILinks {
-        //TODO generate links
-        return emptyMap()
-    }
-
 }
 
 class SingletonSubresourceFetchHandler<UserContext : Any, Parent : ModelHolder, Model : Any>(
@@ -70,14 +45,7 @@ class SingletonSubresourceFetchHandler<UserContext : Any, Parent : ModelHolder, 
         request: SingletonSubresourceRequest.Fetch<UserContext>,
         parent: Parent
     ): UAPIResponse<*> {
-        val user = request.userContext
-
-        val model = subresource.loadModel(user, parent) ?: return UAPINotFoundError
-
-        if (!subresource.canUserViewModel(user, parent, model)) {
-            return UAPINotAuthorizedError
-        }
-        return buildResponse(user, parent, model)
+        return runtime.handleBasicFetch(request.requestContext, request.userContext, parent)
     }
 }
 

@@ -1,9 +1,6 @@
 package edu.byu.uapi.server.resources.list
 
-import edu.byu.uapi.server.subresources.ParentResult
-import edu.byu.uapi.server.subresources.Subresource
-import edu.byu.uapi.server.subresources.SubresourceParent
-import edu.byu.uapi.server.subresources.createRuntime
+import edu.byu.uapi.server.subresources.*
 import edu.byu.uapi.server.types.IdentifiedModel
 import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.server.util.loggerFor
@@ -58,10 +55,9 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
         Collections.unmodifiableSet(ops)
     }
 
-    val availableFieldsets = setOf(SpecConstants.FieldSets.VALUE_BASIC)
+    val subresources: Map<String, SubresourceRuntime<UserContext, IdentifiedModel<Id, Model>, *>> = subresourceList.map { it.createRuntime(this, typeDictionary, validationEngine) }.associateBy { it.fieldsetName }
+    val availableFieldsets = setOf(SpecConstants.FieldSets.VALUE_BASIC) + subresources.keys
     val availableContexts = emptyMap<String, Set<String>>()
-
-    val subresources = subresourceList.map { it.createRuntime(this, typeDictionary, validationEngine) }
 
     override fun getParentModel(
         user: UserContext,
