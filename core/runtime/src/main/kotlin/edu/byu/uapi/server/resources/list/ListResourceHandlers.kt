@@ -126,7 +126,7 @@ class ListResourceFetchHandler<UserContext : Any, Id : Any, Model : Any, Params 
         if (!resource.canUserViewModel(userContext, id, model)) {
             return UAPINotAuthorizedError
         }
-        return buildFieldsetResponse(request.requestContext, userContext, id, model, runtime.availableFieldsets, setOf()) // TODO: Fieldsets
+        return buildFieldsetResponse(request.requestContext, userContext, id, model, emptySet(), setOf()) // TODO: Fieldsets
     }
 }
 
@@ -143,7 +143,7 @@ class ListResourceListHandler<UserContext : Any, Id : Any, Model : Any, Params :
         val meta = buildCollectionMetadata(result, params)
 
         return UAPIFieldsetsCollectionResponse(
-            result.map { buildFieldsetResponse(request.requestContext, request.userContext, resource.idFromModel(it), it, runtime.availableFieldsets, setOf()) },
+            result.map { buildFieldsetResponse(request.requestContext, request.userContext, resource.idFromModel(it), it, emptySet(), setOf()) },
             meta,
             emptyMap() //TODO: Links
         )
