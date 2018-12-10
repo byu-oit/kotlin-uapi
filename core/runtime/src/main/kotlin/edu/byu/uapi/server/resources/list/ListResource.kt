@@ -237,16 +237,16 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         interface Simple<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any> : IListSubresource.Simple<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model>
 
         interface ListWithSubset<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSubset> :
-            IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
+            IListSubresource.ListWithSubset<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
 
         interface ListWithSearch<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSearch<SearchContext>, SearchContext : Enum<SearchContext>>
-            : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
+            : IListSubresource.ListWithSearch<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams, SearchContext>
 
         interface ListWithSort<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithSort<SortProperty>, SortProperty : Enum<SortProperty>>
-            : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
+            : IListSubresource.ListWithSort<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams, SortProperty>
 
         interface ListWithFilters<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
-            : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams>
+            : IListSubresource.ListWithFilters<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams, Filters>
     }
 }
 
