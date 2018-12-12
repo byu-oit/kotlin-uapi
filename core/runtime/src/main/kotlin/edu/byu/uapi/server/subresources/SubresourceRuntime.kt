@@ -113,11 +113,14 @@ class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, 
 
     val idReader = subresource.getIdReader(typeDictionary)
 
+    private val fetchHandler = ListSubresourceFetchHandler(this)
+    private val listHandler = ListSubresourceListHandler(this)
+
     val availableOperations: Set<ListSubresourceRequestHandler<UserContext, Parent, Id, Model, Params, *>> by lazy {
         val ops: MutableSet<ListSubresourceRequestHandler<UserContext, Parent, Id, Model, Params, *>> = mutableSetOf()
 
-        ops.add(ListSubresourceFetchHandler(this))
-        ops.add(ListSubresourceListHandler(this))
+        ops.add(fetchHandler)
+        ops.add(listHandler)
 
         subresource.createOperation?.also { ops.add(ListSubresourceCreateHandler(this, it)) }
         subresource.updateOperation?.also { ops.add(ListSubresourceUpdateHandler(this, it)) }
@@ -132,7 +135,7 @@ class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, 
         userContext: UserContext,
         parent: Parent
     ): UAPIResponse<*> {
-        TODO("not implemented")
+        return listHandler.handle(subresourceRequestContext, userContext, emptyMap(), parent)
     }
 }
 

@@ -14,6 +14,7 @@ import edu.byu.uapi.spi.input.ListParams
 import edu.byu.uapi.spi.input.ListWithTotal
 import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.requests.ListSubresourceRequest
+import edu.byu.uapi.spi.requests.QueryParams
 import edu.byu.uapi.utility.takeIfType
 
 sealed class ListSubresourceRequestHandler<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Params : ListParams, Request : ListSubresourceRequest<UserContext>>(
@@ -116,14 +117,23 @@ class ListSubresourceListHandler<UserContext : Any, Parent : ModelHolder, Id : A
         requestContext: SubresourceRequestContext,
         parent: Parent
     ): UAPIResponse<*> {
-        val params = paramReader.read(request.queryParams)
+        return handle(requestContext, request.userContext, request.queryParams, parent)
+    }
 
-        val result = resource.list(requestContext, request.userContext, parent, params)
+    fun handle(
+        requestContext: SubresourceRequestContext,
+        userContext: UserContext,
+        queryParams: QueryParams,
+        parent: Parent
+    ): UAPIResponse<*> {
+        val params = paramReader.read(queryParams)
+
+        val result = resource.list(requestContext, userContext, parent, params)
 
         val meta = buildCollectionMetadata(result, params)
 
         return UAPISubresourceCollectionResponse(
-            result.map { buildResponse(request.userContext, parent, it) },
+            result.map { buildResponse(userContext, parent, it) },
             meta,
             emptyMap() //TODO: Links
         )

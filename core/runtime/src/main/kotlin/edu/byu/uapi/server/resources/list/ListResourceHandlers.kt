@@ -90,14 +90,7 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
 
         val subresourceRequestContext = SubresourceRequestContext.Simple(requestedFieldsets, resourceRequestContext.attributes)
 
-        fieldsets.associateWith { loadFieldset(requestContext, subresourceRequestContext, userContext, id, model, it) }
-
-        //TODO(Return fieldsets other than basic)
-        return mapOf(SpecConstants.FieldSets.VALUE_BASIC to modelToBasic(
-            userContext = userContext,
-            model = model,
-            id = id
-        ))
+        return fieldsets.associateWith { loadFieldset(requestContext, subresourceRequestContext, userContext, id, model, it) }
     }
 
     internal fun loadFieldset(
