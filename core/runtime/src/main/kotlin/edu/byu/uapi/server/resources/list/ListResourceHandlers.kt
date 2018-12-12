@@ -1,6 +1,8 @@
 package edu.byu.uapi.server.resources.list
 
-import edu.byu.uapi.server.subresources.SubresourceRuntime
+import edu.byu.uapi.server.resources.ResourceRequestContext
+import edu.byu.uapi.server.subresources.RequestedFieldsetResponse
+import edu.byu.uapi.server.subresources.SubresourceRequestContext
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.debug
 import edu.byu.uapi.server.util.info
@@ -53,13 +55,19 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
 
     internal fun buildFieldsetResponse(
         requestContext: RequestContext,
+        resourceRequestContext: ResourceRequestContext,
         userContext: UserContext,
         id: Id,
-        model: Model,
-        requestedFieldsets: Set<String>,
-        requestedContexts: Set<String>
+        model: Model
     ): UAPIFieldsetsResponse {
-        val loadedFieldsets = loadFieldsets(requestContext, userContext, id, model, requestedFieldsets, requestedContexts)
+        val loadedFieldsets = loadFieldsets(
+            requestContext,
+            resourceRequestContext,
+            userContext,
+            id,
+            model,
+            resourceRequestContext.requestedSubresources
+        )
 
         return UAPIFieldsetsResponse(
             fieldsets = loadedFieldsets,
@@ -72,15 +80,17 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
 
     internal fun loadFieldsets(
         requestContext: RequestContext,
+        resourceRequestContext: ResourceRequestContext,
         userContext: UserContext,
         id: Id,
         model: Model,
-        requestedFieldsets: Set<String>,
-        requestedContexts: Set<String>
+        requestedFieldsets: Set<String>
     ): Map<String, UAPIResponse<*>> {
         val fieldsets = requestedFieldsets.ifEmpty { setOf(SpecConstants.FieldSets.VALUE_BASIC) }
 
-        fieldsets.associateWith { loadFieldset(requestContext, userContext, id, model, it) }
+        val subresourceRequestContext = SubresourceRequestContext.Simple(requestedFieldsets, resourceRequestContext.attributes)
+
+        fieldsets.associateWith { loadFieldset(requestContext, subresourceRequestContext, userContext, id, model, it) }
 
         //TODO(Return fieldsets other than basic)
         return mapOf(SpecConstants.FieldSets.VALUE_BASIC to modelToBasic(
@@ -92,6 +102,7 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
 
     internal fun loadFieldset(
         requestContext: RequestContext,
+        subresourceRequestContext: SubresourceRequestContext,
         userContext: UserContext,
         id: Id,
         model: Model,
@@ -102,31 +113,46 @@ sealed class ListResourceRequestHandler<UserContext : Any, Id : Any, Model : Any
                 userContext = userContext, id = id, model = model
             )
         }
-        val sub: SubresourceRuntime<UserContext, IdentifiedModel<Id, Model>, *> = runtime.subresources[fieldsetName] ?: return UAPIBadRequestError("Invalid fieldset name")
-        return sub.handleBasicFetch(requestContext, userContext, IdentifiedModel.Simple(id, model))
+        val sub = runtime.subresources[fieldsetName]
+            ?: return UAPIBadRequestError("Invalid fieldsets name")
+        return sub.handleBasicFetch(requestContext, subresourceRequestContext, userContext, IdentifiedModel.Simple(id, model))
     }
 
     fun getId(idParams: IdParams): Id {
         return runtime.idReader.read(idParams)
     }
 
-    abstract fun handle(request: Request): UAPIResponse<*>
+    fun handle(request: Request): UAPIResponse<*> {
+        val requestedFieldsets = when (val result = runtime.getRequestedFieldsets(request.requestContext.fieldsets)) {
+            is RequestedFieldsetResponse.Success -> result.fieldsets
+            RequestedFieldsetResponse.InvalidFieldsets -> return UAPIBadRequestError("Requested one or more invalid fieldsets. Allowed fieldsets are: ${runtime.availableFieldsets}")
+            RequestedFieldsetResponse.InvalidContexts -> return UAPIBadRequestError("Requested one or more invalid contexts. Allowed contexts are: ${runtime.availableContexts.keys}.")
+        }
+        val requestContext = ResourceRequestContext.Simple(requestedFieldsets)
+        return handle(request, requestContext)
+    }
+
+    abstract fun handle(
+        request: Request,
+        requestContext: ResourceRequestContext
+    ): UAPIResponse<*>
 }
 
 class ListResourceFetchHandler<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
     runtime: ListResourceRuntime<UserContext, Id, Model, Params>
 ) : ListResourceRequestHandler<UserContext, Id, Model, Params, FetchListResource<UserContext>>(runtime) {
     override fun handle(
-        request: FetchListResource<UserContext>
+        request: FetchListResource<UserContext>,
+        requestContext: ResourceRequestContext
     ): UAPIResponse<*> {
         val id = getId(request.idParams)
         val userContext = request.userContext
 
-        val model = resource.loadModel(userContext, id) ?: return UAPINotFoundError
-        if (!resource.canUserViewModel(userContext, id, model)) {
+        val model = resource.loadModel(requestContext, userContext, id) ?: return UAPINotFoundError
+        if (!resource.canUserViewModel(requestContext, userContext, id, model)) {
             return UAPINotAuthorizedError
         }
-        return buildFieldsetResponse(request.requestContext, userContext, id, model, emptySet(), setOf()) // TODO: Fieldsets
+        return buildFieldsetResponse(request.requestContext, requestContext, userContext, id, model)
     }
 }
 
@@ -135,15 +161,18 @@ class ListResourceListHandler<UserContext : Any, Id : Any, Model : Any, Params :
 ) : ListResourceRequestHandler<UserContext, Id, Model, Params, ListListResource<UserContext>>(runtime) {
     private val paramReader: ListParamReader<Params> = resource.getListParamReader(runtime.typeDictionary)
 
-    override fun handle(request: ListListResource<UserContext>): UAPIResponse<*> {
+    override fun handle(
+        request: ListListResource<UserContext>,
+        requestContext: ResourceRequestContext
+    ): UAPIResponse<*> {
         val params = paramReader.read(request.queryParams)
 
-        val result = resource.list(request.userContext, params)
+        val result = resource.list(requestContext, request.userContext, params)
 
         val meta = buildCollectionMetadata(result, params)
 
         return UAPIFieldsetsCollectionResponse(
-            result.map { buildFieldsetResponse(request.requestContext, request.userContext, resource.idFromModel(it), it, emptySet(), setOf()) },
+            result.map { buildFieldsetResponse(request.requestContext, requestContext, request.userContext, resource.idFromModel(it), it) },
             meta,
             emptyMap() //TODO: Links
         )
@@ -190,11 +219,14 @@ class ListResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Params
 
     private val inputType = operation.createInput
 
-    override fun handle(request: CreateListResource<UserContext>): UAPIResponse<*> {
+    override fun handle(
+        request: CreateListResource<UserContext>,
+        requestContext: ResourceRequestContext
+    ): UAPIResponse<*> {
         LOG.debug { "Got request to create ${resource.singleName}" }
         val userContext = request.userContext
 
-        val authorized = operation.canUserCreate(userContext)
+        val authorized = operation.canUserCreate(requestContext, userContext)
         if (!authorized) {
             LOG.warn { "Unauthorized request to create ${resource.singleName}! User Context was $userContext" }
             return UAPINotAuthorizedError
@@ -211,7 +243,7 @@ class ListResourceCreateHandler<UserContext : Any, Id : Any, Model : Any, Params
                 validationInformation = validationResponse.map { "The value for ${it.field} is invalid: ${it.should}" }
             )
         }
-        return when (val result = operation.handleCreate(userContext, input)) {
+        return when (val result = operation.handleCreate(requestContext, userContext, input)) {
             is CreateResult.Success -> {
                 val model = result.model
                 val id = resource.idFromModel(model)
@@ -256,22 +288,25 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
     private val createWithId = operation.takeIfType<ListResource.CreatableWithId<UserContext, Id, Model, Input>>()
     private val validator = operation.getUpdateValidator(runtime.validationEngine)
 
-    override fun handle(request: UpdateListResource<UserContext>): UAPIResponse<*> {
+    override fun handle(
+        request: UpdateListResource<UserContext>,
+        requestContext: ResourceRequestContext
+    ): UAPIResponse<*> {
         LOG.debug { "Got request to update ${resource.singleName}" }
         val userContext = request.userContext
 
         val id = getId(request.idParams)
         val input = request.body.readAs(inputType)
 
-        val model = resource.loadModel(userContext, id)
+        val model = resource.loadModel(requestContext, userContext, id)
 
         return when {
             model != null -> {
-                val result = doUpdate(userContext, id, model, input)
+                val result = doUpdate(requestContext, userContext, id, model, input)
                 handleUpdateResult(userContext, id, result)
             }
             createWithId != null -> {
-                val result = doCreate(createWithId, userContext, id, input)
+                val result = doCreate(createWithId, requestContext, userContext, id, input)
                 handleCreateResult(userContext, id, result)
             }
             else -> UAPINotFoundError
@@ -324,12 +359,13 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
     }
 
     private fun doUpdate(
+        requestContext: ResourceRequestContext,
         userContext: UserContext,
         id: Id,
         model: Model,
         input: Input
     ): UpdateResult<Model> {
-        val authorized = operation.canUserUpdate(userContext, id, model)
+        val authorized = operation.canUserUpdate(requestContext, userContext, id, model)
         if (!authorized) {
             return UpdateResult.Unauthorized
         }
@@ -343,16 +379,17 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
         if (validationResponse.isNotEmpty()) {
             return UpdateResult.InvalidInput(validationResponse.map { InputError(it.field, it.should) })
         }
-        return operation.handleUpdate(userContext, id, model, input)
+        return operation.handleUpdate(requestContext, userContext, id, model, input)
     }
 
     private fun doCreate(
         operation: ListResource.CreatableWithId<UserContext, Id, Model, Input>,
+        requestContext: ResourceRequestContext,
         userContext: UserContext,
         id: Id,
         input: Input
     ): CreateResult<Model> {
-        val authorized = operation.canUserCreateWithId(userContext, id)
+        val authorized = operation.canUserCreateWithId(requestContext, userContext, id)
         if (!authorized) {
             return CreateResult.Unauthorized
         }
@@ -361,7 +398,7 @@ class ListResourceUpdateHandler<UserContext : Any, Id : Any, Model : Any, Params
         if (validationResponse.isNotEmpty()) {
             return CreateResult.InvalidInput(validationResponse.map { InputError(it.field, it.should) })
         }
-        return operation.handleCreateWithId(userContext, id, input)
+        return operation.handleCreateWithId(requestContext, userContext, id, input)
     }
 
     private fun handleCreateResult(
@@ -408,14 +445,15 @@ class ListResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any, Params
     }
 
     override fun handle(
-        request: DeleteListResource<UserContext>
+        request: DeleteListResource<UserContext>,
+        requestContext: ResourceRequestContext
     ): UAPIResponse<*> {
         val id = getId(request.idParams)
         val userContext = request.userContext
 
-        val model = resource.loadModel(userContext, id)
+        val model = resource.loadModel(requestContext, userContext, id)
 
-        val result = doDelete(userContext, id, model)
+        val result = doDelete(requestContext, userContext, id, model)
 
         return when (result) {
             DeleteResult.Success -> {
@@ -427,7 +465,7 @@ class ListResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any, Params
                 UAPIEmptyResponse
             }
             DeleteResult.Unauthorized -> {
-                LOG.warn("Unauthorized request to delete ${resource.singleName} $id! User context was $userContext")
+                LOG.warn("Unauthorized request to delete ${resource.singleName} $id! User contexts was $userContext")
                 UAPINotAuthorizedError
             }
             is DeleteResult.CannotBeDeleted -> {
@@ -450,6 +488,7 @@ class ListResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any, Params
     }
 
     private fun doDelete(
+        requestContext: ResourceRequestContext,
         userContext: UserContext,
         id: Id,
         model: Model?
@@ -457,12 +496,12 @@ class ListResourceDeleteHandler<UserContext : Any, Id : Any, Model : Any, Params
         if (model == null) {
             return DeleteResult.AlreadyDeleted
         }
-        if (!operation.canUserDelete(userContext, id, model)) {
+        if (!operation.canUserDelete(requestContext, userContext, id, model)) {
             return DeleteResult.Unauthorized
         }
         if (!operation.canBeDeleted(id, model)) {
             return DeleteResult.CannotBeDeleted("Cannot be deleted")
         }
-        return operation.handleDelete(userContext, id, model)
+        return operation.handleDelete(requestContext, userContext, id, model)
     }
 }

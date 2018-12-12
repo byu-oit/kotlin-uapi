@@ -1,6 +1,7 @@
 package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.*
+import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
 import edu.byu.uapi.server.types.CreateResult
@@ -22,6 +23,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override val pluralName: String = "books"
 
     override fun loadModel(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long
     ): Book? {
@@ -33,6 +35,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun canUserViewModel(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long,
         model: Book
@@ -41,6 +44,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun list(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         params: BookListParams
     ): ListWithTotal<Book> {
@@ -125,11 +129,15 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         }
     }
 
-    override fun canUserCreate(userContext: LibraryUser): Boolean {
+    override fun canUserCreate(
+        requestContext: ResourceRequestContext,
+        userContext: LibraryUser
+    ): Boolean {
         return userContext.canCreateBooks
     }
 
     override fun handleCreate(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         input: CreateBook
     ): CreateResult<Book> {
@@ -158,6 +166,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun canUserUpdate(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long,
         model: Book
@@ -173,6 +182,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun handleUpdate(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long,
         model: Book,
@@ -203,6 +213,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun canUserCreateWithId(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long
     ): Boolean {
@@ -210,6 +221,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun handleCreateWithId(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long,
         input: UpdateBook
@@ -239,6 +251,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun canUserDelete(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long,
         model: Book
@@ -255,6 +268,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun handleDelete(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long,
         model: Book

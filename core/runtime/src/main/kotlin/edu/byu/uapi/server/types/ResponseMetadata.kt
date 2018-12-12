@@ -29,7 +29,7 @@ sealed class ResponseMetadata : Renderable {
     abstract fun renderExtras(renderer: Renderer<*>)
 }
 
-object EmptyResponseMetadata: ResponseMetadata() {
+object EmptyResponseMetadata : ResponseMetadata() {
     override val validationResponse = ValidationResponse(204, "No Content")
     override val validationInformation = emptyList<String>()
     override val cache: CacheMeta? = null
@@ -152,8 +152,10 @@ data class FieldsetsMetadata(
         renderer.valueArray(FieldSetMeta.KEY_FIELD_SETS_RETURNED, fieldSetsReturned)
         renderer.valueArray(FieldSetMeta.KEY_FIELD_SETS_AVAILABLE, fieldSetsAvailable)
         renderer.valueArray(FieldSetMeta.KEY_FIELD_SETS_DEFAULT, fieldSetsDefault)
-        renderer.tree(FieldSetMeta.KEY_CONTEXTS_AVAILABLE) {
-            contextsAvailable.forEach { k, v -> renderer.valueArray(k, v) }
+        if (contextsAvailable.isNotEmpty()) {
+            renderer.tree(FieldSetMeta.KEY_CONTEXTS_AVAILABLE) {
+                contextsAvailable.forEach { k, v -> renderer.valueArray(k, v) }
+            }
         }
     }
 }

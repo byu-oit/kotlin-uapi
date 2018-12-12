@@ -2,6 +2,8 @@ package edu.byu.uapi.server.subresources.list
 
 import edu.byu.uapi.server.subresources.ListSubresourceRuntime
 import edu.byu.uapi.server.subresources.ParentResult
+import edu.byu.uapi.server.subresources.RequestedFieldsetResponse
+import edu.byu.uapi.server.subresources.SubresourceRequestContext
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.debug
 import edu.byu.uapi.server.util.info
@@ -60,8 +62,14 @@ sealed class ListSubresourceRequestHandler<UserContext : Any, Parent : ModelHold
     }
 
     fun handle(request: Request): UAPIResponse<*> {
-        return when (val parent = runtime.parent.getParentModel(request.userContext, request.parentIdParams)) {
-            is ParentResult.Success -> handle(request, parent.value)
+        val fieldsets = when (val r = runtime.parent.getRequestedFieldsets(request.requestContext.fieldsets)) {
+            is RequestedFieldsetResponse.Success -> r.fieldsets
+            RequestedFieldsetResponse.InvalidFieldsets -> return UAPIBadRequestError("Requested one or more invalid fieldsets.")
+            RequestedFieldsetResponse.InvalidContexts -> return UAPIBadRequestError("Requested one or more invalid contexts.")
+        }
+        val context = SubresourceRequestContext.Simple(fieldsets)
+        return when (val parent = runtime.parent.getParentModel(context, request.userContext, request.parentIdParams)) {
+            is ParentResult.Success -> handle(request, context, parent.value)
             ParentResult.DoesNotExist -> UAPINotFoundError
             ParentResult.NotAuthorized -> UAPINotAuthorizedError
         }
@@ -69,6 +77,7 @@ sealed class ListSubresourceRequestHandler<UserContext : Any, Parent : ModelHold
 
     abstract fun handle(
         request: Request,
+        requestContext: SubresourceRequestContext,
         parent: Parent
     ): UAPIResponse<*>
 }
@@ -78,13 +87,14 @@ class ListSubresourceFetchHandler<UserContext : Any, Parent : ModelHolder, Id : 
 ) : ListSubresourceRequestHandler<UserContext, Parent, Id, Model, Params, ListSubresourceRequest.Fetch<UserContext>>(runtime) {
     override fun handle(
         request: ListSubresourceRequest.Fetch<UserContext>,
+        requestContext: SubresourceRequestContext,
         parent: Parent
     ): UAPIResponse<*> {
         val id = getId(request.idParams)
         val userContext = request.userContext
 
-        val model = resource.loadModel(userContext, parent, id) ?: return UAPINotFoundError
-        if (!resource.canUserViewModel(userContext, parent, id, model)) {
+        val model = resource.loadModel(requestContext, userContext, parent, id) ?: return UAPINotFoundError
+        if (!resource.canUserViewModel(requestContext, userContext, parent, id, model)) {
             return UAPINotAuthorizedError
         }
         return buildResponse(
@@ -103,11 +113,12 @@ class ListSubresourceListHandler<UserContext : Any, Parent : ModelHolder, Id : A
 
     override fun handle(
         request: ListSubresourceRequest.List<UserContext>,
+        requestContext: SubresourceRequestContext,
         parent: Parent
     ): UAPIResponse<*> {
         val params = paramReader.read(request.queryParams)
 
-        val result = resource.list(request.userContext, parent, params)
+        val result = resource.list(requestContext, request.userContext, parent, params)
 
         val meta = buildCollectionMetadata(result, params)
 
@@ -161,12 +172,13 @@ class ListSubresourceCreateHandler<UserContext : Any, Parent : ModelHolder, Id :
 
     override fun handle(
         request: ListSubresourceRequest.Create<UserContext>,
+        requestContext: SubresourceRequestContext,
         parent: Parent
     ): UAPIResponse<*> {
         LOG.debug { "Got request to create ${resource.singleName}" }
         val userContext = request.userContext
 
-        val authorized = operation.canUserCreate(userContext, parent)
+        val authorized = operation.canUserCreate(requestContext, userContext, parent)
         if (!authorized) {
             LOG.warn { "Unauthorized request to create ${resource.singleName}! User Context was $userContext" }
             return UAPINotAuthorizedError
@@ -183,7 +195,7 @@ class ListSubresourceCreateHandler<UserContext : Any, Parent : ModelHolder, Id :
                 validationInformation = validationResponse.map { "The value for ${it.field} is invalid: ${it.should}" }
             )
         }
-        return when (val result = operation.handleCreate(userContext, parent, input)) {
+        return when (val result = operation.handleCreate(requestContext, userContext, parent, input)) {
             is CreateResult.Success -> {
                 val model = result.model
                 val id = resource.idFromModel(model)
@@ -231,6 +243,7 @@ class ListSubresourceUpdateHandler<UserContext : Any, Parent : ModelHolder, Id :
 
     override fun handle(
         request: ListSubresourceRequest.Update<UserContext>,
+        requestContext: SubresourceRequestContext,
         parent: Parent
     ): UAPIResponse<*> {
         LOG.debug { "Got request to update ${resource.singleName}" }
@@ -239,15 +252,15 @@ class ListSubresourceUpdateHandler<UserContext : Any, Parent : ModelHolder, Id :
         val id = getId(request.idParams)
         val input = request.body.readAs(inputType)
 
-        val model = resource.loadModel(userContext, parent, id)
+        val model = resource.loadModel(requestContext, userContext, parent, id)
 
         return when {
             model != null -> {
-                val result = doUpdate(userContext, parent, id, model, input)
+                val result = doUpdate(requestContext, userContext, parent, id, model, input)
                 handleUpdateResult(userContext, parent, id, result)
             }
             createWithId != null -> {
-                val result = doCreate(createWithId, userContext, parent, id, input)
+                val result = doCreate(createWithId, requestContext, userContext, parent, id, input)
                 handleCreateResult(userContext, parent, id, result)
             }
             else -> UAPINotFoundError
@@ -302,13 +315,14 @@ class ListSubresourceUpdateHandler<UserContext : Any, Parent : ModelHolder, Id :
     }
 
     private fun doUpdate(
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent,
         id: Id,
         model: Model,
         input: Input
     ): UpdateResult<Model> {
-        val authorized = operation.canUserUpdate(userContext, parent, id, model)
+        val authorized = operation.canUserUpdate(requestContext, userContext, parent, id, model)
         if (!authorized) {
             return UpdateResult.Unauthorized
         }
@@ -322,17 +336,18 @@ class ListSubresourceUpdateHandler<UserContext : Any, Parent : ModelHolder, Id :
         if (validationResponse.isNotEmpty()) {
             return UpdateResult.InvalidInput(validationResponse.map { InputError(it.field, it.should) })
         }
-        return operation.handleUpdate(userContext, parent, id, model, input)
+        return operation.handleUpdate(requestContext, userContext, parent, id, model, input)
     }
 
     private fun doCreate(
         operation: ListSubresource.CreatableWithId<UserContext, Parent, Id, Model, Input>,
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent,
         id: Id,
         input: Input
     ): CreateResult<Model> {
-        val authorized = operation.canUserCreateWithId(userContext, parent, id)
+        val authorized = operation.canUserCreateWithId(requestContext, userContext, parent, id)
         if (!authorized) {
             return CreateResult.Unauthorized
         }
@@ -341,7 +356,7 @@ class ListSubresourceUpdateHandler<UserContext : Any, Parent : ModelHolder, Id :
         if (validationResponse.isNotEmpty()) {
             return CreateResult.InvalidInput(validationResponse.map { InputError(it.field, it.should) })
         }
-        return operation.handleCreateWithId(userContext, parent, id, input)
+        return operation.handleCreateWithId(requestContext, userContext, parent, id, input)
     }
 
     private fun handleCreateResult(
@@ -391,14 +406,15 @@ class ListSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder, Id :
 
     override fun handle(
         request: ListSubresourceRequest.Delete<UserContext>,
+        requestContext: SubresourceRequestContext,
         parent: Parent
     ): UAPIResponse<*> {
         val id = getId(request.idParams)
         val userContext = request.userContext
 
-        val model = resource.loadModel(userContext, parent, id)
+        val model = resource.loadModel(requestContext, userContext, parent, id)
 
-        val result = doDelete(userContext, parent, id, model)
+        val result = doDelete(requestContext, userContext, parent, id, model)
 
         return when (result) {
             DeleteResult.Success -> {
@@ -410,7 +426,7 @@ class ListSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder, Id :
                 UAPIEmptyResponse
             }
             DeleteResult.Unauthorized -> {
-                LOG.warn("Unauthorized request to delete ${resource.singleName} $id! User context was $userContext")
+                LOG.warn("Unauthorized request to delete ${resource.singleName} $id! User contexts was $userContext")
                 UAPINotAuthorizedError
             }
             is DeleteResult.CannotBeDeleted -> {
@@ -433,6 +449,7 @@ class ListSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder, Id :
     }
 
     private fun doDelete(
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent,
         id: Id,
@@ -441,12 +458,12 @@ class ListSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder, Id :
         if (model == null) {
             return DeleteResult.AlreadyDeleted
         }
-        if (!operation.canUserDelete(userContext, parent, id, model)) {
+        if (!operation.canUserDelete(requestContext, userContext, parent, id, model)) {
             return DeleteResult.Unauthorized
         }
         if (!operation.canBeDeleted(parent, id, model)) {
             return DeleteResult.CannotBeDeleted("Cannot be deleted")
         }
-        return operation.handleDelete(userContext, parent, id, model)
+        return operation.handleDelete(requestContext, userContext, parent, id, model)
     }
 }

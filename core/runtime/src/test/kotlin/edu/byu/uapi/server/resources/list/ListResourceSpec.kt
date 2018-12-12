@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.resources.list
 
+import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
@@ -47,6 +48,7 @@ class ListResourceSpec : DescribeSpec() {
             get() = TODO("not implemented")
 
         override fun loadModel(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String
         ): String? {
@@ -54,6 +56,7 @@ class ListResourceSpec : DescribeSpec() {
         }
 
         override fun canUserViewModel(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String,
             model: String
@@ -66,6 +69,7 @@ class ListResourceSpec : DescribeSpec() {
         }
 
         override fun list(
+            requestContext: ResourceRequestContext,
             userContext: String,
             params: ListParams.Empty
         ): List<String> {
@@ -75,11 +79,15 @@ class ListResourceSpec : DescribeSpec() {
 
     private class WithCreate : Base(),
                                ListResource.Creatable<String, String, String, String> {
-        override fun canUserCreate(userContext: String): Boolean {
+        override fun canUserCreate(
+            requestContext: ResourceRequestContext,
+            userContext: String
+        ): Boolean {
             TODO("not implemented")
         }
 
         override fun handleCreate(
+            requestContext: ResourceRequestContext,
             userContext: String,
             input: String
         ): CreateResult<String> {
@@ -93,6 +101,7 @@ class ListResourceSpec : DescribeSpec() {
     private open class WithUpdate : Base(),
                                     ListResource.Updatable<String, String, String, String> {
         override fun canUserUpdate(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String,
             model: String
@@ -108,6 +117,7 @@ class ListResourceSpec : DescribeSpec() {
         }
 
         override fun handleUpdate(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String,
             model: String,
@@ -124,6 +134,7 @@ class ListResourceSpec : DescribeSpec() {
     private class WithCreateWithId : WithUpdate(),
                                      ListResource.CreatableWithId<String, String, String, String> {
         override fun canUserCreateWithId(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String
         ): Boolean {
@@ -131,6 +142,7 @@ class ListResourceSpec : DescribeSpec() {
         }
 
         override fun handleCreateWithId(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String,
             input: String
@@ -143,6 +155,7 @@ class ListResourceSpec : DescribeSpec() {
     private class WithDelete : Base(),
                                ListResource.Deletable<String, String, String> {
         override fun canUserDelete(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String,
             model: String
@@ -158,6 +171,7 @@ class ListResourceSpec : DescribeSpec() {
         }
 
         override fun handleDelete(
+            requestContext: ResourceRequestContext,
             userContext: String,
             id: String,
             model: String

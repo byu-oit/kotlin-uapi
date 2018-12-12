@@ -4,8 +4,10 @@ import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
+import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
+import edu.byu.uapi.server.subresources.SubresourceRequestContext
 import edu.byu.uapi.server.subresources.list.fields
 import edu.byu.uapi.server.subresources.singleton.fields
 import edu.byu.uapi.server.types.CreateResult
@@ -75,6 +77,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     override val name: String = "foo"
 
     override fun loadModel(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>
     ): Foo? {
@@ -82,6 +85,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     }
 
     override fun canUserViewModel(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         model: Foo
@@ -95,6 +99,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     }
 
     override fun canUserUpdate(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         model: Foo
@@ -110,6 +115,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     }
 
     override fun handleUpdate(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         model: Foo,
@@ -120,6 +126,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     }
 
     override fun canUserCreate(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>
     ): Boolean {
@@ -127,6 +134,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     }
 
     override fun handleCreate(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         input: Foo
@@ -136,6 +144,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     }
 
     override fun canUserDelete(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         model: Foo
@@ -151,6 +160,7 @@ class FooSubresource : ListResource.SingletonSubresource<HelloWorldUser, String,
     }
 
     override fun handleDelete(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         model: Foo
@@ -165,11 +175,13 @@ class GreetingResource : ListResource.Simple<HelloWorldUser, String, Greeting> {
     override val pluralName = "greetings"
 
     override fun list(
+        requestContext: ResourceRequestContext,
         userContext: HelloWorldUser,
         params: ListParams.Empty
     ): List<Greeting> = Language.values().map { Greeting(it) }
 
     override fun loadModel(
+        requestContext: ResourceRequestContext,
         userContext: HelloWorldUser,
         id: String
     ): Greeting? {
@@ -184,6 +196,7 @@ class GreetingResource : ListResource.Simple<HelloWorldUser, String, Greeting> {
     }
 
     override fun canUserViewModel(
+        requestContext: ResourceRequestContext,
         userContext: HelloWorldUser,
         id: String,
         model: Greeting
@@ -250,12 +263,14 @@ class BarSubresource: ListResource.ListSubresource.Simple<HelloWorldUser, String
     override val pluralName: String = "bars"
 
     override fun loadModel(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         id: BarId
     ): Bar? = bars[id]
 
     override fun canUserViewModel(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         id: BarId,
@@ -269,6 +284,7 @@ class BarSubresource: ListResource.ListSubresource.Simple<HelloWorldUser, String
     }
 
     override fun list(
+        requestContext: SubresourceRequestContext,
         userContext: HelloWorldUser,
         parent: IdentifiedModel<String, Greeting>,
         params: ListParams.Empty

@@ -13,6 +13,7 @@ import java.util.*
 sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any> {
     abstract fun handleBasicFetch(
         requestContext: RequestContext,
+        subresourceRequestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent
     ): UAPIResponse<*>
@@ -51,12 +52,13 @@ class SingletonSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model
 
     override fun handleBasicFetch(
         requestContext: RequestContext,
+        subresourceRequestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent
     ): UAPIResponse<*> {
-        val model = subresource.loadModel(userContext, parent) ?: return UAPINotFoundError
+        val model = subresource.loadModel(subresourceRequestContext, userContext, parent) ?: return UAPINotFoundError
 
-        if (!subresource.canUserViewModel(userContext, parent, model)) {
+        if (!subresource.canUserViewModel(subresourceRequestContext, userContext, parent, model)) {
             return UAPINotAuthorizedError
         }
         return buildResponse(userContext, parent, model)
@@ -126,6 +128,7 @@ class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, 
 
     override fun handleBasicFetch(
         requestContext: RequestContext,
+        subresourceRequestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent
     ): UAPIResponse<*> {

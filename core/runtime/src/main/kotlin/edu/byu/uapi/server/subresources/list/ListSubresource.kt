@@ -9,6 +9,7 @@ import edu.byu.uapi.server.spi.*
 import edu.byu.uapi.server.spi.reflective.ReflectiveFilterParamReader
 import edu.byu.uapi.server.spi.reflective.ReflectiveIdParamReader
 import edu.byu.uapi.server.subresources.Subresource
+import edu.byu.uapi.server.subresources.SubresourceRequestContext
 import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.ModelHolder
@@ -36,12 +37,14 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
         get() = defaultIdType()
 
     fun loadModel(
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent,
         id: Id
     ): Model?
 
     fun canUserViewModel(
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent,
         id: Id,
@@ -58,6 +61,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
     }
 
     fun list(
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent,
         params: Params
@@ -86,6 +90,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
 
     interface Creatable<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Input : Any> {
         fun canUserCreate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent
         ): Boolean
@@ -95,6 +100,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
         }
 
         fun handleCreate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             input: Input
@@ -106,6 +112,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
 
     interface Deletable<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any> {
         fun canUserDelete(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             id: Id,
@@ -119,6 +126,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
         ): Boolean
 
         fun handleDelete(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             id: Id,
@@ -128,6 +136,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
 
     interface Updatable<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Input : Any> {
         fun canUserUpdate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             id: Id,
@@ -145,6 +154,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
         }
 
         fun handleUpdate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             id: Id,
@@ -158,12 +168,14 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
 
     interface CreatableWithId<UserContext : Any, Parent : ModelHolder, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Parent, Id, Model, Input> {
         fun canUserCreateWithId(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             id: Id
         ): Boolean
 
         fun handleCreateWithId(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             id: Id,
@@ -184,6 +196,7 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
         ListSubresource<UserContext, Parent, Id, Model, CollectionParams> {
 
         override fun list(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             params: CollectionParams
@@ -330,7 +343,7 @@ internal fun <SearchContext : Enum<SearchContext>>
     val searchContextType: KClass<SearchContext> = try {
         DarkMagic.findSupertypeArgNamed(this::class, ListSubresource.ListWithSearch::class, "SearchContext")
     } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get search contexts type", ex)
     }
     return DefaultParameterStyleEnumScalar(searchContextType)
 }
@@ -343,7 +356,7 @@ internal fun <SortProperty : Enum<SortProperty>>
     val sortPropertyType: KClass<SortProperty> = try {
         DarkMagic.findSupertypeArgNamed(this::class, ListSubresource.ListWithSort::class, "SortProperty")
     } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get search contexts type", ex)
     }
     return DefaultParameterStyleEnumScalar(sortPropertyType)
 }

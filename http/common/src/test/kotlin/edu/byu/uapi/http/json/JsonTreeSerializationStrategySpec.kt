@@ -88,7 +88,7 @@ package edu.byu.uapi.http.json
 //            }
 //        }
 //        describe("trees") {
-//            context("tree(key, UAPISerializableTree?)") {
+//            contexts("tree(key, UAPISerializableTree?)") {
 //                it("serializes a UAPISerializableTree") {
 //                    forAll(100, Gen.string(), serializables()) { key, value ->
 //                        val json = setup { it.tree(key, value) }
@@ -104,7 +104,7 @@ package edu.byu.uapi.http.json
 //                    json.shouldHaveNull("key")
 //                }
 //            }
-//            context("Strategy receiver") {
+//            contexts("Strategy receiver") {
 //                it("serializes from a receiver function") {
 //                    forAll(100, Gen.string(), stringMap()) { key, value ->
 //                        val json = setup {
@@ -119,7 +119,7 @@ package edu.byu.uapi.http.json
 //                    }
 //                }
 //            }
-//            context("Map of String -> UAPISerializableTree?") {
+//            contexts("Map of String -> UAPISerializableTree?") {
 //                it("serializes a map") {
 //                    forAll(100,
 //                           Gen.string(), serializableMap()) { key, value ->
@@ -191,7 +191,7 @@ package edu.byu.uapi.http.json
 //                JsonSerialization.Trees::booleans,
 //                JsonObject::shouldHaveAllBooleans
 //            )
-//            context("object array") {
+//            contexts("object array") {
 //                it("serializes a collection") {
 //                    forAll(100, jsonKey(), Gen.list(serializables())) { key, value ->
 //                        val json = setup {
@@ -268,7 +268,7 @@ package edu.byu.uapi.http.json
 //        crossinline add: JsonSerialization.Trees.(String, T?) -> Unit,
 //        crossinline shouldHave: JsonObject.(String, T) -> Unit
 //    ) {
-//        context(nameOf(T::class)) {
+//        contexts(nameOf(T::class)) {
 //            it("serializes any values") {
 //                forAll(100, jsonKey(), gen) { key, value ->
 //                    val json = setup { it.add(key, value) }
@@ -289,7 +289,7 @@ package edu.byu.uapi.http.json
 //        crossinline addCollection: JsonSerialization.Trees.(String, Collection<T>) -> Unit,
 //        crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
 //    ) {
-//        context("array of " + nameOf(T::class)) {
+//        contexts("array of " + nameOf(T::class)) {
 //            itShouldSerializeACollection(gen, addCollection, shouldHaveAll)
 //        }
 //    }
@@ -316,7 +316,7 @@ package edu.byu.uapi.http.json
 //        crossinline addArray: JsonSerialization.Trees.(String, Array) -> Unit,
 //        crossinline shouldHaveAll: JsonObject.(String, List<T>) -> Unit
 //    ) {
-//        context("array of " + nameOf(T::class)) {
+//        contexts("array of " + nameOf(T::class)) {
 //            itShouldSerializeACollection(gen, addCollection, shouldHaveAll)
 //            it("serializes an array") {
 //                forAll(100, jsonKey(), Gen.list(gen)) { key, list ->

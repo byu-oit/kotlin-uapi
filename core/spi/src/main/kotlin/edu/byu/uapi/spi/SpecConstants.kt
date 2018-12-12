@@ -92,6 +92,8 @@ object SpecConstants {
     object FieldSets {
         const val VALUE_BASIC = "basic"
 
+        val DEFAULT_FIELDSETS: Set<String> = java.util.Collections.singleton(VALUE_BASIC)
+
         object Metadata {
             const val KEY_FIELD_SETS_RETURNED = "field_sets_returned"
             const val KEY_FIELD_SETS_AVAILABLE = "field_sets_available"

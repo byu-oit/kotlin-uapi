@@ -37,7 +37,7 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
 
             before { request, response ->
                 request.attribute("uapi.start", System.currentTimeMillis())
-                println("context path: " + request.contextPath())
+                println("contexts path: " + request.contextPath())
                 println("host: " + request.host())
                 println("path info: " + request.pathInfo())
                 println("uri: " + request.uri())

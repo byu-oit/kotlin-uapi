@@ -5,6 +5,7 @@ import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit
 import edu.byu.uapi.server.response.uapiResponse
 import edu.byu.uapi.server.subresources.Subresource
+import edu.byu.uapi.server.subresources.SubresourceRequestContext
 import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.ModelHolder
@@ -22,11 +23,13 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
     val name: String
 
     fun loadModel(
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent
     ): Model?
 
     fun canUserViewModel(
+        requestContext: SubresourceRequestContext,
         userContext: UserContext,
         parent: Parent,
         model: Model
@@ -41,6 +44,7 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
 
     interface Updatable<UserContext : Any, Parent : ModelHolder, Model : Any, Input : Any> {
         fun canUserUpdate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             model: Model
@@ -52,6 +56,7 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
         ): Boolean
 
         fun handleUpdate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             model: Model,
@@ -76,11 +81,13 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
         : Updatable<UserContext, Parent, Model, Input> {
 
         fun canUserCreate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent
         ): Boolean
 
         fun handleCreate(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             input: Input
@@ -89,6 +96,7 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
 
     interface Deletable<UserContext: Any, Parent: ModelHolder, Model: Any> {
         fun canUserDelete(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             model: Model
@@ -100,6 +108,7 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
         ): Boolean
 
         fun handleDelete(
+            requestContext: SubresourceRequestContext,
             userContext: UserContext,
             parent: Parent,
             model: Model

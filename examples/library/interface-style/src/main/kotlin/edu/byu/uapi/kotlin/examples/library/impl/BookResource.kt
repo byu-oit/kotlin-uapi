@@ -2,6 +2,7 @@ package edu.byu.uapi.kotlin.examples.library.impl
 
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
+import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.uapiResponse
@@ -20,6 +21,7 @@ class BookResource : ListResource.Simple<
     override val pluralName: String = "books"
 
     override fun loadModel(
+        requestContext: ResourceRequestContext,
         userContext: MyUserContext,
         id: Long
     ): Book? {
@@ -27,6 +29,7 @@ class BookResource : ListResource.Simple<
     }
 
     override fun canUserViewModel(
+        requestContext: ResourceRequestContext,
         userContext: MyUserContext,
         id: Long,
         model: Book
@@ -39,6 +42,7 @@ class BookResource : ListResource.Simple<
     }
 
     override fun list(
+        requestContext: ResourceRequestContext,
         userContext: MyUserContext,
         params: ListParams.Empty
     ): List<Book> {

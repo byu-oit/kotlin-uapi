@@ -9,6 +9,7 @@ import edu.byu.uapi.server.resources.list.*
 import edu.byu.uapi.server.types.GenericUAPIErrorResponse
 import edu.byu.uapi.server.types.UAPINotAuthenticatedError
 import edu.byu.uapi.server.types.UAPIResponse
+import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamMeta
 import edu.byu.uapi.spi.rendering.Renderable
@@ -266,6 +267,20 @@ fun HttpQueryParams.asQueryParams(): QueryParams {
 fun HttpRequest.asRequestContext() = HttpRequestContext(this)
 
 data class HttpRequestContext(val request: HttpRequest) : RequestContext {
+    override val fieldsets: FieldsetRequest? = request.getFieldsetRequest()
     override val baseUri: String = ""
     override val headers: Headers = request.headers
+}
+
+internal fun HttpRequest.getFieldsetRequest(): FieldsetRequest? {
+    val query = this.query
+    val fieldsets = query[SpecConstants.FieldSets.Query.KEY_FIELD_SETS].orEmpty()
+        .flatMap { it.split(",").filter(String::isNotBlank) }
+    val contexts = query[SpecConstants.FieldSets.Query.KEY_CONTEXTS].orEmpty()
+        .flatMap { it.split(",").filter(String::isNotBlank) }
+
+    if (fieldsets.isEmpty() && contexts.isEmpty()) {
+        return null
+    }
+    return FieldsetRequest(fieldsets.toSet(), contexts.toSet())
 }

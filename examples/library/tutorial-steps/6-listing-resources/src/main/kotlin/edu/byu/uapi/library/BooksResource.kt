@@ -4,6 +4,7 @@ import edu.byu.uapi.kotlin.examples.library.Author
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
+import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
 import edu.byu.uapi.spi.input.ListWithTotal
@@ -18,6 +19,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override val pluralName: String = "books"
 
     override fun loadModel(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long
     ): Book? {
@@ -29,6 +31,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun canUserViewModel(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         id: Long,
         model: Book
@@ -37,6 +40,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     }
 
     override fun list(
+        requestContext: ResourceRequestContext,
         userContext: LibraryUser,
         params: BookListParams
     ): ListWithTotal<Book> {

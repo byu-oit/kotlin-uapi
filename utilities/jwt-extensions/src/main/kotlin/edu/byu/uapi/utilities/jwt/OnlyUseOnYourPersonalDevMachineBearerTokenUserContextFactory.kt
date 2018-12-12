@@ -23,7 +23,7 @@ class OnlyUseOnYourPersonalDevMachineBearerTokenUserContextFactory<UserContext :
     }
 
     override fun createUserContext(authenticationInfo: UserContextAuthnInfo): UserContextResult<UserContext> {
-        LOG.debug("Creating user context")
+        LOG.debug("Creating user contexts")
         val authnInfo = maybeDecorateAuthInfo(authenticationInfo)
         return when (authnInfo) {
             is UserContextResult.Success -> wrapped.createUserContext(authnInfo.result)

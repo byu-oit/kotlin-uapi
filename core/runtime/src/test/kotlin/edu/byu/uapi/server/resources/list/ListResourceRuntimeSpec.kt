@@ -4,6 +4,7 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
+import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.spi.input.IdParamReader
 import edu.byu.uapi.spi.input.ListParams
@@ -150,6 +151,7 @@ class ListResourceRuntimeSpec : DescribeSpec() {
         override val idType: KClass<String> = String::class
 
         override fun loadModel(
+            requestContext: ResourceRequestContext,
             userContext: User,
             id: String
         ): Foo? {
@@ -157,6 +159,7 @@ class ListResourceRuntimeSpec : DescribeSpec() {
         }
 
         override fun canUserViewModel(
+            requestContext: ResourceRequestContext,
             userContext: User,
             id: String,
             model: Foo
@@ -169,9 +172,10 @@ class ListResourceRuntimeSpec : DescribeSpec() {
         }
 
          override fun list(
-            userContext: User,
-            params: ListParams.Empty
-        ): List<Foo> {
+             requestContext: ResourceRequestContext,
+             userContext: User,
+             params: ListParams.Empty
+         ): List<Foo> {
             TODO("not implemented")
         }
 

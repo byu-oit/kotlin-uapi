@@ -2,6 +2,7 @@ package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.resources.Resource
+import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit
 import edu.byu.uapi.server.response.uapiResponse
@@ -38,11 +39,13 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         get() = defaultIdType()
 
     fun loadModel(
+        requestContext: ResourceRequestContext,
         userContext: UserContext,
         id: Id
     ): Model?
 
     fun canUserViewModel(
+        requestContext: ResourceRequestContext,
         userContext: UserContext,
         id: Id,
         model: Model
@@ -58,6 +61,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
     }
 
     fun list(
+        requestContext: ResourceRequestContext,
         userContext: UserContext,
         params: Params
     ): List<Model>
@@ -84,13 +88,17 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         get() = this.takeIfType()
 
     interface Creatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
-        fun canUserCreate(userContext: UserContext): Boolean
+        fun canUserCreate(
+            requestContext: ResourceRequestContext,
+            userContext: UserContext
+        ): Boolean
 
         fun getCreateValidator(validationEngine: ValidationEngine): Validator<Input> {
             return validationEngine.validatorFor(createInput)
         }
 
         fun handleCreate(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             input: Input
         ): CreateResult<Model>
@@ -101,6 +109,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
     interface Deletable<UserContext : Any, Id : Any, Model : Any> {
         fun canUserDelete(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             id: Id,
             model: Model
@@ -112,6 +121,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         ): Boolean
 
         fun handleDelete(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             id: Id,
             model: Model
@@ -120,6 +130,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
     interface Updatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
         fun canUserUpdate(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             id: Id,
             model: Model
@@ -135,6 +146,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         }
 
         fun handleUpdate(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             id: Id,
             model: Model,
@@ -147,11 +159,13 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
     interface CreatableWithId<UserContext : Any, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Id, Model, Input> {
         fun canUserCreateWithId(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             id: Id
         ): Boolean
 
         fun handleCreateWithId(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             id: Id,
             input: Input
@@ -171,6 +185,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         ListResource<UserContext, Id, Model, CollectionParams> {
 
         override fun list(
+            requestContext: ResourceRequestContext,
             userContext: UserContext,
             params: CollectionParams
         ): ListWithTotal<Model>
@@ -345,7 +360,7 @@ internal fun <SearchContext : Enum<SearchContext>>
     val searchContextType: KClass<SearchContext> = try {
         DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSearch::class, "SearchContext")
     } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get search contexts type", ex)
     }
     return DefaultParameterStyleEnumScalar(searchContextType)
 }
@@ -358,7 +373,7 @@ internal fun <SortProperty : Enum<SortProperty>>
     val sortPropertyType: KClass<SortProperty> = try {
         DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSort::class, "SortProperty")
     } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get search context type", ex)
+        throw UAPITypeError.create(this::class, "Unable to get search contexts type", ex)
     }
     return DefaultParameterStyleEnumScalar(sortPropertyType)
 }
