@@ -6,14 +6,14 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.KTypeProjection
 import kotlin.reflect.KVariance
+import kotlin.reflect.full.allSupertypes
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.starProjectedType
 import java.lang.reflect.Array as ReflectArray
 
 object DarkMagic {
     fun <T: Any> findMatchingSupertype(me: KClass<out T>, type: KClass<T>): KType? {
-        val star = type.starProjectedType
-        return me.supertypes.find { it.isSubtypeOf(star) }
+        return me.allSupertypes.find { it.classifier == type }
     }
 
     fun <Super: Any, Expected: Any> findSupertypeArgNamed(me: KClass<out Super>, type: KClass<Super>, name: String): KClass<Expected> {
