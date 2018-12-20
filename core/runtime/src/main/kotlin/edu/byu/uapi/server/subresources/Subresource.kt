@@ -9,7 +9,8 @@ import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.validation.ValidationEngine
 
 interface Subresource<UserContext : Any, Parent : ModelHolder, Model : Any> {
-
+    val pretendUnauthorizedDoesntExist: Boolean
+        get() = false
 }
 
 fun <UserContext : Any, Parent : ModelHolder, Model : Any> Subresource<UserContext, Parent, Model>.createRuntime(

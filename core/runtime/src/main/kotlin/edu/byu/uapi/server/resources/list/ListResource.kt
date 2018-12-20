@@ -60,6 +60,12 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         return defaultIdReader(dictionary)
     }
 
+    fun canUserViewList(
+        requestContext: ResourceRequestContext,
+        userContext: UserContext,
+        params: Params
+    ): Boolean
+
     fun list(
         requestContext: ResourceRequestContext,
         userContext: UserContext,

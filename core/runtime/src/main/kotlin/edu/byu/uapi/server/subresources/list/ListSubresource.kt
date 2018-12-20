@@ -60,6 +60,13 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
         return defaultIdReader(dictionary)
     }
 
+    fun canUserViewList(
+        requestContext: SubresourceRequestContext,
+        userContext: UserContext,
+        parent: Parent,
+        params: Params
+    ): Boolean
+
     fun list(
         requestContext: SubresourceRequestContext,
         userContext: UserContext,
