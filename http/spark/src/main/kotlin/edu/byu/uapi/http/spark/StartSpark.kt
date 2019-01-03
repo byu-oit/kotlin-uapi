@@ -70,6 +70,24 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
         runtime: UAPIRuntime<*>
     ) {
         server.optionalPath(rootPath) {
+            server.before { request, response ->
+                request.attribute("uapi.start", System.currentTimeMillis())
+//                println("contexts path: " + request.contextPath())
+//                println("host: " + request.host())
+//                println("path info: " + request.pathInfo())
+                println("uri: " + request.uri())
+//                println("url: " + request.url())
+//                println("servlet path: " + request.servletPath())
+//                println("headers: " + request.headers().map { it to request.headers(it) }.joinToString(", "))
+            }
+
+            server.after { request, response ->
+                val start = request.attribute<Long>("uapi.start")
+                val end = System.currentTimeMillis()
+                println("Finished in ${end - start} ms")
+                response.header("Content-Encoding", "gzip")
+            }
+
             routes.forEach {
                 LOG.info { "Adding route ${it.method} $rootPath${it.pathParts.stringifySpark()}" }
                 server.addRoute(it.method.toSpark(), it.toSpark(config, runtime.typeDictionary))
