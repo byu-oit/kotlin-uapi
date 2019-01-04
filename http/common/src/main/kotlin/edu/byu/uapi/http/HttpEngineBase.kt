@@ -8,10 +8,8 @@ import org.slf4j.LoggerFactory
 abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
     val config: Config
 ) {
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(HttpEngineBase::class.java)
-    }
+    @Suppress("PrivatePropertyName")
+    private val LOG = LoggerFactory.getLogger(this.javaClass)
 
     abstract fun startServer(config: Config): Server
 
@@ -43,6 +41,8 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
         val routes = resources.flatMap { it.routes }
 
         registerRoutes(_server, config, routes, rootPath, runtime)
+
+        LOG.info("Finished registering routes for root path '/$rootPath'")
     }
 
     abstract fun stop(server: Server)

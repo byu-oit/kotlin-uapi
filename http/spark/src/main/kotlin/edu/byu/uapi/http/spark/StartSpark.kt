@@ -34,6 +34,9 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
     override fun startServer(config: SparkConfig): Service {
         return Service.ignite().apply {
             port(config.port)
+            after { request, response ->
+                response.header("Content-Encoding", "gzip")
+            }
             LOG.info("UAPI-HTTP Spark server is starting on port {}", config.port)
         }
     }
@@ -51,35 +54,22 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
         runtime: UAPIRuntime<*>
     ) {
         server.optionalPath(rootPath) {
-            server.before { request, response ->
-                if (request.uri() != "/") {
+            routes.forEach {
+                LOG.info { "Adding route ${it.method} $rootPath${it.pathParts.stringifySpark()}" }
+                server.addRoute(it.method.toSpark(), it.toSpark(config, runtime.typeDictionary))
+            }
+
+            routes.asSequence().map { it.pathParts.stringifySpark() }.distinct().forEach {
+                server.before(it) { request, response ->
                     request.attribute("uapi.start", System.currentTimeMillis())
                     LOG.info("Processing request: ${request.requestMethod()} ${request.uri()}")
-//                LOG.debug("contexts path: " + request.contextPath())
-//                LOG.debug("host: " + request.host())
-//                LOG.debug("path info: " + request.pathInfo())
-//                LOG.debug("uri: " + request.uri())
-//                LOG.debug("url: " + request.url())
-//                LOG.debug("servlet path: " + request.servletPath())
-//                LOG.debug("headers: " + request.headers().map { it to request.headers(it) }.joinToString(", "))
                 }
-            }
 
-            server.after { request, response ->
-                response.header("Content-Encoding", "gzip")
-            }
-
-            server.after { request, response ->
-                if (request.uri() != "/") {
+                server.after(it) { request, response ->
                     val start = request.attribute<Long>("uapi.start")
                     val end = System.currentTimeMillis()
                     LOG.info("Responding with status ${response.status()}. Took ${end - start} ms")
                 }
-            }
-
-            routes.forEach {
-                LOG.info { "Adding route ${it.method} $rootPath${it.pathParts.stringifySpark()}" }
-                server.addRoute(it.method.toSpark(), it.toSpark(config, runtime.typeDictionary))
             }
         }
     }
