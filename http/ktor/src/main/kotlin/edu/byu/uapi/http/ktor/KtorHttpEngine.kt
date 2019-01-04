@@ -1,0 +1,244 @@
+package edu.byu.uapi.http.ktor
+
+import com.google.gson.JsonObject
+import edu.byu.uapi.http.*
+import edu.byu.uapi.http.json.*
+import edu.byu.uapi.server.UAPIRuntime
+import edu.byu.uapi.server.util.loggerFor
+import edu.byu.uapi.spi.dictionary.TypeDictionary
+import edu.byu.uapi.spi.rendering.Renderer
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
+import spark.*
+import java.io.File
+import java.io.InputStream
+import java.io.Writer
+import java.util.concurrent.TimeUnit
+
+
+data class KtorConfig(
+    val port: Int = defaultPort,
+    override val jsonEngine: JsonEngine<*, *> = defaultJsonEngine
+) : HttpEngineConfig {
+    companion object {
+        val defaultPort = 4567
+        val defaultJsonEngine: JsonEngine<*, *> = JacksonEngine
+    }
+}
+
+class KtorHttpEngine(config: KtorConfig) : HttpEngineBase<NettyApplicationEngine, KtorConfig>(config) {
+    private val LOG = loggerFor<KtorHttpEngine>()
+
+    init {
+        super.doInit()
+    }
+
+    override fun startServer(config: KtorConfig): NettyApplicationEngine {
+        return embeddedServer(Netty, port = 8080) {
+        }
+//        return Service.ignite().apply {
+//            port(config.port)
+//            after { request, response ->
+//                response.header("Content-Encoding", "gzip")
+//            }
+//            LOG.info("UAPI-HTTP Spark server is starting on port {}", config.port)
+//        }
+    }
+
+    override fun stop(server: NettyApplicationEngine) {
+        server.stop(10, 10, TimeUnit.SECONDS)
+    }
+
+    override fun registerRoutes(
+        server: NettyApplicationEngine,
+        config: KtorConfig,
+        routes: List<HttpRoute>,
+        rootPath: String,
+        runtime: UAPIRuntime<*>
+    ) {
+//        server.optionalPath(rootPath) {
+//            routes.forEach {
+//                LOG.info { "Adding route ${it.method} $rootPath${it.pathParts.stringifyKtor()}" }
+//                server.addRoute(it.method.toKtor(), it.toKtor(config, runtime.typeDictionary))
+//            }
+//
+//            routes.asSequence().map { it.pathParts.stringifyKtor() }.distinct().forEach {
+//                server.before(it) { request, response ->
+//                    request.attribute("uapi.start", System.currentTimeMillis())
+//                    LOG.info("Processing request: ${request.requestMethod()} ${request.uri()}")
+//                }
+//
+//                server.after(it) { request, response ->
+//                    val start = request.attribute<Long>("uapi.start")
+//                    val end = System.currentTimeMillis()
+//                    LOG.info("Responding with status ${response.status()}. Took ${end - start} ms")
+//                }
+//            }
+//        }
+    }
+
+    private inline fun Service.optionalPath(
+        rootPath: String,
+        crossinline group: () -> Unit
+    ) {
+        if (rootPath.isBlank() || rootPath.trim() == "/") {
+            group()
+        } else {
+            this.path(rootPath) { group() }
+        }
+    }
+}
+
+fun List<PathPart>.stringifyKtor(): String {
+    return this.stringify(PathParamDecorators.COLON) { part, decorator ->
+        decorator.invoke(part.names.joinToString(separator = COMPOUND_PARAM_SEPARATOR, prefix = COMPOUND_PARAM_PREFIX))
+    }
+}
+
+fun <UserContext : Any> UAPIRuntime<UserContext>.startKtor(
+    config: KtorConfig
+): KtorHttpEngine {
+    return KtorHttpEngine(config).also { it.register(this) }
+}
+
+fun <UserContext : Any> UAPIRuntime<UserContext>.startKtor(
+    port: Int = KtorConfig.defaultPort,
+    jsonEngine: JsonEngine<*, *> = KtorConfig.defaultJsonEngine
+): KtorHttpEngine {
+    return this.startKtor(KtorConfig(port, jsonEngine))
+}
+
+private fun HttpRoute.toKtor(
+    config: KtorConfig,
+    typeDictionary: TypeDictionary
+): RouteImpl {
+    val path = this.pathParts.stringifyKtor()
+    return RouteImpl.create(path, this.handler.toKtor(config, typeDictionary))
+}
+
+private fun HttpHandler.toKtor(
+    config: KtorConfig,
+    typeDictionary: TypeDictionary
+): KtorHttpRoute {
+    return KtorHttpRoute(this, config, typeDictionary)
+}
+
+class KtorHttpRoute(
+    val handler: HttpHandler,
+    val config: KtorConfig,
+    val typeDictionary: TypeDictionary
+) : Route {
+    override fun handle(
+        request: Request,
+        response: Response
+    ): Any {
+        val resp = handler.handle(KtorRequest(request))
+        response.type("application/json")
+        response.status(resp.status)
+        resp.headers.forEach { key, set -> set.forEach { response.header(key, it) } }
+        return resp.body.renderResponseBody(config.jsonEngine, typeDictionary)
+    }
+}
+
+fun ResponseBody.renderResponseBody(
+    json: JsonEngine<*, *>,
+    typeDictionary: TypeDictionary
+): Any {
+    return when (json) {
+        is GsonTreeEngine -> {
+            val result: JsonObject = this.render(json.renderer(typeDictionary, null))
+            result.toString()
+        }
+        is JavaxJsonTreeEngine -> {
+            val obj = this.render(json.renderer(typeDictionary, null))
+            obj.toString()
+        }
+        is JavaxJsonStreamEngine -> {
+            json.renderWithFile(typeDictionary) {
+                this.render(it)
+            }
+        }
+        is JacksonEngine -> {
+            json.renderWithFile(typeDictionary) {
+                this.render(it)
+            }
+        }
+    }
+}
+
+inline fun <Output : Any> JsonEngine<Output, Writer>.renderWithFile(
+    typeDictionary: TypeDictionary,
+    render: (Renderer<Output>) -> Unit
+): InputStream {
+    val file = File.createTempFile("uapi-runtime-render-buffer", ".tmp.json")
+    file.deleteOnExit()
+
+    file.bufferedWriter().use {
+        val renderer = this.renderer(typeDictionary, it)
+        render(renderer)
+        it.flush()
+    }
+    return file.inputStream().buffered()//.afterClose { file.delete() }
+}
+
+fun InputStream.afterClose(afterClose: () -> Unit): InputStream {
+    return CloseActionInputStream(this, afterClose)
+}
+
+class CloseActionInputStream(
+    val wrapped: InputStream,
+    val afterClose: () -> Unit
+) : InputStream() {
+
+    override fun skip(n: Long): Long {
+        return wrapped.skip(n)
+    }
+
+    override fun available(): Int {
+        return wrapped.available()
+    }
+
+    override fun reset() {
+        wrapped.reset()
+    }
+
+    override fun close() {
+        wrapped.close()
+        afterClose()
+    }
+
+    override fun mark(readlimit: Int) {
+        wrapped.mark(readlimit)
+    }
+
+    override fun markSupported(): Boolean {
+        return wrapped.markSupported()
+    }
+
+    override fun read(): Int {
+        return wrapped.read()
+    }
+
+    override fun read(b: ByteArray?): Int {
+        return wrapped.read(b)
+    }
+
+    override fun read(
+        b: ByteArray?,
+        off: Int,
+        len: Int
+    ): Int {
+        return wrapped.read(b, off, len)
+    }
+}
+
+private fun HttpMethod.toKtor(): spark.route.HttpMethod {
+    return when (this) {
+        HttpMethod.GET -> spark.route.HttpMethod.get
+        HttpMethod.PUT -> spark.route.HttpMethod.put
+        HttpMethod.PATCH -> spark.route.HttpMethod.patch
+        HttpMethod.POST -> spark.route.HttpMethod.post
+        HttpMethod.DELETE -> spark.route.HttpMethod.delete
+    }
+}

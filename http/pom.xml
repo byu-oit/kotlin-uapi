@@ -14,6 +14,7 @@
     <modules>
         <module>common</module>
         <module>spark</module>
+        <module>ktor</module>
         <module>aws-lambda-proxy</module>
     </modules>
 
