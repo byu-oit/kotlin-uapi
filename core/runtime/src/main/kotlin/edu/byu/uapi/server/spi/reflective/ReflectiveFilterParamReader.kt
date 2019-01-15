@@ -2,6 +2,7 @@ package edu.byu.uapi.server.spi.reflective
 
 import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.spi.requireScalarType
+import edu.byu.uapi.server.util.exhaustive
 import edu.byu.uapi.server.util.toSnakeCase
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.dictionary.TypeDictionary
@@ -30,8 +31,7 @@ class ReflectiveFilterParamReader<Filters : Any> internal constructor(
         if (!hasAny) {
             return null
         }
-        val values = analyzed.fields.map { it.parameter to it.read(input) }.toMap()
-        return analyzed.constructor.callBy(values)
+        return analyzed.constructor.invoke(input, analyzed.fields)
     }
 
     override fun describe(): FilterParamsMeta = meta
@@ -57,7 +57,10 @@ internal fun <T : Any> analyzeFilterParams(
         throw UAPITypeError.create(toAnalyze, "Filter type must be a data class")
     }
     val ctor = toAnalyze.primaryConstructor
-        ?: throw UAPITypeError.create(toAnalyze, "Missing primary constructor. As this is a data class, this shouldn't be possible?!")
+        ?: throw UAPITypeError.create(
+            toAnalyze,
+            "Missing primary constructor. As this is a data class, this shouldn't be possible?!"
+        )
     val params = ctor.parameters
     val analyzedParams = params.map { p ->
         analyzeFilterParam(p, dictionary)
@@ -88,7 +91,16 @@ internal sealed class AnalyzedFilterField {
     abstract val type: KClass<*>
 
     abstract fun getParams(prefix: String): List<QueryParamMetadata.Param>
-    abstract fun read(queryParams: QueryParams): Any?
+    abstract fun read(queryParams: QueryParams): ReadResult
+
+    val hasDefault: Boolean
+        get() = parameter.isOptional
+}
+
+internal sealed class ReadResult {
+    data class Value(val value: Any?) : ReadResult()
+    object UseDefault : ReadResult()
+    object Missing : ReadResult()
 }
 
 internal data class AnalyzedSimpleFilterField(
@@ -97,11 +109,17 @@ internal data class AnalyzedSimpleFilterField(
     override val type: KClass<*>,
     val scalarType: ScalarType<*>
 ) : AnalyzedFilterField() {
-    override fun getParams(prefix: String): List<QueryParamMetadata.Param> = listOf(QueryParamMetadata.Param(
-        prefix + name, scalarType.scalarFormat, false
-    ))
+    override fun getParams(prefix: String): List<QueryParamMetadata.Param> = listOf(
+        QueryParamMetadata.Param(
+            prefix + name, scalarType.scalarFormat, false
+        )
+    )
 
-    override fun read(queryParams: QueryParams): Any? = queryParams[name]?.asScalar(scalarType)
+    override fun read(queryParams: QueryParams): ReadResult {
+        return queryParams[name]?.let {
+            ReadResult.Value(it.asScalar(scalarType))
+        } ?: if (hasDefault) ReadResult.UseDefault else ReadResult.Missing
+    }
 }
 
 typealias ContainerCreator<Item, Container> = (Iterable<Item>) -> Container
@@ -113,13 +131,19 @@ internal data class AnalyzedRepeatableFilterField(
     val containerCreator: ContainerCreator<*, *>,
     val scalarType: ScalarType<*>
 ) : AnalyzedFilterField() {
-    override fun getParams(prefix: String): List<QueryParamMetadata.Param> = listOf(QueryParamMetadata.Param(
-        prefix + name, scalarType.scalarFormat, true
-    ))
+    override fun getParams(prefix: String): List<QueryParamMetadata.Param> = listOf(
+        QueryParamMetadata.Param(
+            prefix + name, scalarType.scalarFormat, true
+        )
+    )
 
-    override fun read(queryParams: QueryParams): Any? {
-        val values = queryParams[name]?.asScalarList(scalarType).orEmpty()
-        return containerCreator(values)
+    override fun read(queryParams: QueryParams): ReadResult {
+        val found = queryParams[name]
+        if (found == null && hasDefault) {
+            return ReadResult.UseDefault
+        }
+        val values = found?.asScalarList(scalarType).orEmpty()
+        return ReadResult.Value(containerCreator(values))
     }
 }
 
@@ -138,18 +162,33 @@ internal data class AnalyzedComplexFilterField(
         return fields.flatMap { it.getParams(newPrefix) }
     }
 
-    override fun read(queryParams: QueryParams): Any? {
+    override fun read(queryParams: QueryParams): ReadResult {
         val nested = queryParams.withPrefix("$name.")
-        if (nested.isEmpty()) {
-            return null
-        }
         val hasAny = this.fieldNames.any { nested.containsKey(it) }
         if (!hasAny) {
-            return null
+            return when {
+                hasDefault -> ReadResult.UseDefault
+                parameter.type.isMarkedNullable -> ReadResult.Value(null)
+                else -> ReadResult.Missing
+            }
         }
-        val values = this.fields.map { it.parameter to it.read(nested) }.toMap()
-        return constructor.callBy(values)
+        return ReadResult.Value(constructor.invoke(queryParams, fields))
     }
+}
+
+private fun <T> KFunction<T>.invoke(
+    queryParams: QueryParams,
+    fields: List<AnalyzedFilterField>
+): T {
+    val values = mutableMapOf<KParameter, Any?>()
+    loop@ for (field in fields) {
+        when (val read = field.read(queryParams)) {
+            is ReadResult.Value -> values[field.parameter] = read.value
+            ReadResult.UseDefault -> continue@loop// do nothing
+            ReadResult.Missing -> throw IllegalArgumentException("Missing required parameter '${field.name}'")
+        }.exhaustive
+    }
+    return this.callBy(values)
 }
 
 private val collectionStar = Collection::class.starProjectedType
@@ -226,7 +265,10 @@ private fun analyzeCollectionFilter(
         Set::class -> { it -> it.toSet() } //TODO(someday) optimize this for Enums using EnumSet
         Collection::class -> { it -> it.toSet() }
         else -> {
-            throw UAPITypeError.create(parameter.type, "Invalid collection type for ${parameter.name}. Must be a List, Set, or Collection")
+            throw UAPITypeError.create(
+                parameter.type,
+                "Invalid collection type for ${parameter.name}. Must be a List, Set, or Collection"
+            )
         }
     }
 
