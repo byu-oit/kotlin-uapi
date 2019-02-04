@@ -2,6 +2,8 @@ package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.*
 import edu.byu.uapi.model.UAPISortOrder
+import edu.byu.uapi.server.claims.UAPIClaimRelationship
+import edu.byu.uapi.server.claims.claimConcepts
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
@@ -9,6 +11,7 @@ import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.spi.input.ListWithTotal
+import java.util.*
 
 class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
                       ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
@@ -18,7 +21,8 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
                       ListResource.Creatable<LibraryUser, Long, Book, CreateBook>,
                       ListResource.Updatable<LibraryUser, Long, Book, UpdateBook>,
                       ListResource.CreatableWithId<LibraryUser, Long, Book, UpdateBook>,
-                      ListResource.Deletable<LibraryUser, Long, Book> {
+                      ListResource.Deletable<LibraryUser, Long, Book>,
+                      ListResource.HasClaims<LibraryUser, Long, Book> {
 
     override val pluralName: String = "books"
     override val scalarIdParamName: String = "oclc"
@@ -65,7 +69,8 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         )
     }
 
-    override val listDefaultSortProperties: List<BookSortProperty> = listOf(BookSortProperty.TITLE, BookSortProperty.OCLC)
+    override val listDefaultSortProperties: List<BookSortProperty> =
+        listOf(BookSortProperty.TITLE, BookSortProperty.OCLC)
     override val listDefaultSortOrder: UAPISortOrder = UAPISortOrder.ASCENDING
     override val listDefaultSubsetSize: Int = 50
     override val listMaxSubsetSize: Int = 100
@@ -151,17 +156,19 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
-        val created = Library.createBook(NewBook(
-            oclc = input.oclc,
-            isbn = input.isbn,
-            title = input.title,
-            subtitles = input.subtitles,
-            publishedYear = input.publishedYear.value,
-            publisher = publisher,
-            authors = authors,
-            genres = genres,
-            restricted = input.restricted
-        ))
+        val created = Library.createBook(
+            NewBook(
+                oclc = input.oclc,
+                isbn = input.isbn,
+                title = input.title,
+                subtitles = input.subtitles,
+                publishedYear = input.publishedYear.value,
+                publisher = publisher,
+                authors = authors,
+                genres = genres,
+                restricted = input.restricted
+            )
+        )
 
         return CreateResult.Success(created)
     }
@@ -198,17 +205,19 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             Library.getGenreByCode(it) ?: return UpdateResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
-        val updated = Library.updateBook(NewBook(
-            oclc = id,
-            isbn = input.isbn,
-            title = input.title,
-            subtitles = input.subtitles,
-            publishedYear = input.publishedYear.value,
-            publisher = publisher,
-            authors = authors,
-            genres = genres,
-            restricted = input.restricted
-        ))
+        val updated = Library.updateBook(
+            NewBook(
+                oclc = id,
+                isbn = input.isbn,
+                title = input.title,
+                subtitles = input.subtitles,
+                publishedYear = input.publishedYear.value,
+                publisher = publisher,
+                authors = authors,
+                genres = genres,
+                restricted = input.restricted
+            )
+        )
 
         return UpdateResult.Success(updated)
     }
@@ -236,17 +245,19 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
             Library.getGenreByCode(it) ?: return CreateResult.InvalidInput("genre_codes", "No such genre exists")
         }
 
-        val created = Library.createBook(NewBook(
-            oclc = id,
-            isbn = input.isbn,
-            title = input.title,
-            subtitles = input.subtitles,
-            publishedYear = input.publishedYear.value,
-            publisher = publisher,
-            authors = authors,
-            genres = genres,
-            restricted = input.restricted
-        ))
+        val created = Library.createBook(
+            NewBook(
+                oclc = id,
+                isbn = input.isbn,
+                title = input.title,
+                subtitles = input.subtitles,
+                publishedYear = input.publishedYear.value,
+                publisher = publisher,
+                authors = authors,
+                genres = genres,
+                restricted = input.restricted
+            )
+        )
 
         return CreateResult.Success(created)
     }
@@ -276,5 +287,16 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     ): DeleteResult {
         Library.deleteBook(model.id)
         return DeleteResult.Success
+    }
+
+    override val claimConcepts = claimConcepts {
+        concept<String>("foo") {
+            canUserMakeClaim { requestContext, user, model -> true }
+            getValue { "" }
+            compareUsing {
+                it.length
+            }
+            supports = EnumSet.complementOf(EnumSet.of(UAPIClaimRelationship.GREATER_THAN))
+        }
     }
 }

@@ -280,6 +280,9 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         interface ListWithFilters<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
             : IListSubresource.ListWithFilters<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, CollectionParams, Filters>
     }
+
+    interface HasClaims<UserContext : Any, Id : Any, Model : Any>
+        : Resource.HasClaims<UserContext, Model, IdentifiedModel<Id, Model>>
 }
 
 private fun ListResource<*, *, *, *>.defaultSingleName(): String {
