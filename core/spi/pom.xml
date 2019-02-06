@@ -28,6 +28,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>edu.byu.uapi.kotlin</groupId>
