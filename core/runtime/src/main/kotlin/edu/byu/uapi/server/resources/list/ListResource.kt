@@ -327,6 +327,7 @@ internal fun <Params : ListParams>
     }
 
     return DefaultListParamReader.create(
+        paramsType = listParamsType,
         search = search,
         filter = filter,
         sort = sort,

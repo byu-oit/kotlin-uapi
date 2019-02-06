@@ -127,16 +127,16 @@ class DefaultIntrospectionContext(
     override val messages: List<IntrospectionMessage>
         get() = _messages
 
-    override fun suggest(message: String, suggestions: List<String>) {
-        _messages += IntrospectionMessage(IntrospectionMessage.Severity.SUGGESTION, this.location, message, suggestions)
+    override fun suggest(message: String, suggestions: List<String>, location: IntrospectionLocation) {
+        _messages += IntrospectionMessage(IntrospectionMessage.Severity.SUGGESTION, location, message, suggestions)
     }
 
-    override fun warn(message: String, suggestions: List<String>) {
-        _messages += IntrospectionMessage(IntrospectionMessage.Severity.WARNING, this.location, message, suggestions)
+    override fun warn(message: String, suggestions: List<String>, location: IntrospectionLocation) {
+        _messages += IntrospectionMessage(IntrospectionMessage.Severity.WARNING, location, message, suggestions)
     }
 
-    override fun error(message: String, suggestions: List<String>): Nothing {
-        _messages += IntrospectionMessage(ERROR, this.location, message, suggestions)
+    override fun error(message: String, suggestions: List<String>, location: IntrospectionLocation): Nothing {
+        _messages += IntrospectionMessage(ERROR, location, message, suggestions)
         throw IntrospectionException(
             this.location, message, suggestions
         )
@@ -150,7 +150,7 @@ class DefaultIntrospectionContext(
 
     override fun <R> withLocation(location: IntrospectionLocation, fn: IntrospectionContext.() -> R): R {
         val ctx = DefaultIntrospectionContext(
-            this.types, this.location, this._messages
+            this.types, location, this._messages
         )
         return ctx.fn()
     }

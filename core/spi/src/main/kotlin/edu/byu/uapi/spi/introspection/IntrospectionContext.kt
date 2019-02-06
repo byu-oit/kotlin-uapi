@@ -13,59 +13,68 @@ interface IntrospectionContext {
 
     fun suggest(
         message: String,
-        suggestions: List<String> = emptyList()
+        suggestions: List<String> = emptyList(),
+        location: IntrospectionLocation = this.location
     )
 
     fun suggest(
         message: String,
-        suggestion: String
+        suggestion: String,
+        location: IntrospectionLocation = this.location
     ) {
-        suggest(message, listOf(suggestion))
+        suggest(message, listOf(suggestion), location)
     }
 
     fun suggest(
         message: String,
         suggestion: String,
-        vararg otherSuggestions: String
+        vararg otherSuggestions: String,
+        location: IntrospectionLocation = this.location
     ) {
-        suggest(message, listOf(suggestion) + otherSuggestions)
+        suggest(message, listOf(suggestion) + otherSuggestions, location)
     }
 
     fun warn(
         message: String,
-        suggestions: List<String> = emptyList()
+        suggestions: List<String> = emptyList(),
+        location: IntrospectionLocation = this.location
     )
 
     fun warn(
         message: String,
-        suggestion: String
+        suggestion: String,
+        location: IntrospectionLocation = this.location
     ) {
-        warn(message, listOf(suggestion))
+        warn(message, listOf(suggestion), location)
     }
 
     fun warn(
         message: String,
         suggestion: String,
-        vararg otherSuggestions: String
+        vararg otherSuggestions: String,
+        location: IntrospectionLocation = this.location
     ) {
-        warn(message, listOf(suggestion) + otherSuggestions)
+        warn(message, listOf(suggestion) + otherSuggestions, location)
     }
 
     fun error(
         message: String,
-        suggestions: List<String> = emptyList()
+        suggestions: List<String> = emptyList(),
+        location: IntrospectionLocation = this.location
     ): Nothing
 
     fun error(
         message: String,
-        suggestion: String
-    ): Nothing = error(message, listOf(suggestion))
+        suggestion: String,
+        location: IntrospectionLocation = this.location
+    ): Nothing = error(message, listOf(suggestion), location)
 
     fun error(
         message: String,
         suggestion: String,
-        vararg otherSuggestions: String
-    ): Nothing = error(message, listOf(suggestion) + otherSuggestions)
+        vararg otherSuggestions: String,
+        location: IntrospectionLocation = this.location
+    ): Nothing = error(message, listOf(suggestion) + otherSuggestions, location)
 
     fun <R> introspect(target: Introspectable<R>): R
 

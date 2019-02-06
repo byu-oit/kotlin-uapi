@@ -30,7 +30,9 @@ sealed class IntrospectionLocation {
     data class Parameter(val inClass: KClass<*>, val method: KCallable<*>, val parameter: KParameter) :
         IntrospectionLocation() {
         override fun toString(): String {
-            return "$inClass.${method.name}(... ${parameter.name}, ...)"
+            val prefix = "_, ".repeat(parameter.index)
+            val suffix = ", _".repeat(method.parameters.size - parameter.index - 1)
+            return "${inClass.simpleName}.${method.name}($prefix${parameter.name}: ${parameter.type}$suffix)"
         }
     }
 
