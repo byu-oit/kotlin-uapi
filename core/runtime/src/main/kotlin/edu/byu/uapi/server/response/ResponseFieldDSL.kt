@@ -309,7 +309,7 @@ class UAPIValueInit<UserContext : Any, Model : Any, Type : Any>(
 
     @PublishedApi
     override fun toDefinition(): ResponseField<UserContext, Model, *> {
-        return ValueResponseField(
+        return RequiredValueResponseField(
             type,
             name,
             valueGetter,
@@ -339,7 +339,7 @@ class MappedValueInit<UserContext : Any, Model : Any, MappedFrom : Any, Output :
 
     @PublishedApi
     override fun toDefinition(): ResponseField<UserContext, Model, *> {
-        return ValueResponseField(
+        return RequiredValueResponseField(
             type,
             name,
             valueGetter.then(getOutput),

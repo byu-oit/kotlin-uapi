@@ -30,7 +30,7 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 6-listing-resources/src/main/kotl
 +import edu.byu.uapi.kotlin.examples.library.*
 +import edu.byu.uapi.server.resources.identified.*
  import edu.byu.uapi.spi.input.ListWithTotal
- import edu.byu.uapi.spi.input.UAPISortOrder
+ import edu.byu.uapi.model.UAPISortOrder
  
 @@ -13,7 +9,11 @@
                        ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,

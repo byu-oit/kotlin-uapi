@@ -73,7 +73,7 @@ internal data class AnalyzedIdParams<Id : Any>(
     val constructor: KFunction<Id>,
     val params: List<AnalyzedIdParam>
 ) : IdParamMeta {
-    override val idParams: List<IdParamMeta.Param> = params.map { IdParamMeta.Param(it.name, it.scalarType.scalarFormat) }
+    override val idParams: List<IdParamMeta.Param> = params.map { IdParamMeta.Param(it.name, it.scalarType.valueType, it.scalarType.constraints) }
 }
 
 internal data class AnalyzedIdParam(

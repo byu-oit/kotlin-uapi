@@ -1,6 +1,10 @@
 package edu.byu.uapi.server.response
 
+import edu.byu.uapi.model.*
+import edu.byu.uapi.server.spi.requireScalarType
 import edu.byu.uapi.server.types.*
+import edu.byu.uapi.spi.dictionary.TypeDictionary
+import java.util.*
 import kotlin.reflect.KClass
 
 typealias ValuePropDescriber<Model, Value> = (Model, value: Value) -> String?
@@ -15,20 +19,44 @@ sealed class ResponseField<UserContext : Any, Model : Any, Prop : UAPIProperty> 
     abstract val doc: String?
     abstract val displayLabel: String?
 
-
     abstract fun toProp(
         userContext: UserContext,
         model: Model
     ): Prop
 
+    fun introspect(
+        typeDictionary: TypeDictionary
+    ): UAPIPropertyModel {
+        return UAPIPropertyModel(
+            type = introspectTypeModel(typeDictionary),
+            apiTypes = this.possibleApiTypes
+        )
+    }
+
+    abstract fun introspectTypeModel(
+        typeDictionary: TypeDictionary
+    ): UAPIPropertyTypeModel
+
+    internal abstract val canBeModifiable: Boolean
+
+    val possibleApiTypes: Set<UAPIApiType> by lazy {
+        when {
+            isSystem -> EnumSet.of(UAPIApiType.SYSTEM)
+            isDerived -> EnumSet.of(UAPIApiType.DERIVED)
+            //TODO: Handle related
+            canBeModifiable -> EnumSet.of(UAPIApiType.MODIFIABLE, UAPIApiType.READ_ONLY)
+            else -> EnumSet.of(UAPIApiType.READ_ONLY)
+        }
+    }
 }
 
 typealias ArrayPropGetter<Model, Item> = (Model) -> Collection<Item>
 typealias ArrayPropDescriber<Model, Item> = (Model, array: Collection<Item?>, item: Item, index: Int) -> String?
 
-sealed class ValueResponseFieldBase<UserContext : Any, Model : Any, Type, NonNullType : Any>
+sealed class ValueResponseField<UserContext : Any, Model : Any, Type, NonNullType : Any>
     : ResponseField<UserContext, Model, UAPIValueProperty<Type>>() {
 
+    abstract val type: KClass<NonNullType>
     abstract override val name: String
     abstract val getValue: ValuePropGetter<Model, Type>
     abstract override val key: Boolean
@@ -40,6 +68,9 @@ sealed class ValueResponseFieldBase<UserContext : Any, Model : Any, Type, NonNul
     abstract override val doc: String?
     abstract override val displayLabel: String?
 
+    abstract val nullable: Boolean
+
+    override val canBeModifiable: Boolean by lazy { modifiable != null }
 
     private fun getDescriptions(
         model: Model,
@@ -85,7 +116,7 @@ sealed class ValueResponseFieldBase<UserContext : Any, Model : Any, Type, NonNul
 
     protected abstract fun construct(
         value: Type,
-        apiType: APIType,
+        apiType: UAPIApiType,
         key: Boolean,
         description: OrMissing<String?>,
         longDescription: OrMissing<String?>,
@@ -94,11 +125,20 @@ sealed class ValueResponseFieldBase<UserContext : Any, Model : Any, Type, NonNul
         relatedResource: OrMissing<String>
     ): UAPIValueProperty<Type>
 
+    override fun introspectTypeModel(typeDictionary: TypeDictionary): UAPIValuePropertyTypeModel {
+        return typeDictionary.getValuePropDefinition(type)
+    }
 }
 
-sealed class ValueArrayResponseField<UserContext: Any, Model: Any, Item: Any>
-    : ResponseField<UserContext, Model, UAPIValueArrayProperty<Item?>>(){
+sealed class ValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>
+    : ResponseField<UserContext, Model, UAPIValueArrayProperty<Item?>>() {
     abstract val itemType: KClass<Item>
+
+    override fun introspectTypeModel(typeDictionary: TypeDictionary): UAPIValueArrayPropertyTypeModel {
+        return UAPIValueArrayPropertyTypeModel(
+            items = typeDictionary.getValuePropDefinition(itemType)
+        )
+    }
 }
 
 class SimpleValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>(
@@ -114,6 +154,7 @@ class SimpleValueArrayResponseField<UserContext : Any, Model : Any, Item : Any>(
     override val doc: String? = null,
     override val displayLabel: String? = null
 ) : ValueArrayResponseField<UserContext, Model, Item>() {
+    override val canBeModifiable: Boolean by lazy { modifiable != null }
     override fun toProp(
         userContext: UserContext,
         model: Model
@@ -182,6 +223,7 @@ class MappedValueArrayResponseField<UserContext : Any, Model : Any, Item : Any, 
     override val doc: String? = null,
     override val displayLabel: String? = null
 ) : ValueArrayResponseField<UserContext, Model, Value>() {
+    override val canBeModifiable: Boolean by lazy { modifiable != null }
     override fun toProp(
         userContext: UserContext,
         model: Model
@@ -250,18 +292,18 @@ fun getApiType(
     modifiable: Boolean?,
     derived: Boolean,
     system: Boolean
-): APIType {
+): UAPIApiType {
     return when {
-        modifiable != null -> if (modifiable) APIType.MODIFIABLE else APIType.READ_ONLY
-        derived -> APIType.DERIVED
-        system -> APIType.SYSTEM
+        modifiable != null -> if (modifiable) UAPIApiType.MODIFIABLE else UAPIApiType.READ_ONLY
+        derived -> UAPIApiType.DERIVED
+        system -> UAPIApiType.SYSTEM
         // TODO(Handle 'related')
-        else -> APIType.READ_ONLY
+        else -> UAPIApiType.READ_ONLY
     }
 }
 
-class ValueResponseField<UserContext : Any, Model : Any, Type : Any>(
-    val type: KClass<Type>,
+class RequiredValueResponseField<UserContext : Any, Model : Any, Type : Any>(
+    override val type: KClass<Type>,
     override val name: String,
     override val getValue: ValuePropGetter<Model, Type>,
     override val key: Boolean = false,
@@ -272,14 +314,16 @@ class ValueResponseField<UserContext : Any, Model : Any, Type : Any>(
     override val isDerived: Boolean = false,
     override val doc: String? = null,
     override val displayLabel: String? = null
-) : ValueResponseFieldBase<UserContext, Model, Type, Type>() {
+) : ValueResponseField<UserContext, Model, Type, Type>() {
+
+    override val nullable: Boolean = false
 
     //Oh, the joys of hacking around Java's Generic system
     override fun asNonNull(value: Type): Type = value
 
     override fun construct(
         value: Type,
-        apiType: APIType,
+        apiType: UAPIApiType,
         key: Boolean,
         description: OrMissing<String?>,
         longDescription: OrMissing<String?>,
@@ -301,7 +345,7 @@ class ValueResponseField<UserContext : Any, Model : Any, Type : Any>(
 }
 
 class NullableValueResponseField<UserContext : Any, Model : Any, Type : Any>(
-    val type: KClass<Type>,
+    override val type: KClass<Type>,
     override val name: String,
     override val getValue: ValuePropGetter<Model, Type?>,
     override val key: Boolean = false,
@@ -312,7 +356,9 @@ class NullableValueResponseField<UserContext : Any, Model : Any, Type : Any>(
     override val isDerived: Boolean = false,
     override val doc: String? = null,
     override val displayLabel: String? = null
-) : ValueResponseFieldBase<UserContext, Model, Type?, Type>() {
+) : ValueResponseField<UserContext, Model, Type?, Type>() {
+
+    override val nullable: Boolean = true
 
     //Oh, the joys of hacking around Java's Generic system
     @Suppress("UNCHECKED_CAST")
@@ -320,7 +366,7 @@ class NullableValueResponseField<UserContext : Any, Model : Any, Type : Any>(
 
     override fun construct(
         value: Type?,
-        apiType: APIType,
+        apiType: UAPIApiType,
         key: Boolean,
         description: OrMissing<String?>,
         longDescription: OrMissing<String?>,
@@ -341,4 +387,6 @@ class NullableValueResponseField<UserContext : Any, Model : Any, Type : Any>(
     }
 }
 
-
+internal fun TypeDictionary.getValuePropDefinition(type: KClass<*>): UAPIValuePropertyTypeModel {
+    return this.requireScalarType(type).asValueDefinition()
+}

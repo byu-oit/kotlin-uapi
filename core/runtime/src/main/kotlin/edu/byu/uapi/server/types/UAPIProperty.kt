@@ -1,10 +1,11 @@
 package edu.byu.uapi.server.types
 
+import edu.byu.uapi.model.UAPIApiType
 import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
 
 sealed class UAPIProperty : Renderable {
-    abstract val apiType: APIType
+    abstract val apiType: UAPIApiType
     abstract val key: Boolean
     abstract val displayLabel: String?
     abstract val domain: OrMissing<String?>
@@ -28,7 +29,7 @@ class UAPIValueProperty<Value>(
     val value: Value,
     val description: OrMissing<String?>,
     val longDescription: OrMissing<String?>,
-    override val apiType: APIType,
+    override val apiType: UAPIApiType,
     override val key: Boolean,
     override val displayLabel: String?,
     override val domain: OrMissing<String>,
@@ -45,7 +46,7 @@ class UAPIValueProperty<Value>(
 
 class UAPIValueArrayProperty<Item>(
     val values: Collection<ValueArrayItem<Item>>,
-    override val apiType: APIType,
+    override val apiType: UAPIApiType,
     override val key: Boolean,
     override val displayLabel: String?,
     override val domain: OrMissing<String>,

@@ -1,11 +1,13 @@
 package edu.byu.uapi.server.spi
 
+import edu.byu.uapi.model.UAPIListSortFeature
+import edu.byu.uapi.model.UAPISortOrder
 import edu.byu.uapi.server.scalars.EnumScalarType
 import edu.byu.uapi.spi.UAPITypeError
-import edu.byu.uapi.spi.input.UAPISortOrder
 import edu.byu.uapi.spi.input.SortParams
 import edu.byu.uapi.spi.input.SortParamsMeta
 import edu.byu.uapi.spi.input.SortParamsReader
+import edu.byu.uapi.spi.introspection.IntrospectionContext
 import edu.byu.uapi.spi.requests.QueryParams
 
 class DefaultSortParamsReader<SortProperty : Enum<SortProperty>> private constructor(
@@ -36,6 +38,14 @@ class DefaultSortParamsReader<SortProperty : Enum<SortProperty>> private constru
     )
 
     override fun describe(): SortParamsMeta = meta
+
+    override fun introspect(context: IntrospectionContext): UAPIListSortFeature {
+        return UAPIListSortFeature(
+            availableSortProperties = meta.properties,
+            defaultSortProperties = meta.defaults,
+            defaultSortOrder = meta.defaultSortOrder
+        )
+    }
 
     companion object {
         @Throws(UAPITypeError::class)

@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.subresources.list
 
+import edu.byu.uapi.model.UAPISortOrder
 import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit

@@ -33,6 +33,11 @@
             <artifactId>uapi-hibernate-validator</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>edu.byu.uapi.kotlin</groupId>
+            <artifactId>uapi-model</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- Kotlin -->
         <dependency>

@@ -1,5 +1,6 @@
 package lambda
 
+import edu.byu.uapi.model.UAPIValueType
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
@@ -17,7 +18,6 @@ import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.*
 import edu.byu.uapi.spi.requests.IdParams
-import edu.byu.uapi.spi.scalars.ScalarFormat
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -227,7 +227,7 @@ class GreetingResource : ListResource.Simple<HelloWorldUser, String, Greeting> {
             }
 
             override fun describe(): IdParamMeta {
-                return IdParamMeta.Default(listOf(IdParamMeta.Param("id", ScalarFormat.STRING)))
+                return IdParamMeta.Default(listOf(IdParamMeta.Param("id", UAPIValueType.STRING)))
             }
         }
     }

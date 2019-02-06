@@ -1,12 +1,19 @@
 package edu.byu.uapi.spi.input
 
+import edu.byu.uapi.model.*
 import edu.byu.uapi.spi.SpecConstants
+import edu.byu.uapi.spi.introspection.Introspectable
+import edu.byu.uapi.spi.introspection.IntrospectionContext
 import edu.byu.uapi.spi.requests.QueryParams
-import edu.byu.uapi.spi.scalars.ScalarFormat
+import java.math.BigDecimal
 
-interface ListParamReader<Params : Any> : QueryParamReader<Params, ListParamsMeta>
+interface ListParamReader<Params : Any> : QueryParamReader<Params, ListParamsMeta>, Introspectable<UAPIListFeatureModel>
 
 object EmptyListParamReader : ListParamReader<ListParams.Empty> {
+    override fun introspect(context: IntrospectionContext): UAPIListFeatureModel {
+        return UAPIListFeatureModel()
+    }
+
     override fun read(input: QueryParams): ListParams.Empty = ListParams.Empty
 
     override fun describe(): ListParamsMeta {
@@ -14,13 +21,9 @@ object EmptyListParamReader : ListParamReader<ListParams.Empty> {
     }
 }
 
-//interface SearchContextReader<SearchContext : Enum<SearchContext>> : ScalarType<SearchContext>
-//interface SortPropertyReader<SortProperty : Enum<SortProperty>> : ScalarType<SortProperty>
-interface FilterParamsReader<FilterParams : Any> : QueryParamReader<FilterParams?, FilterParamsMeta>
-interface SearchParamsReader<SearchContext: Enum<SearchContext>>: QueryParamReader<SearchParams<SearchContext>?, SearchParamsMeta>
-interface SortParamsReader<SortProperty: Enum<SortProperty>>: QueryParamReader<SortParams<SortProperty>, SortParamsMeta>
-
-//class SearchContextReader<SearchContext: Enum<SearchContext>>(): EnumScalar
+interface FilterParamsReader<FilterParams : Any> : QueryParamReader<FilterParams?, FilterParamsMeta>, Introspectable<UAPIListFiltersFeature>
+interface SearchParamsReader<SearchContext: Enum<SearchContext>>: QueryParamReader<SearchParams<SearchContext>?, SearchParamsMeta>, Introspectable<UAPIListSearchFeature>
+interface SortParamsReader<SortProperty: Enum<SortProperty>>: QueryParamReader<SortParams<SortProperty>, SortParamsMeta>, Introspectable<UAPIListSortFeature>
 
 data class ListParamsMeta(
     val search: SearchParamsMeta?,
@@ -44,8 +47,8 @@ data class SearchParamsMeta(
     val contextFields: Map<String, Collection<String>>
 ) : ListParamsMetaType() {
     override val queryParams: List<QueryParamMetadata.Param> = listOf(
-        QueryParamMetadata.Param(SEARCH_TEXT_KEY, ScalarFormat.STRING),
-        QueryParamMetadata.Param(SEARCH_CONTEXT_KEY, ScalarFormat.STRING.asEnum(contextFields.keys))
+        QueryParamMetadata.Param(SEARCH_TEXT_KEY, UAPIValueType.STRING),
+        QueryParamMetadata.Param(SEARCH_CONTEXT_KEY, UAPIValueType.STRING, UAPIValueConstraints(enum = contextFields.keys))
     )
     companion object {
         const val SEARCH_TEXT_KEY = SpecConstants.Collections.Query.KEY_SEARCH_TEXT
@@ -63,8 +66,8 @@ data class SortParamsMeta(
     val defaultSortOrder: UAPISortOrder
 ) : ListParamsMetaType() {
     override val queryParams: List<QueryParamMetadata.Param> = listOf(
-        QueryParamMetadata.Param(SORT_PROPERTIES_KEY, ScalarFormat.STRING),
-        QueryParamMetadata.Param(SORT_ORDER_KEY, ScalarFormat.STRING)
+        QueryParamMetadata.Param(SORT_PROPERTIES_KEY, UAPIValueType.STRING, UAPIValueConstraints(enum = properties.toSet())),
+        QueryParamMetadata.Param(SORT_ORDER_KEY, UAPIValueType.STRING, UAPIValueConstraints(enum = edu.byu.uapi.model.UAPISortOrder.values().map { it.apiValue }.toSet()))
     )
     companion object {
         const val SORT_PROPERTIES_KEY = SpecConstants.Collections.Query.KEY_SORT_PROPERTIES
@@ -77,8 +80,8 @@ data class SubsetParamsMeta(
     val maxSize: Int
 ) : ListParamsMetaType() {
     override val queryParams: List<QueryParamMetadata.Param> = listOf(
-        QueryParamMetadata.Param(SUBSET_START_OFFSET_KEY, ScalarFormat.INTEGER),
-        QueryParamMetadata.Param(SUBSET_SIZE_KEY, ScalarFormat.INTEGER)
+        QueryParamMetadata.Param(SUBSET_START_OFFSET_KEY, UAPIValueType.INT, UAPIValueConstraints(minimum = BigDecimal.ZERO)),
+        QueryParamMetadata.Param(SUBSET_SIZE_KEY, UAPIValueType.INT, UAPIValueConstraints(minimum = BigDecimal.ONE, maximum = maxSize.toBigDecimal()))
     )
 
     companion object {

@@ -8,7 +8,7 @@ import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
 import edu.byu.uapi.spi.input.ListWithTotal
-import edu.byu.uapi.spi.input.UAPISortOrder
+import edu.byu.uapi.model.UAPISortOrder
 
 class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
                       ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,

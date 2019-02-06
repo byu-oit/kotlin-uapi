@@ -1,8 +1,8 @@
 package edu.byu.uapi.server.types
 
+import edu.byu.uapi.model.UAPISortOrder
 import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.SpecConstants.Metadata
-import edu.byu.uapi.spi.input.UAPISortOrder
 import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
 import java.time.Instant

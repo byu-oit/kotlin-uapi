@@ -1,5 +1,7 @@
 package edu.byu.uapi.server.resources.list
 
+import edu.byu.uapi.model.UAPIListResourceModel
+import edu.byu.uapi.model.UAPIResourceModel
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.subresources.*
 import edu.byu.uapi.server.types.IdentifiedModel
@@ -9,13 +11,24 @@ import edu.byu.uapi.spi.SpecConstants.FieldSets.DEFAULT_FIELDSETS
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamReader
 import edu.byu.uapi.spi.input.ListParams
+import edu.byu.uapi.spi.introspection.Introspectable
+import edu.byu.uapi.spi.introspection.IntrospectionContext
+import edu.byu.uapi.spi.introspection.IntrospectionLocation
 import edu.byu.uapi.spi.requests.FieldsetRequest
 import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.utility.collections.ifNotEmpty
 import java.util.*
+import kotlin.reflect.KClass
 
-sealed class ResourceRuntime<UserContext : Any, ModelStyle : ModelHolder> : SubresourceParent<UserContext, ModelStyle> {
+sealed class ResourceRuntime<
+    UserContext : Any,
+    ModelStyle : ModelHolder,
+    ResourceModelType : UAPIResourceModel
+    > : SubresourceParent<UserContext, ModelStyle>, Introspectable<Pair<String, ResourceModelType>> {
+
+    abstract val name: String
+
 }
 
 class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : ListParams>(
@@ -23,10 +36,12 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
     val typeDictionary: TypeDictionary,
     val validationEngine: ValidationEngine,
     subresourceList: List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = emptyList()
-) : ResourceRuntime<UserContext, IdentifiedModel<Id, Model>>() {
+) : ResourceRuntime<UserContext, IdentifiedModel<Id, Model>, UAPIListResourceModel>() {
 
     val pluralName = resource.pluralName
     val singleName = resource.singleName
+
+    override val name: String = pluralName
 
     // TODO fun validateResource(validation: Validating)
 
@@ -38,10 +53,6 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
 
     init {
         LOG.debug("Initializing $pluralName runtime")
-    }
-
-    val model: ListResourceModel by lazy {
-        TODO()
     }
 
     val availableOperations: Set<ListResourceRequestHandler<UserContext, Id, Model, Params, *>> by lazy {
@@ -57,7 +68,8 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
         Collections.unmodifiableSet(ops)
     }
 
-    val subresources: Map<String, SubresourceRuntime<UserContext, IdentifiedModel<Id, Model>, *>> = subresourceList.map { it.createRuntime(this, typeDictionary, validationEngine) }.associateBy { it.fieldsetName }
+    val subresources: Map<String, SubresourceRuntime<UserContext, IdentifiedModel<Id, Model>, *>> =
+        subresourceList.map { it.createRuntime(this, typeDictionary, validationEngine) }.associateBy { it.fieldsetName }
     val availableFieldsets = DEFAULT_FIELDSETS + subresources.keys
     val availableContexts = emptyMap<String, Set<String>>()
 
@@ -72,7 +84,8 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
         (requestedFieldsets - availableFieldsets).ifNotEmpty { return RequestedFieldsetResponse.InvalidFieldsets }
         (requestedContexts - availableContexts.keys).ifNotEmpty { return RequestedFieldsetResponse.InvalidContexts }
 
-        val fromContexts = fieldsetRequest.requestedContexts.flatMap { availableContexts.getValue(it) /* we already validated contexts */ }
+        val fromContexts =
+            fieldsetRequest.requestedContexts.flatMap { availableContexts.getValue(it) /* we already validated contexts */ }
         val set = fieldsetRequest.requestedFieldsets.ifEmpty { DEFAULT_FIELDSETS } + fromContexts
         return RequestedFieldsetResponse.of(set)
     }
@@ -89,4 +102,16 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
         if (!authorized) return ParentResult.NotAuthorized
         return ParentResult.Success(IdentifiedModel.Simple(id, model))
     }
+
+    override fun introspect(context: IntrospectionContext): Pair<String, UAPIListResourceModel> {
+        return this.pluralName to context.withLocation(resource.asIntrospectionLocation()) {
+            introspect(this@ListResourceRuntime, this)
+        }
+    }
+}
+
+fun KClass<*>.asIntrospectionLocation(): IntrospectionLocation = IntrospectionLocation.of(this)
+
+fun Any.asIntrospectionLocation(): IntrospectionLocation {
+    return IntrospectionLocation.of(this::class)
 }

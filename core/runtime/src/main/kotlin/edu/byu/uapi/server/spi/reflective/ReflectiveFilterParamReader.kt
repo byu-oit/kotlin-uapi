@@ -1,5 +1,7 @@
 package edu.byu.uapi.server.spi.reflective
 
+import edu.byu.uapi.model.UAPIListFilterParameter
+import edu.byu.uapi.model.UAPIListFiltersFeature
 import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.spi.requireScalarType
 import edu.byu.uapi.server.util.exhaustive
@@ -9,6 +11,8 @@ import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.FilterParamsMeta
 import edu.byu.uapi.spi.input.FilterParamsReader
 import edu.byu.uapi.spi.input.QueryParamMetadata
+import edu.byu.uapi.spi.introspection.IntrospectionContext
+import edu.byu.uapi.spi.introspection.withLocation
 import edu.byu.uapi.spi.requests.QueryParams
 import edu.byu.uapi.spi.requests.withPrefix
 import edu.byu.uapi.spi.scalars.ScalarType
@@ -35,6 +39,22 @@ class ReflectiveFilterParamReader<Filters : Any> internal constructor(
     }
 
     override fun describe(): FilterParamsMeta = meta
+
+    override fun introspect(context: IntrospectionContext): UAPIListFiltersFeature {
+        return context.withLocation(analyzed.filterClass) {
+            analyzed.fields.flatMap { af ->
+                context.withLocation(analyzed.filterClass, analyzed.constructor, af.parameter) {
+                    af.getParams("").map {
+                        it.name to UAPIListFilterParameter(
+                            type = it.type,
+                            constraints = it.constraints,
+                            allowMultiple = it.repeatable
+                        )
+                    }
+                }
+            }.toMap().toSortedMap()
+        }
+    }
 
     companion object {
         @Throws(UAPITypeError::class)
@@ -111,7 +131,7 @@ internal data class AnalyzedSimpleFilterField(
 ) : AnalyzedFilterField() {
     override fun getParams(prefix: String): List<QueryParamMetadata.Param> = listOf(
         QueryParamMetadata.Param(
-            prefix + name, scalarType.scalarFormat, false
+            prefix + name, scalarType.valueType, scalarType.constraints, false
         )
     )
 
@@ -133,7 +153,7 @@ internal data class AnalyzedRepeatableFilterField(
 ) : AnalyzedFilterField() {
     override fun getParams(prefix: String): List<QueryParamMetadata.Param> = listOf(
         QueryParamMetadata.Param(
-            prefix + name, scalarType.scalarFormat, true
+            prefix + name, scalarType.valueType, scalarType.constraints, true
         )
     )
 

@@ -17,6 +17,6 @@ class ScalarTypeIdParamReader<T : Any>(
     }
 
     override fun describe(): IdParamMeta = IdParamMeta.Default(listOf(
-        IdParamMeta.Param(paramName, type.scalarFormat)
+        IdParamMeta.Param(paramName, type.valueType, type.constraints)
     ))
 }

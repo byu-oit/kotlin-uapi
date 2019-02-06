@@ -10,5 +10,9 @@ fun main() {
         .level(Level.WARNING)
         .activate()
 
+    val model = helloWorldRuntime.model
+
+    println(model)
+
     helloWorldRuntime.startSpark(8080)
 }

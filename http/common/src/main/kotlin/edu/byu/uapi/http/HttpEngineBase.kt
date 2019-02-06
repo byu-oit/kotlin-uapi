@@ -40,6 +40,8 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
         }
         val routes = resources.flatMap { it.routes }
 
+
+
         registerRoutes(_server, config, routes, rootPath, runtime)
 
         LOG.info("Finished registering routes for root path '/$rootPath'")

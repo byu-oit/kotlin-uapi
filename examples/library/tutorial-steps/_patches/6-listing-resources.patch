@@ -139,7 +139,7 @@ diff -urN -x '*.iml' -x '*.orig' -x 'target/*' 5-response-body/src/main/kotlin/e
  import edu.byu.uapi.server.resources.identified.fields
 -import edu.byu.uapi.spi.input.ListParams
 +import edu.byu.uapi.spi.input.ListWithTotal
-+import edu.byu.uapi.spi.input.UAPISortOrder
++import edu.byu.uapi.model.UAPISortOrder
  
 -class BooksResource : ListResource.SimpleList<LibraryUser, Long, Book> {
 +class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,

@@ -1,9 +1,10 @@
 package edu.byu.uapi.spi.input
 
+import edu.byu.uapi.model.UAPIValueConstraints
+import edu.byu.uapi.model.UAPIValueType
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.requests.QueryParams
-import edu.byu.uapi.spi.scalars.ScalarFormat
 import kotlin.reflect.KClass
 
 interface ParamReader<ParamType, InputType : Any, MetaType : Any> {
@@ -20,7 +21,8 @@ interface QueryParamMetadata {
 
     data class Param(
         val name: String,
-        val format: ScalarFormat,
+        val type: UAPIValueType,
+        val constraints: UAPIValueConstraints? = null,
         val repeatable: Boolean = false
     )
 }
@@ -32,7 +34,8 @@ interface IdParamMeta {
 
     data class Param(
         val name: String,
-        val format: ScalarFormat
+        val type: UAPIValueType,
+        val constraints: UAPIValueConstraints? = null
     )
 
     data class Default(override val idParams: List<Param>): IdParamMeta
