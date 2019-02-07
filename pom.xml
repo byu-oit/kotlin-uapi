@@ -48,6 +48,8 @@
         <!-- Process and validate JWTs -->
         <byu.jwt.version>2.1.0-SNAPSHOT</byu.jwt.version>
 
+        <uapi.model.version>0.1.0-SNAPSHOT</uapi.model.version>
+
         <!-- Guava because, well, Guava. -->
         <util.guava.version>27.0.1-jre</util.guava.version>
 
@@ -136,6 +138,27 @@
                 <groupId>edu.byu.jwt</groupId>
                 <artifactId>byu-jwt</artifactId>
                 <version>${byu.jwt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>edu.byu.uapi.model</groupId>
+                <artifactId>uapi-model</artifactId>
+                <version>${uapi.model.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.model.dialects</groupId>
+                <artifactId>uapi-model-dialect-openapi3</artifactId>
+                <version>${uapi.model.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.model.serialization</groupId>
+                <artifactId>uapi-model-serialization-jackson2</artifactId>
+                <version>${uapi.model.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.model.serialization</groupId>
+                <artifactId>uapi-dialect-openapi3-serialization-jackson2</artifactId>
+                <version>${uapi.model.version}</version>
             </dependency>
 
             <!-- Logging -->

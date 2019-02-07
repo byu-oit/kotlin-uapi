@@ -4,11 +4,11 @@ import edu.byu.uapi.kotlin.examples.library.Author
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Genre
 import edu.byu.uapi.kotlin.examples.library.Library
+import edu.byu.uapi.model.UAPISortOrder
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
 import edu.byu.uapi.spi.input.ListWithTotal
-import edu.byu.uapi.model.UAPISortOrder
 
 class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
                       ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
@@ -17,6 +17,8 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
                       ListResource.ListWithSubset<LibraryUser, Long, Book, BookListParams> {
 
     override val pluralName: String = "books"
+
+    override val scalarIdParamName: String = "oclc"
 
     override fun loadModel(
         requestContext: ResourceRequestContext,

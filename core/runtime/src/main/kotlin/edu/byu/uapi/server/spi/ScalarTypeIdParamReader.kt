@@ -7,10 +7,9 @@ import edu.byu.uapi.spi.requests.IdParams
 import edu.byu.uapi.spi.scalars.ScalarType
 
 class ScalarTypeIdParamReader<T : Any>(
-    prefix: String,
+    private val paramName: String,
     val type: ScalarType<T>
 ) : IdParamReader<T> {
-    private val paramName = prefix + "id"
 
     override fun read(input: IdParams): T {
         return input[paramName]?.asScalar(type) ?: throw ParamReadFailure(paramName, type.type, "No parameter value specified")

@@ -4,21 +4,28 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import edu.byu.uapi.http.*
+import edu.byu.uapi.http.docs.DocSource
 import edu.byu.uapi.http.json.*
 import edu.byu.uapi.server.UAPIRuntime
 import java.io.StringWriter
 
 data class LambdaConfig(override val jsonEngine: JsonEngine<*, *>) : HttpEngineConfig
 
-data class LambdaRequestHandler(
-    val pattern: Regex,
+interface LambdaRequestHandler {
+    val pattern: Regex
+    val method: HttpMethod
+    fun handle(request: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent
+}
+
+data class APILambdaRequestHandler(
+    override val pattern: Regex,
     val paramsNames: List<String>,
-    val method: HttpMethod,
+    override val method: HttpMethod,
     val handler: HttpHandler,
     val runtime: UAPIRuntime<*>,
     val jsonEngine: JsonEngine<*, *>
-) {
-    fun handle(request: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
+) : LambdaRequestHandler {
+    override fun handle(request: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
         val response = this.handler.handle(LambdaRequest(request, pattern, paramsNames))
 
         val rendered = when (jsonEngine) {
@@ -73,6 +80,17 @@ class LambdaProxyEngine(config: LambdaConfig) : HttpEngineBase<LambdaServer, Lam
         mappedPaths += routes.map { it.toHandler(root, runtime, config) }
     }
 
+    override fun registerDocRoutes(
+        server: LambdaServer,
+        config: LambdaConfig,
+        docRoutes: List<DocRoute>,
+        rootPath: String,
+        runtime: UAPIRuntime<*>
+    ) {
+        val root = if (rootPath.isNotBlank() && !rootPath.startsWith("/")) "/$rootPath" else rootPath
+        mappedPaths += docRoutes.map { it.toHandler(root) }
+    }
+
     fun dispatch(
         input: APIGatewayProxyRequestEvent,
         context: Context
@@ -94,13 +112,37 @@ fun HttpRoute.toHandler(
     runtime: UAPIRuntime<*>,
     config: LambdaConfig
 ): LambdaRequestHandler {
-    val (regex, groups) = this.toRegex(rootPath)
-    return LambdaRequestHandler(regex, groups, this.method, this.handler, runtime, config.jsonEngine)
+    val (regex, groups) = this.pathParts.toRoutePattern(rootPath)
+    return APILambdaRequestHandler(regex, groups, this.method, this.handler, runtime, config.jsonEngine)
 }
 
-fun HttpRoute.toRegex(rootPath: String): HttpRoutePattern {
+fun DocRoute.toHandler(
+    rootPath: String
+): LambdaRequestHandler {
+    val (regex, _) = this.path.toRoutePattern(rootPath)
+    return DocLambdaRequestHandler(regex, this.source)
+}
+
+class DocLambdaRequestHandler(override val pattern: Regex, private val source: DocSource) :
+    LambdaRequestHandler {
+    override val method: HttpMethod = HttpMethod.GET
+
+    override fun handle(request: APIGatewayProxyRequestEvent): APIGatewayProxyResponseEvent {
+        val pretty = request.queryStringParameters.orEmpty()["pretty"]?.toBoolean() ?: false
+
+        val body = source.getInputStream(pretty).use { it.reader().use { r -> r.readText() } }
+
+        return APIGatewayProxyResponseEvent()
+            .withStatusCode(200)
+            .withHeaders(mapOf("Content-Type" to source.contentType))
+            .withBody(body)
+    }
+
+}
+
+fun List<PathPart>.toRoutePattern(rootPath: String): HttpRoutePattern {
     val groups = mutableListOf<String>()
-    val parts = this.pathParts.stringify {
+    val parts = this.stringify {
         groups.add(it)
         "(.+?)"
     }

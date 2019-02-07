@@ -1,6 +1,12 @@
 package edu.byu.uapi.http
 
+import edu.byu.uapi.http.docs.DialectDocSource
+import edu.byu.uapi.http.docs.DocSource
+import edu.byu.uapi.http.docs.SwaggerViewerDocs
 import edu.byu.uapi.http.json.JsonEngine
+import edu.byu.uapi.model.UAPIModel
+import edu.byu.uapi.model.dialect.UAPIDialect
+import edu.byu.uapi.model.serialization.UAPISerializationFormat
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.resources.list.ListResourceRuntime
 import org.slf4j.LoggerFactory
@@ -40,11 +46,19 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
         }
         val routes = resources.flatMap { it.routes }
 
-
-
         registerRoutes(_server, config, routes, rootPath, runtime)
 
+        registerDocRoutes(_server, config, docRoutes(runtime.model), rootPath, runtime)
+
         LOG.info("Finished registering routes for root path '/$rootPath'")
+    }
+
+    private fun docRoutes(model: UAPIModel): List<DocRoute> {
+        val rootPath: List<PathPart> = listOf(StaticPathPart("\$docs"))
+        return UAPIDialect.findAllDialects()
+            .flatMap { d -> UAPISerializationFormat.values().map { d to it } }
+            .map { DialectDocSource(model, it.first, it.second) }
+            .map { DocRoute(it, rootPath) } + DocRoute(SwaggerViewerDocs(), rootPath)
     }
 
     abstract fun stop(server: Server)
@@ -55,6 +69,24 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
         routes: List<HttpRoute>,
         rootPath: String,
         runtime: UAPIRuntime<*>
+    )
+
+    abstract fun registerDocRoutes(
+        server: Server,
+        config: Config,
+        docRoutes: List<DocRoute>,
+        rootPath: String,
+        runtime: UAPIRuntime<*>
+    )
+}
+
+data class DocRoute (
+    val path: List<PathPart>,
+    val source: DocSource
+) {
+    constructor(source: DocSource, basePath: List<PathPart>): this(
+        basePath + StaticPathPart(source.name),
+        source
     )
 }
 

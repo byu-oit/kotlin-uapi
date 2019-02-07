@@ -62,23 +62,25 @@ internal fun introspectKeys(
         idParams.map { p ->
             val name = p.name
             val prop = resource.responseFields.find { it.name == name }
-            if (prop == null) {
-                context.warn(
+                ?: context.error(
                     "ID parameter $name is not listed in the resource's response properties.",
-                    "Be sure that all ID parameters are listed in the response properties list."
+                    "Be sure that all ID parameters are listed in the response properties list.",
+                    "If you're using a primitive ID type and the response property's name does not match the pattern `{resourceName}_id`, make sure you override the 'scalarIdParamName' in your resource"
+                )
+            if (!prop.key) {
+                context.warn(
+                    "ID parameter $name is not marked as a key in the resource's response properties.",
+                    "Set `key = true` in the response definition for this property."
+                )
+            }
+            if (prop !is ValueResponseField<*, *, *, *>) {
+                context.warn(
+                    "ID parameter $name is not a value property type.",
+                    "ID parameters should be simple values types, not arrays or objects."
                 )
             } else {
-                if (!prop.key) {
-                    context.warn("ID parameter $name is not marked as a key in the resource's response properties.",
-                        "Set `key = true` in the response definition for this property.")
-                }
-                if (prop !is ValueResponseField<*, *, *, *>) {
-                    context.warn("ID parameter $name is not a value property type.",
-                        "ID parameters should be simple values types, not arrays or objects.")
-                } else {
-                    if (types.getValuePropDefinition(prop.type).type != p.type) {
-                        context.warn("ID parameter $name has a different type than the corresponding response property.")
-                    }
+                if (types.getValuePropDefinition(prop.type).type != p.type) {
+                    context.warn("ID parameter $name has a different type than the corresponding response property.")
                 }
             }
 

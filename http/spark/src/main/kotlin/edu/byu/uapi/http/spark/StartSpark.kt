@@ -74,6 +74,23 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
         }
     }
 
+    override fun registerDocRoutes(
+        server: Service,
+        config: SparkConfig,
+        docRoutes: List<DocRoute>,
+        rootPath: String,
+        runtime: UAPIRuntime<*>
+    ) {
+        docRoutes.forEach { dr ->
+            val path = dr.path.stringifySpark()
+            LOG.info("Adding GET $path")
+            server.get(path) { req, res ->
+                res.type(dr.source.contentType)
+                dr.source.getInputStream(req.queryParams("pretty")?.toBoolean() ?: false)
+            }
+        }
+    }
+
     private inline fun Service.optionalPath(
         rootPath: String,
         crossinline group: () -> Unit

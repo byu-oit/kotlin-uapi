@@ -39,6 +39,9 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
     val idType: KClass<Id>
         get() = defaultIdType()
 
+    val scalarIdParamName: String
+        get() = this.singleName + "_id"
+
     fun loadModel(
         requestContext: ResourceRequestContext,
         userContext: UserContext,
@@ -58,7 +61,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
     fun getIdReader(
         dictionary: TypeDictionary
     ): IdParamReader<Id> {
-        return defaultIdReader(dictionary)
+        return defaultIdReader(dictionary, scalarIdParamName)
     }
 
     fun list(
@@ -238,17 +241,30 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
 
     // Subresource interface aliases - makes subresources a little nicer!
-    interface SingletonSubresource<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any> : ISingletonSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Model> {
-        interface Updatable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any, Input : Any> : ISingletonSubresource.Updatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model, Input>
-        interface Creatable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any, Input : Any> : ISingletonSubresource.Creatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model, Input>
+    interface SingletonSubresource<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any> :
+        ISingletonSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Model> {
+        interface Updatable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any, Input : Any> :
+            ISingletonSubresource.Updatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model, Input>
+
+        interface Creatable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any, Input : Any> :
+            ISingletonSubresource.Creatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model, Input>
+
         interface Deletable<UserContext : Any, ParentId : Any, ParentModel : Any, Model : Any> : ISingletonSubresource.Deletable<UserContext, IdentifiedModel<ParentId, ParentModel>, Model>
     }
 
-    interface ListSubresource<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Params : ListParams> : IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Params> {
-        interface Creatable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> : IListSubresource.Creatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
-        interface Updatable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> : IListSubresource.Updatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
-        interface CreatableWithId<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> : IListSubresource.CreatableWithId<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
-        interface Deletable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any> : IListSubresource.Deletable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model>
+    interface ListSubresource<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Params : ListParams> :
+        IListSubresource<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Params> {
+        interface Creatable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> :
+            IListSubresource.Creatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
+
+        interface Updatable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> :
+            IListSubresource.Updatable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
+
+        interface CreatableWithId<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any, Input : Any> :
+            IListSubresource.CreatableWithId<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model, Input>
+
+        interface Deletable<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any> :
+            IListSubresource.Deletable<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model>
 
         interface Simple<UserContext : Any, ParentId : Any, ParentModel : Any, Id : Any, Model : Any> : IListSubresource.Simple<UserContext, IdentifiedModel<ParentId, ParentModel>, Id, Model>
 
@@ -274,12 +290,13 @@ private fun ListResource<*, *, *, *>.defaultSingleName(): String {
 }
 
 private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdReader(
-    dictionary: TypeDictionary
+    dictionary: TypeDictionary,
+    scalarIdParamName: String
 ): IdParamReader<Id> {
     val prefix = this.singleName + "_"
     val idType = this.idType
     if (dictionary.isScalarType(idType)) {
-        return ScalarTypeIdParamReader(prefix, dictionary.requireScalarType(idType))
+        return ScalarTypeIdParamReader(scalarIdParamName, dictionary.requireScalarType(idType))
     }
     return ReflectiveIdParamReader.create(prefix, idType, dictionary)
 }
@@ -346,7 +363,10 @@ internal fun <SearchContext : Enum<SearchContext>>
     val searchContexts = contextType.enumConstants.map { it to listSearchContexts(it) }.toMap()
 
     if (searchContexts.any { it.value.isEmpty() }) {
-        throw UAPITypeError.create(contextType.type, "${this::class.simpleName}.listSearchContexts must return a non-empty set for every value of ${contextClass.simpleName}")
+        throw UAPITypeError.create(
+            contextType.type,
+            "${this::class.simpleName}.listSearchContexts must return a non-empty set for every value of ${contextClass.simpleName}"
+        )
     }
 
     return DefaultSearchParamsReader.create(
