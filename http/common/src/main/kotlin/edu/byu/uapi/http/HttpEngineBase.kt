@@ -58,7 +58,7 @@ abstract class HttpEngineBase<Server : Any, Config : HttpEngineConfig>(
         return UAPIDialect.findAllDialects()
             .flatMap { d -> UAPISerializationFormat.values().map { d to it } }
             .map { DialectDocSource(model, it.first, it.second) }
-            .map { DocRoute(it, rootPath) } + DocRoute(SwaggerViewerDocs(), rootPath)
+            .map { DocRoute(it, rootPath) } + DocRoute(SwaggerViewerDocs(model), rootPath)
     }
 
     abstract fun stop(server: Server)
