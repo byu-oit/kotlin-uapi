@@ -1,16 +1,19 @@
 package edu.byu.uapi.server.subresources
 
+import edu.byu.uapi.model.UAPISubresourceModel
 import edu.byu.uapi.server.subresources.list.*
 import edu.byu.uapi.server.subresources.singleton.*
 import edu.byu.uapi.server.types.*
 import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.ListParams
+import edu.byu.uapi.spi.introspection.Introspectable
+import edu.byu.uapi.spi.introspection.IntrospectionContext
 import edu.byu.uapi.spi.requests.RequestContext
 import edu.byu.uapi.spi.validation.ValidationEngine
 import java.util.*
 
-sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any> {
+sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any>: Introspectable<UAPISubresourceModel> {
     abstract fun handleBasicFetch(
         requestContext: RequestContext,
         subresourceRequestContext: SubresourceRequestContext,
@@ -19,6 +22,10 @@ sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model :
     ): UAPIResponse<*>
 
     abstract val fieldsetName: String
+
+    override fun introspect(context: IntrospectionContext): UAPISubresourceModel {
+        return introspect(this, context)
+    }
 }
 
 class SingletonSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model : Any>(
@@ -105,6 +112,7 @@ class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, 
     val validationEngine: ValidationEngine
 ) : SubresourceRuntime<UserContext, Parent, Model>() {
     val pluralName = subresource.pluralName
+    val singleName = subresource.singleName
     override val fieldsetName: String = pluralName
 
     companion object {

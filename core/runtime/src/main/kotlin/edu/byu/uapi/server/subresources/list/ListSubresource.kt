@@ -37,6 +37,9 @@ interface ListSubresource<UserContext : Any, Parent : ModelHolder, Id : Any, Mod
     val idType: KClass<Id>
         get() = defaultIdType()
 
+    val scalarIdParamName: String
+        get() = this.singleName + "_id"
+
     fun loadModel(
         requestContext: SubresourceRequestContext,
         userContext: UserContext,
@@ -262,7 +265,7 @@ private fun <Id : Any, Model : Any, UserContext : Any> ListSubresource<UserConte
     val idType = this.idType
     val prefix = this.singleName + "_"
     if (dictionary.isScalarType(idType)) {
-        return ScalarTypeIdParamReader(prefix, dictionary.requireScalarType(idType))
+        return ScalarTypeIdParamReader(this.scalarIdParamName, dictionary.requireScalarType(idType))
     }
     return ReflectiveIdParamReader.create(prefix, idType, dictionary)
 }

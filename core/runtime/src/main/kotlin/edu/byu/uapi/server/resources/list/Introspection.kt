@@ -18,6 +18,8 @@ internal fun introspect(
 
     val list = context.introspect(runtime.resource.getListParamReader(types))
 
+    val subs = runtime.subresources.mapValues { context.introspect(it.value) }
+
     return UAPIListResourceModel(
         properties = props,
         keys = keys,
@@ -25,7 +27,8 @@ internal fun introspect(
         singularName = runtime.singleName,
         create = runtime.resource.createOperation?.introspect(context),
         update = runtime.resource.updateOperation?.introspect(context),
-        delete = runtime.resource.deleteOperation?.introspect(context)
+        delete = runtime.resource.deleteOperation?.introspect(context),
+        subresources = subs
     )
 }
 
