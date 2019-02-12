@@ -9,6 +9,8 @@ interface IntrospectionContext {
     val types: TypeDictionary
     val location: IntrospectionLocation
 
+    val schemaGenerator: SchemaGenerator
+
     val messages: List<IntrospectionMessage>
 
     fun suggest(

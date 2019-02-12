@@ -2,6 +2,7 @@ package edu.byu.uapi.server
 
 import edu.byu.uapi.model.UAPIInfo
 import edu.byu.uapi.model.UAPIModel
+import edu.byu.uapi.schemagen.JacksonSchemaGenerator
 import edu.byu.uapi.server.inputs.DefaultTypeDictionary
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.ListResourceRuntime
@@ -122,8 +123,10 @@ class UAPIRuntime<UserContext : Any>(
 class DefaultIntrospectionContext(
     override val types: TypeDictionary,
     override val location: IntrospectionLocation,
+    override val schemaGenerator: SchemaGenerator = JacksonSchemaGenerator(),
     private val _messages: MutableList<IntrospectionMessage> = mutableListOf()
 ) : IntrospectionContext {
+
     override val messages: List<IntrospectionMessage>
         get() = _messages
 
@@ -150,7 +153,7 @@ class DefaultIntrospectionContext(
 
     override fun <R> withLocation(location: IntrospectionLocation, fn: IntrospectionContext.() -> R): R {
         val ctx = DefaultIntrospectionContext(
-            this.types, location, this._messages
+            this.types, location, this.schemaGenerator, this._messages
         )
         return ctx.fn()
     }

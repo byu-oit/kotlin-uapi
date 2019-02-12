@@ -42,7 +42,7 @@ internal fun introspect(
     val props = runtime.subresource.responseFields.associate {
         it.name to it.introspect(types)
     }
-    val keys = context.withLocation(runtime.subresource.idType) { introspectKeys(this, runtime.subresource)}
+    val keys = context.withLocation(runtime.subresource.idType) { introspectKeys(this, runtime.subresource) }
 
     val list = context.introspect(runtime.subresource.getListParamReader(types))
 
@@ -60,7 +60,9 @@ internal fun introspect(
 internal fun SingletonSubresource.Updatable<*, *, *, *>.introspect(context: IntrospectionContext): UAPIUpdateMutation {
     return context.withLocation(this::class) {
         UAPIUpdateMutation(
-            inputSchema = UAPIInputSchema(),
+            input = UAPIInput(
+                json = context.schemaGenerator.generateSchemaFor(updateInput)
+            ),
             createsIfMissing = this is SingletonSubresource.Creatable<*, *, *, *>
         )
     }
@@ -75,7 +77,9 @@ internal fun SingletonSubresource.Deletable<*, *, *>.introspect(context: Introsp
 internal fun ListSubresource.Creatable<*, *, *, *, *>.introspect(context: IntrospectionContext): UAPICreateMutation {
     return context.withLocation(this::class) {
         UAPICreateMutation(
-            inputSchema = UAPIInputSchema()
+            input = UAPIInput(
+                json = context.schemaGenerator.generateSchemaFor(createInput)
+            )
         )
     }
 }
@@ -83,7 +87,9 @@ internal fun ListSubresource.Creatable<*, *, *, *, *>.introspect(context: Intros
 internal fun ListSubresource.Updatable<*, *, *, *, *>.introspect(context: IntrospectionContext): UAPIUpdateMutation {
     return context.withLocation(this::class) {
         UAPIUpdateMutation(
-            inputSchema = UAPIInputSchema(),
+            input = UAPIInput(
+                json = context.schemaGenerator.generateSchemaFor(updateInput)
+            ),
             createsIfMissing = this is ListSubresource.CreatableWithId<*, *, *, *, *>
         )
     }

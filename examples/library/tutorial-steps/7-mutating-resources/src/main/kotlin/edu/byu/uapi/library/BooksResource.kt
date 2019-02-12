@@ -21,6 +21,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
                       ListResource.Deletable<LibraryUser, Long, Book> {
 
     override val pluralName: String = "books"
+    override val scalarIdParamName: String = "oclc"
 
     override fun loadModel(
         requestContext: ResourceRequestContext,

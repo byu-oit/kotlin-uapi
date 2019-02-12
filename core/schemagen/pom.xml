@@ -4,11 +4,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>uapi-runtime</artifactId>
+    <artifactId>uapi-schemagen</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>Kotlin UAPI Runtime</name>
+    <name>Kotlin UAPI Schema Generation</name>
 
     <parent>
         <groupId>edu.byu.uapi.kotlin</groupId>
@@ -17,52 +17,41 @@
     </parent>
 
     <dependencies>
+        <dependency>
+            <groupId>com.kjetland</groupId>
+            <artifactId>mbknor-jackson-jsonschema_2.12</artifactId>
+            <version>1.0.32</version>
+        </dependency>
+
         <!-- UAPI -->
         <dependency>
             <groupId>edu.byu.uapi.kotlin</groupId>
             <artifactId>uapi-spi</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
-            <artifactId>uapi-utility-types</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>edu.byu.uapi.kotlin.validation</groupId>
-            <artifactId>uapi-hibernate-validator</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
-            <artifactId>uapi-schemagen</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
+
         <dependency>
             <groupId>edu.byu.uapi.model</groupId>
             <artifactId>uapi-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.byu.uapi.model.serialization</groupId>
+            <artifactId>uapi-model-serialization-jackson2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
         </dependency>
 
         <!-- Kotlin -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-reflect</artifactId>
-        </dependency>
-
-        <!-- Utils -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-
-        <!-- Logging -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
         </dependency>
 
         <!-- Test -->
@@ -113,20 +102,21 @@
                         <configuration>
                             <artifactSet>
                                 <includes>
-                                    <include>com.google.guava:guava:*</include>
+                                    <include>com.kjetland:mbknor-jackson-jsonschema_2.12</include>
+                                    <include>org.scala-lang:scala-library</include>
                                 </includes>
                             </artifactSet>
                             <minimizeJar>true</minimizeJar>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.google</pattern>
-                                    <shadedPattern>edu.byu.uapi.server.thirdpartyshaded.guava.com.google</shadedPattern>
-                                    <includes>
-                                        <include>com/google/common/**</include>
-                                        <include>com/google/thirdparty/**</include>
-                                    </includes>
-                                </relocation>
-                            </relocations>
+                            <!--<relocations>-->
+                            <!--<relocation>-->
+                            <!--<pattern>com.google</pattern>-->
+                            <!--<shadedPattern>edu.byu.uapi.server.thirdpartyshaded.guava.com.google</shadedPattern>-->
+                            <!--<includes>-->
+                            <!--<include>com/google/common/**</include>-->
+                            <!--<include>com/google/thirdparty/**</include>-->
+                            <!--</includes>-->
+                            <!--</relocation>-->
+                            <!--</relocations>-->
                         </configuration>
                     </execution>
                 </executions>

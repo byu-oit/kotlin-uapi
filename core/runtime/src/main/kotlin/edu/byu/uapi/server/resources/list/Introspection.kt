@@ -34,14 +34,18 @@ internal fun introspect(
 
 internal fun ListResource.Creatable<*, *, *, *>.introspect(context: IntrospectionContext): UAPICreateMutation {
     return context.withLocation(this::class) {
-        UAPICreateMutation(UAPIInputSchema())
+        UAPICreateMutation(UAPIInput(
+            json = context.schemaGenerator.generateSchemaFor(createInput)
+        ))
     }
 }
 
 internal fun ListResource.Updatable<*, *, *, *>.introspect(context: IntrospectionContext): UAPIUpdateMutation {
     return context.withLocation(this::class) {
         UAPIUpdateMutation(
-            inputSchema = UAPIInputSchema(),
+            input = UAPIInput(
+                json = context.schemaGenerator.generateSchemaFor(updateInput)
+            ),
             createsIfMissing = this is ListResource.CreatableWithId<*, *, *, *>
         )
     }
