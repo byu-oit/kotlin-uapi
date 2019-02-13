@@ -20,7 +20,7 @@
         <dependency>
             <groupId>com.kjetland</groupId>
             <artifactId>mbknor-jackson-jsonschema_2.12</artifactId>
-            <version>1.0.32</version>
+            <version>1.0.33</version>
         </dependency>
 
         <!-- UAPI -->
