@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.claims
 
+import edu.byu.uapi.model.UAPIClaimRelationship
 import edu.byu.uapi.server.resources.Resource
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.response.ValuePropGetter

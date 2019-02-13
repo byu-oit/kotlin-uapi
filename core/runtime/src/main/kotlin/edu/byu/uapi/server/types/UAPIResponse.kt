@@ -97,7 +97,7 @@ class UAPINotAuthenticatedError(
     override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
         ValidationResponse(
             403,
-            "Unauthorized"
+            "NotAuthorized"
         ),
         validationInformation = messages
     )

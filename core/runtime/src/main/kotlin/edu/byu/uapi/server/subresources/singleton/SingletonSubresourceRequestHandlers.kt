@@ -85,7 +85,7 @@ class SingletonSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder,
                 UAPIEmptyResponse
             }
             DeleteResult.Unauthorized -> {
-                LOG.warn("Unauthorized request to delete ${subresource.name}! User contexts was $user")
+                LOG.warn("NotAuthorized request to delete ${subresource.name}! User contexts was $user")
                 UAPINotAuthorizedError
             }
             is DeleteResult.CannotBeDeleted -> {
@@ -182,7 +182,7 @@ class SingletonSubresourceUpdateHandler<UserContext : Any, Parent: ModelHolder, 
                 )
             }
             UpdateResult.Unauthorized -> {
-                LOG.warn { "Unauthorized request to update ${subresource.name}! User Context was $userContext" }
+                LOG.warn { "NotAuthorized request to update ${subresource.name}! User Context was $userContext" }
                 UAPINotAuthorizedError
             }
             is UpdateResult.CannotBeUpdated -> {
@@ -259,7 +259,7 @@ class SingletonSubresourceUpdateHandler<UserContext : Any, Parent: ModelHolder, 
                 buildResponse(userContext, parent, result.model)
             }
             CreateResult.Unauthorized -> {
-                LOG.warn { "Unauthorized request to create ${subresource.name}! User Context was $userContext" }
+                LOG.warn { "NotAuthorized request to create ${subresource.name}! User Context was $userContext" }
                 UAPINotAuthorizedError
             }
             is CreateResult.InvalidInput -> {

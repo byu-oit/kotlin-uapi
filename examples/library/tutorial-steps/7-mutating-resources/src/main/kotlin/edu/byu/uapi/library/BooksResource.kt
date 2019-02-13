@@ -289,6 +289,10 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         return DeleteResult.Success
     }
 
+    override fun canUserMakeAnyClaims(user: LibraryUser, model: Book): Boolean {
+        return true
+    }
+
     override val claimConcepts = claimConcepts {
         concept<String>("foo") {
             canUserMakeClaim { requestContext, user, model -> true }

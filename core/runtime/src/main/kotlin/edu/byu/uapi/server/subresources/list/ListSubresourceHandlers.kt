@@ -190,7 +190,7 @@ class ListSubresourceCreateHandler<UserContext : Any, Parent : ModelHolder, Id :
 
         val authorized = operation.canUserCreate(requestContext, userContext, parent)
         if (!authorized) {
-            LOG.warn { "Unauthorized request to create ${resource.singleName}! User Context was $userContext" }
+            LOG.warn { "NotAuthorized request to create ${resource.singleName}! User Context was $userContext" }
             return UAPINotAuthorizedError
         }
         val input = request.body.readAs(inputType)
@@ -219,7 +219,7 @@ class ListSubresourceCreateHandler<UserContext : Any, Parent : ModelHolder, Id :
                 )
             }
             CreateResult.Unauthorized -> {
-                LOG.warn { "Unauthorized request to create ${resource.singleName} (caught in handleCreate)! User Context was $userContext" }
+                LOG.warn { "NotAuthorized request to create ${resource.singleName} (caught in handleCreate)! User Context was $userContext" }
                 UAPINotAuthorizedError
             }
             is CreateResult.InvalidInput -> {
@@ -302,7 +302,7 @@ class ListSubresourceUpdateHandler<UserContext : Any, Parent : ModelHolder, Id :
                 )
             }
             UpdateResult.Unauthorized -> {
-                LOG.warn { "Unauthorized request to update ${resource.singleName} $id! User Context was $userContext" }
+                LOG.warn { "NotAuthorized request to update ${resource.singleName} $id! User Context was $userContext" }
                 UAPINotAuthorizedError
             }
             is UpdateResult.CannotBeUpdated -> {
@@ -387,7 +387,7 @@ class ListSubresourceUpdateHandler<UserContext : Any, Parent : ModelHolder, Id :
                 )
             }
             CreateResult.Unauthorized -> {
-                LOG.warn { "Unauthorized request to create ${resource.singleName} $id! User Context was $userContext" }
+                LOG.warn { "NotAuthorized request to create ${resource.singleName} $id! User Context was $userContext" }
                 UAPINotAuthorizedError
             }
             is CreateResult.InvalidInput -> {
@@ -436,7 +436,7 @@ class ListSubresourceDeleteHandler<UserContext : Any, Parent : ModelHolder, Id :
                 UAPIEmptyResponse
             }
             DeleteResult.Unauthorized -> {
-                LOG.warn("Unauthorized request to delete ${resource.singleName} $id! User contexts was $userContext")
+                LOG.warn("NotAuthorized request to delete ${resource.singleName} $id! User contexts was $userContext")
                 UAPINotAuthorizedError
             }
             is DeleteResult.CannotBeDeleted -> {

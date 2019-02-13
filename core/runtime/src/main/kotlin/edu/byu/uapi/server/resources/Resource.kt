@@ -15,6 +15,8 @@ interface Resource<UserContext : Any, Model : Any, ModelStyle : ModelHolder> {
         ModelStyle : ModelHolder
         > : Resource<UserContext, Model, ModelStyle> {
 
+        fun canUserMakeAnyClaims(user: UserContext, model: Model): Boolean
+
         val claimConcepts: List<ClaimConcept<UserContext, Model, *>>
     }
 
