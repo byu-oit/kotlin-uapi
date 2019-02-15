@@ -1,6 +1,5 @@
 package edu.byu.uapi.server.subresources.singleton
 
-import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.response.ResponseField
 import edu.byu.uapi.server.response.UAPIResponseInit
 import edu.byu.uapi.server.response.uapiResponse
@@ -10,9 +9,7 @@ import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.server.types.UpdateResult
-import edu.byu.uapi.server.util.DarkMagic
-import edu.byu.uapi.server.util.DarkMagicException
-import edu.byu.uapi.spi.UAPITypeError
+import edu.byu.uapi.server.util.extrapolateGenericType
 import edu.byu.uapi.spi.validation.ValidationEngine
 import edu.byu.uapi.spi.validation.Validator
 import edu.byu.uapi.utility.takeIfType
@@ -64,13 +61,7 @@ interface SingletonSubresource<UserContext : Any, Parent : ModelHolder, Model : 
         ): UpdateResult<Model>
 
         val updateInput: KClass<Input>
-            get() {
-                return try {
-                    DarkMagic.findSupertypeArgNamed(this::class, Updatable::class, "Input")
-                } catch (ex: DarkMagicException) {
-                    throw UAPITypeError.create(this::class, "Unable to get update input type", ex)
-                }
-            }
+            get() = extrapolateGenericType("Input", Updatable<*, *, *, *>::updateInput)
 
         fun getUpdateValidator(validationEngine: ValidationEngine): Validator<Input> {
             return validationEngine.validatorFor(updateInput)

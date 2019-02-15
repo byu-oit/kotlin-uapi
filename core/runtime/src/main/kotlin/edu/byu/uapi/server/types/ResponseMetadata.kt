@@ -29,6 +29,15 @@ sealed class ResponseMetadata : Renderable {
     abstract fun renderExtras(renderer: Renderer<*>)
 }
 
+data class ClaimsResponseMetadata(
+    override val validationResponse: ValidationResponse = ValidationResponse.OK,
+    override val validationInformation: List<String> = emptyList(),
+    override val cache: CacheMeta? = null
+): ResponseMetadata() {
+    override fun renderExtras(renderer: Renderer<*>) {
+    }
+}
+
 object EmptyResponseMetadata : ResponseMetadata() {
     override val validationResponse = ValidationResponse(204, "No Content")
     override val validationInformation = emptyList<String>()

@@ -1,5 +1,8 @@
 package edu.byu.uapi.server.types
 
+import edu.byu.uapi.model.UAPIClaimRelationship
+import edu.byu.uapi.model.UAPIValueConstraints
+import edu.byu.uapi.model.UAPIValueType
 import edu.byu.uapi.spi.SpecConstants
 import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
@@ -81,8 +84,9 @@ data class GenericUAPIErrorResponse(
 
 data class UAPIBadRequestError(
     val messages: List<String>
-): UAPIResponse<UAPIErrorMetadata>() {
-    constructor(message: String): this(listOf(message))
+) : UAPIResponse<UAPIErrorMetadata>() {
+    constructor(message: String) : this(listOf(message))
+
     override val metadata: UAPIErrorMetadata = UAPIErrorMetadata(
         validationResponse = ValidationResponse(400, "Bad Request"),
         validationInformation = messages
@@ -129,7 +133,41 @@ object UAPIOperationNotImplementedError : UAPIErrorResponse() {
     override val links: UAPILinks = emptyMap()
 }
 
-object UAPIEmptyResponse: UAPIResponse<EmptyResponseMetadata>() {
+object UAPIEmptyResponse : UAPIResponse<EmptyResponseMetadata>() {
     override val metadata = EmptyResponseMetadata
     override val links: UAPILinks = emptyMap()
+}
+
+data class ClaimResponse(
+    val result: Boolean,
+    override val metadata: ClaimsResponseMetadata = ClaimsResponseMetadata(),
+    override val links: UAPILinks = emptyMap()
+) : UAPIResponse<ClaimsResponseMetadata>() {
+    override fun renderExtras(renderer: Renderer<*>) {
+        renderer.value("result", result)
+    }
+}
+
+data class UAPIClaimDescriptionResponse(
+    val values: List<ConceptDescription>,
+    override val metadata: ClaimsResponseMetadata = ClaimsResponseMetadata(),
+    override val links: UAPILinks = emptyMap()
+): UAPIResponse<ClaimsResponseMetadata>() {
+    data class ConceptDescription(
+        val concept: String,
+        val type: UAPIValueType,
+        val relationships: Set<UAPIClaimRelationship>,
+        val constraints: UAPIValueConstraints? = null
+    ): Renderable {
+        override fun render(renderer: Renderer<*>) {
+            renderer.value("concept", concept)
+            renderer.value("type", type.apiValue)
+            renderer.valueArray("relationships", relationships.map { it.apiValue })
+            // TODO: Constraints
+        }
+    }
+
+    override fun renderExtras(renderer: Renderer<*>) {
+        renderer.treeArray("values", values)
+    }
 }

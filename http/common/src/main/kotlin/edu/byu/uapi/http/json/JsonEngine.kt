@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.google.gson.Gson
 import edu.byu.uapi.http.HttpRequestBody
+import edu.byu.uapi.model.serialization.jackson2.UAPIModelModule
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.rendering.Renderer
 import edu.byu.uapi.spi.requests.RequestBody
@@ -38,7 +39,8 @@ object JacksonEngine : JsonEngine<JacksonGenerator, Writer>() {
         .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
         .registerModules(
             KotlinModule(),
-            JavaTimeModule()
+            JavaTimeModule(),
+            UAPIModelModule()
         )
 
     override fun renderer(

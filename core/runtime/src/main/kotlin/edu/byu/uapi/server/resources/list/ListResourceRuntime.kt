@@ -2,6 +2,9 @@ package edu.byu.uapi.server.resources.list
 
 import edu.byu.uapi.model.UAPIListResourceModel
 import edu.byu.uapi.model.UAPIResourceModel
+import edu.byu.uapi.server.claims.ClaimModelLoader
+import edu.byu.uapi.server.claims.ClaimsRuntime
+import edu.byu.uapi.server.resources.Resource
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.subresources.*
 import edu.byu.uapi.server.types.IdentifiedModel
@@ -43,8 +46,6 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
 
     override val name: String = pluralName
 
-    // TODO fun validateResource(validation: Validating)
-
     companion object {
         private val LOG = loggerFor<ListResourceRuntime<*, *, *, *>>()
     }
@@ -72,6 +73,8 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
         subresourceList.map { it.createRuntime(this, typeDictionary, validationEngine) }.associateBy { it.fieldsetName }
     val availableFieldsets = DEFAULT_FIELDSETS + subresources.keys
     val availableContexts = emptyMap<String, Set<String>>()
+
+    val claimsRuntime: ClaimsRuntime<UserContext, Id, Model>? = resource.claims?.toRuntime(this)
 
     override fun getRequestedFieldsets(fieldsetRequest: FieldsetRequest?): RequestedFieldsetResponse {
         if (fieldsetRequest == null) {
@@ -114,4 +117,33 @@ fun KClass<*>.asIntrospectionLocation(): IntrospectionLocation = IntrospectionLo
 
 fun Any.asIntrospectionLocation(): IntrospectionLocation {
     return IntrospectionLocation.of(this::class)
+}
+
+private fun <UserContext : Any, SubjectId : Any, Model : Any> Resource.HasClaims<UserContext, SubjectId, Model, *>.toRuntime(
+    resource: ListResourceRuntime<UserContext, SubjectId, Model, *>
+): ClaimsRuntime<UserContext, SubjectId, Model> {
+    return ClaimsRuntime(
+        SimpleClaimModelLoader(resource.resource, this),
+        resource.typeDictionary,
+        this.getClaimIdScalar(resource.typeDictionary),
+        this.claimConcepts
+    )
+}
+
+private class SimpleClaimModelLoader<UserContext : Any, SubjectId : Any, Model : Any>(
+    private val listResource: ListResource<UserContext, SubjectId, Model, *>,
+    private val claims: Resource.HasClaims<UserContext, SubjectId, Model, *>
+) : ClaimModelLoader<UserContext, SubjectId, Model> {
+    override fun loadClaimModel(request: ResourceRequestContext, userContext: UserContext, id: SubjectId): Model? {
+        return listResource.loadModel(request, userContext, id)
+    }
+
+    override fun canUserMakeAnyClaims(
+        requestContext: ResourceRequestContext,
+        userContext: UserContext,
+        id: SubjectId,
+        model: Model
+    ): Boolean {
+        return claims.canUserMakeAnyClaims(requestContext, userContext, id, model)
+    }
 }

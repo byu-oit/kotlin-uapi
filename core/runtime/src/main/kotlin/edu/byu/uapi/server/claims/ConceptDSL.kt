@@ -4,36 +4,35 @@ import edu.byu.uapi.model.UAPIClaimRelationship
 import edu.byu.uapi.server.resources.Resource
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.response.ValuePropGetter
+import edu.byu.uapi.server.util.DarkerMagic
 import java.lang.annotation.Inherited
 import java.util.*
-import kotlin.reflect.full.isSuperclassOf
+import kotlin.Comparator
+import kotlin.reflect.KClass
 
-fun <UserContext : Any, Model : Any> Resource.HasClaims<UserContext, Model, *>.claimConcepts(
-    init: ConceptListInit<UserContext, Model>.() -> Unit
-): List<ClaimConcept<UserContext, Model, *>> {
-    val i = ConceptListInit<UserContext, Model>()
+fun <UserContext : Any, Id : Any, Model : Any> Resource.HasClaims<UserContext, Id, Model, *>.claimConcepts(
+    init: ConceptListInit<UserContext, Id, Model>.() -> Unit
+): List<ClaimConcept<UserContext, Id, Model, *>> {
+    val i = ConceptListInit<UserContext, Id, Model>()
     i.init()
     return i.concepts
 }
 
 @InConceptDsl
-class ConceptListInit<UserContext : Any, Model : Any> {
+class ConceptListInit<UserContext : Any, Id : Any, Model : Any> {
 
     @PublishedApi
-    internal val concepts: MutableList<ClaimConcept<UserContext, Model, *>> = mutableListOf()
+    internal val concepts: MutableList<ClaimConcept<UserContext, Id, Model, *>> = mutableListOf()
 
     inline fun <reified Value : Any> concept(
         name: String,
-        init: ConceptInit<UserContext, Model, Value>.() -> Unit
+        init: ConceptInit<UserContext, Id, Model, Value>.() -> Unit
     ) {
-        @Suppress("CAST_NEVER_SUCCEEDS")
-        val v: Value = null as Value
-        val comp: Comparator<Value>? = if (Comparable::class.isSuperclassOf(Value::class)) {
-            TODO()
-        } else {
-            null
-        }
-        val concept = ConceptInit<UserContext, Model, Value>(name)
+        val type = Value::class
+        val comp = DarkerMagic.maybeNaturalComparatorFor(type)
+        val concept = ConceptInit<UserContext, Id, Model, Value>(type, name, comp)
+        concept.init()
+        concepts += concept.build()
     }
 }
 
@@ -42,14 +41,15 @@ class ConceptListInit<UserContext : Any, Model : Any> {
 annotation class InConceptDsl
 
 @InConceptDsl
-class ConceptInit<UserContext : Any, Model : Any, Value : Any>(
+class ConceptInit<UserContext : Any, Id : Any, Model : Any, Value : Any>(
+    val type: KClass<Value>,
     val name: String,
     var comparator: Comparator<Value>? = null
 ) {
 
-    private lateinit var getter: ValuePropGetter<Model, Value>
+    private lateinit var getter: ValuePropGetter<Model, ClaimValueResult<Value>>
 
-    fun getValue(fn: ValuePropGetter<Model, Value>) {
+    fun getValue(fn: ValuePropGetter<Model, ClaimValueResult<Value>>) {
         getter = fn
     }
 
@@ -65,6 +65,43 @@ class ConceptInit<UserContext : Any, Model : Any, Value : Any>(
 
     var supports: Set<UAPIClaimRelationship> = EnumSet.allOf(UAPIClaimRelationship::class.java)
 
+    @PublishedApi
+    internal fun build(): ClaimConcept<UserContext, Id, Model, Value> {
+        return ClaimConceptImpl(
+            name,
+            type,
+            comparator
+                ?: throw RuntimeException("You must pass a function to 'compareUsing' for concept $name, or make $type implement the Comparable interface."),
+            userAuth,
+            getter
+        )
+    }
+}
+
+internal class ClaimConceptImpl<UserContext : Any, Id : Any, Model : Any, Value : Any>(
+    override val name: String,
+    override val valueType: KClass<Value>,
+    override val comparator: Comparator<Value>,
+    private val authz: ConceptAuthZ<UserContext, Model>,
+    private val getter: ValuePropGetter<Model, ClaimValueResult<Value>>
+) : SimpleConcept<UserContext, Id, Model, Value>() {
+    override fun canUserEvaluateClaim(
+        requestContext: ResourceRequestContext,
+        user: UserContext,
+        subjectId: Id,
+        subjectModel: Model
+    ): Boolean {
+        return authz.invoke(requestContext, user, subjectModel)
+    }
+
+    override fun getValue(
+        requestContext: ResourceRequestContext,
+        user: UserContext,
+        subjectId: Id,
+        subjectModel: Model
+    ): ClaimValueResult<Value> {
+        return getter.invoke(subjectModel)
+    }
 }
 
 typealias ConceptAuthZ<UserContext, Model> = (requestContext: ResourceRequestContext, user: UserContext, model: Model) -> Boolean

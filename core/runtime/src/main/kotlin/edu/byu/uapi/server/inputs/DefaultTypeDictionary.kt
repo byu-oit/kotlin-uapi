@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.inputs
 
-import edu.byu.uapi.server.scalars.EnumScalarConverterHelper
+import edu.byu.uapi.server.util.DarkerMagic
 import edu.byu.uapi.server.scalars.builtinScalarTypeMap
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.scalars.ScalarType
@@ -70,7 +70,7 @@ class DefaultTypeDictionary : TypeDictionary {
         if (type in enumScalarCache) {
             return enumScalarCache[type]!! as ScalarType<Type>
         }
-        val scalarType: ScalarType<Type> = EnumScalarConverterHelper.getEnumScalarConverter(type)
+        val scalarType: ScalarType<Type> = DarkerMagic.getEnumScalarConverter(type)
         val result = enumScalarCache.putIfAbsent(type, scalarType)
         if (result == null) {
             dispatchScalarRegistered(type, scalarType)

@@ -28,7 +28,8 @@ internal fun introspect(
         create = runtime.resource.createOperation?.introspect(context),
         update = runtime.resource.updateOperation?.introspect(context),
         delete = runtime.resource.deleteOperation?.introspect(context),
-        subresources = subs
+        subresources = subs,
+        claims = runtime.claimsRuntime?.introspect(context).orEmpty()
     )
 }
 

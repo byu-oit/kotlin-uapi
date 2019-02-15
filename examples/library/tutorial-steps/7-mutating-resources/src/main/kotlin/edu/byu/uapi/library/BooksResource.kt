@@ -1,8 +1,9 @@
 package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.*
+import edu.byu.uapi.model.UAPIClaimRelationship
 import edu.byu.uapi.model.UAPISortOrder
-import edu.byu.uapi.server.claims.UAPIClaimRelationship
+import edu.byu.uapi.server.claims.ClaimValueResult
 import edu.byu.uapi.server.claims.claimConcepts
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
@@ -289,14 +290,19 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         return DeleteResult.Success
     }
 
-    override fun canUserMakeAnyClaims(user: LibraryUser, model: Book): Boolean {
+    override fun canUserMakeAnyClaims(
+        requestContext: ResourceRequestContext,
+        user: LibraryUser,
+        ubject: Long,
+        subjectModel: Book
+    ): Boolean {
         return true
     }
 
     override val claimConcepts = claimConcepts {
         concept<String>("foo") {
             canUserMakeClaim { requestContext, user, model -> true }
-            getValue { "" }
+            getValue { ClaimValueResult.Value("foo") }
             compareUsing {
                 it.length
             }

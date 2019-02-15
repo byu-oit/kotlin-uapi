@@ -15,8 +15,7 @@ import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.IdentifiedModel
 import edu.byu.uapi.server.types.UpdateResult
-import edu.byu.uapi.server.util.DarkMagic
-import edu.byu.uapi.server.util.DarkMagicException
+import edu.byu.uapi.server.util.extrapolateGenericType
 import edu.byu.uapi.spi.UAPITypeError
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.*
@@ -37,7 +36,10 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         get() = defaultSingleName()
 
     val idType: KClass<Id>
-        get() = defaultIdType()
+        get() = this.extrapolateGenericType("Id", ListResource<*, *, *, *>::idType)
+
+    val listParamsType: KClass<Params>
+        get() = this.extrapolateGenericType("Params", ListResource<*, *, *, *>::listParamsType)
 
     val scalarIdParamName: String
         get() = this.singleName + "_id"
@@ -70,9 +72,6 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         params: Params
     ): List<Model>
 
-    val listParamsType: KClass<Params>
-        get() = defaultListParamsType()
-
     @Throws(UAPITypeError::class)
     fun getListParamReader(dictionary: TypeDictionary): ListParamReader<Params> {
         return defaultGetListParamReader(dictionary)
@@ -89,6 +88,9 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         get() = this.takeIfType()
 
     val deleteOperation: Deletable<UserContext, Id, Model>?
+        get() = this.takeIfType()
+
+    override val claims: Resource.HasClaims<UserContext, Id, Model, IdentifiedModel<Id, Model>>?
         get() = this.takeIfType()
 
     interface Creatable<UserContext : Any, Id : Any, Model : Any, Input : Any> {
@@ -108,7 +110,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         ): CreateResult<Model>
 
         val createInput: KClass<Input>
-            get() = defaultGetCreateInput()
+            get() = extrapolateGenericType("Input", Creatable<*, *, *, *>::createInput)
     }
 
     interface Deletable<UserContext : Any, Id : Any, Model : Any> {
@@ -158,7 +160,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
         ): UpdateResult<Model>
 
         val updateInput: KClass<Input>
-            get() = this.defaultGetUpdateInput()
+            get() = extrapolateGenericType("Input", Updatable<*, *, *, *>::updateInput)
     }
 
     interface CreatableWithId<UserContext : Any, Id : Any, Model : Any, Input : Any> : Updatable<UserContext, Id, Model, Input> {
@@ -210,7 +212,9 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
         @Throws(UAPITypeError::class)
         fun getListSearchContextType(dictionary: TypeDictionary): EnumScalarType<SearchContext> {
-            return defaultListSearchContextType(dictionary)
+            return DefaultParameterStyleEnumScalar(
+                this.extrapolateGenericType("SearchContext", ListWithSearch<*, *, *, *, *>::getListSearchContextType)
+            )
         }
     }
 
@@ -222,7 +226,9 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
         @Throws(UAPITypeError::class)
         fun getListSortPropertyType(typeDictionary: TypeDictionary): EnumScalarType<SortProperty> {
-            return defaultListSortPropertyType(typeDictionary)
+            return DefaultParameterStyleEnumScalar(
+                this.extrapolateGenericType("SortProperty", ListWithSort<*, *, *, *, *>::getListSortPropertyType)
+            )
         }
 
         @Throws(UAPITypeError::class)
@@ -233,9 +239,13 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
 
     interface ListWithFilters<UserContext : Any, Id : Any, Model : Any, CollectionParams : ListParams.WithFilters<Filters>, Filters : Any>
         : ListResource<UserContext, Id, Model, CollectionParams> {
+
+        val listFilterParamType: KClass<Filters>
+            get() = this.extrapolateGenericType("Filters", ListWithFilters<*, *, *, *, *>::listFilterParamType)
+
         @Throws(UAPITypeError::class)
         fun getListFilterParamReader(typeDictionary: TypeDictionary): FilterParamsReader<Filters> {
-            return defaultListFilterParamReader(typeDictionary)
+            return ReflectiveFilterParamReader.create(listFilterParamType, typeDictionary)
         }
     }
 
@@ -282,7 +292,7 @@ interface ListResource<UserContext : Any, Id : Any, Model : Any, Params : ListPa
     }
 
     interface HasClaims<UserContext : Any, Id : Any, Model : Any>
-        : Resource.HasClaims<UserContext, Model, IdentifiedModel<Id, Model>>
+        : Resource.HasClaims<UserContext, Id, Model, IdentifiedModel<Id, Model>>
 }
 
 private fun ListResource<*, *, *, *>.defaultSingleName(): String {
@@ -302,23 +312,6 @@ private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext,
         return ScalarTypeIdParamReader(scalarIdParamName, dictionary.requireScalarType(idType))
     }
     return ReflectiveIdParamReader.create(prefix, idType, dictionary)
-}
-
-private fun <Id : Any, Model : Any, UserContext : Any> ListResource<UserContext, Id, Model, *>.defaultIdType(): KClass<Id> {
-    return try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource::class, "Id")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get ID type", ex)
-    }
-}
-
-internal fun <Params : ListParams>
-    ListResource<*, *, *, Params>.defaultListParamsType(): KClass<Params> {
-    return try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource::class, "Params")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get list params type", ex)
-    }
 }
 
 @Throws(UAPITypeError::class)
@@ -378,32 +371,6 @@ internal fun <SearchContext : Enum<SearchContext>>
 }
 
 @Throws(UAPITypeError::class)
-internal fun <SearchContext : Enum<SearchContext>>
-    ListResource.ListWithSearch<*, *, *, *, SearchContext>.defaultListSearchContextType(
-    dictionary: TypeDictionary
-): EnumScalarType<SearchContext> {
-    val searchContextType: KClass<SearchContext> = try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSearch::class, "SearchContext")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get search contexts type", ex)
-    }
-    return DefaultParameterStyleEnumScalar(searchContextType)
-}
-
-@Throws(UAPITypeError::class)
-internal fun <SortProperty : Enum<SortProperty>>
-    ListResource.ListWithSort<*, *, *, *, SortProperty>.defaultListSortPropertyType(
-    typeDictionary: TypeDictionary
-): EnumScalarType<SortProperty> {
-    val sortPropertyType: KClass<SortProperty> = try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithSort::class, "SortProperty")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get search contexts type", ex)
-    }
-    return DefaultParameterStyleEnumScalar(sortPropertyType)
-}
-
-@Throws(UAPITypeError::class)
 internal fun <SortProperty : Enum<SortProperty>>
     ListResource.ListWithSort<*, *, *, *, SortProperty>.defaultListSortParamsReader(
     typeDictionary: TypeDictionary
@@ -416,39 +383,6 @@ internal fun <SortProperty : Enum<SortProperty>>
         listDefaultSortProperties,
         listDefaultSortOrder
     )
-}
-
-@Throws(UAPITypeError::class)
-internal fun <Filters : Any>
-    ListResource.ListWithFilters<*, *, *, *, Filters>.defaultListFilterParamReader(
-    typeDictionary: TypeDictionary
-): FilterParamsReader<Filters> {
-    val filterType: KClass<Filters> = try {
-        DarkMagic.findSupertypeArgNamed(this::class, ListResource.ListWithFilters::class, "Filters")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get list filters type", ex)
-    }
-    return ReflectiveFilterParamReader.create(filterType, typeDictionary)
-}
-
-@Throws(UAPITypeError::class)
-internal fun <Input : Any>
-    ListResource.Creatable<*, *, *, Input>.defaultGetCreateInput(): KClass<Input> {
-    try {
-        return DarkMagic.findSupertypeArgNamed(this::class, ListResource.Creatable::class, "Input")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get create input type", ex)
-    }
-}
-
-@Throws(UAPITypeError::class)
-internal fun <Input : Any>
-    ListResource.Updatable<*, *, *, Input>.defaultGetUpdateInput(): KClass<Input> {
-    try {
-        return DarkMagic.findSupertypeArgNamed(this::class, ListResource.Updatable::class, "Input")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get update input type", ex)
-    }
 }
 
 inline fun <UserContext : Any, Model : Any> ListResource<UserContext, *, Model, *>.fields(fn: UAPIResponseInit<UserContext, Model>.() -> Unit)

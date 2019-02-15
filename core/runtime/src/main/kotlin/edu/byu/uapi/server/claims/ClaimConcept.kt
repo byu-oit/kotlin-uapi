@@ -1,33 +1,30 @@
 package edu.byu.uapi.server.claims
 
 import edu.byu.uapi.model.UAPIClaimRelationship
-import edu.byu.uapi.server.inputs.create
 import edu.byu.uapi.server.resources.ResourceRequestContext
-import edu.byu.uapi.server.util.DarkMagic
-import edu.byu.uapi.server.util.DarkMagicException
-import edu.byu.uapi.spi.UAPITypeError
 import kotlin.reflect.KClass
 
-interface ClaimConcept<UserContext : Any, Model : Any, Value : Any> {
+interface ClaimConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Any> {
 
-    val name: String
     val valueType: KClass<Value>
-        get() = defaultGetValueType()
+    val name: String
 
     fun canUserEvaluateClaim(
         requestContext: ResourceRequestContext,
         user: UserContext,
-        model: Model
+        subjectId: SubjectId,
+        subjectModel: Model
     ): Boolean
 
-    fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, Model, Value>?
+    fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, SubjectId, Model, Value>?
 
 }
 
-typealias ClaimEvaluator<User, Model, Value> = (
+typealias ClaimEvaluator<User, SubjectId, Model, Value> = (
     requestContext: ResourceRequestContext,
     user: User,
-    model: Model,
+    subjectId: SubjectId,
+    subjectModel: Model,
     requestedValue: Value
 ) -> ClaimEvaluationResult
 
@@ -45,22 +42,25 @@ sealed class ClaimEvaluationResult {
             listOf(message),
             cause
         )
+
         constructor(code: Int, vararg messages: String) : this(code, messages.toList())
     }
 }
 
-abstract class SimpleConcept<UserContext : Any, Model : Any, Value : Any> : ClaimConcept<UserContext, Model, Value> {
+abstract class SimpleConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Any>
+    : ClaimConcept<UserContext, SubjectId, Model, Value> {
 
     abstract val comparator: Comparator<Value>
 
     abstract fun getValue(
         requestContext: ResourceRequestContext,
         user: UserContext,
-        model: Model
+        subjectId: SubjectId,
+        subjectModel: Model
     ): ClaimValueResult<Value>
 
 
-    override fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, Model, Value>? {
+    override fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, SubjectId, Model, Value>? {
         @Suppress("REDUNDANT_ELSE_IN_WHEN")
         return when (relationship) {
             UAPIClaimRelationship.GREATER_THAN          -> getEvaluator { it > 0 }
@@ -73,9 +73,9 @@ abstract class SimpleConcept<UserContext : Any, Model : Any, Value : Any> : Clai
         }
     }
 
-    private fun getEvaluator(evaluateResult: (Int) -> Boolean): ClaimEvaluator<UserContext, Model, Value> =
-        { requestContext, user, model, value ->
-            val current = getValue(requestContext, user, model)
+    private fun getEvaluator(evaluateResult: (Int) -> Boolean): ClaimEvaluator<UserContext, SubjectId, Model, Value> =
+        { requestContext, user, subjectId, model, value ->
+            val current = getValue(requestContext, user, subjectId, model)
             when (current) {
                 is ClaimValueResult.Error      -> ClaimEvaluationResult.Error(
                     current.code,
@@ -91,25 +91,20 @@ abstract class SimpleConcept<UserContext : Any, Model : Any, Value : Any> : Clai
         }
 }
 
-abstract class SimpleComparableConcept<UserContext : Any, Model : Any, Value : Comparable<Value>>
-    : SimpleConcept<UserContext, Model, Value>() {
+abstract class SimpleComparableConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Comparable<Value>>
+    : SimpleConcept<UserContext, SubjectId, Model, Value>() {
 
     override val comparator: Comparator<Value> = java.util.Comparator.naturalOrder()
 }
 
-@Throws(UAPITypeError::class)
-internal fun <Value : Any>
-    ClaimConcept<*, *, Value>.defaultGetValueType(): KClass<Value> {
-    try {
-        return DarkMagic.findSupertypeArgNamed(this::class, ClaimConcept::class, "Value")
-    } catch (ex: DarkMagicException) {
-        throw UAPITypeError.create(this::class, "Unable to get create input type", ex)
-    }
-}
 
 sealed class ClaimValueResult<V : Any> {
     data class Value<V : Any>(val value: V) : ClaimValueResult<V>()
-    data class Error(val code: Int, val messages: List<String>, val cause: Throwable? = null) : ClaimValueResult<Nothing>() {
+    data class Error(
+        val code: Int,
+        val messages: List<String>,
+        val cause: Throwable? = null
+    ) : ClaimValueResult<Nothing>() {
         constructor(code: Int, message: String, cause: Throwable? = null) : this(code, listOf(message), cause)
         constructor(code: Int, vararg messages: String) : this(code, messages.toList())
     }
