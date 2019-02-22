@@ -5,10 +5,12 @@ import edu.byu.uapi.server.resources.Resource
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.response.ValuePropGetter
 import edu.byu.uapi.server.util.DarkerMagic
+import edu.byu.uapi.server.util.toSnakeCase
 import java.lang.annotation.Inherited
 import java.util.*
 import kotlin.Comparator
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty1
 
 fun <UserContext : Any, Id : Any, Model : Any> Resource.HasClaims<UserContext, Id, Model, *>.claimConcepts(
     init: ConceptListInit<UserContext, Id, Model>.() -> Unit
@@ -31,6 +33,23 @@ class ConceptListInit<UserContext : Any, Id : Any, Model : Any> {
         val type = Value::class
         val comp = DarkerMagic.maybeNaturalComparatorFor(type)
         val concept = ConceptInit<UserContext, Id, Model, Value>(type, name, comp)
+        concept.init()
+        concepts += concept.build()
+    }
+
+    inline fun <reified Value : Any> concept(
+        prop: KProperty1<Model, Value>,
+        init: ConceptInit<UserContext, Id, Model, Value>.() -> Unit
+    ) {
+        val type = Value::class
+        val comp = DarkerMagic.maybeNaturalComparatorFor(type)
+        val concept = ConceptInit<UserContext, Id, Model, Value>(type, prop.name.toSnakeCase(), comp)
+        concept.getValue {
+//            try {
+                ClaimValueResult.Value(prop.get(it))
+//            } catch (err: Exception) {
+//            }
+        }
         concept.init()
         concepts += concept.build()
     }
@@ -72,6 +91,7 @@ class ConceptInit<UserContext : Any, Id : Any, Model : Any, Value : Any>(
             type,
             comparator
                 ?: throw RuntimeException("You must pass a function to 'compareUsing' for concept $name, or make $type implement the Comparable interface."),
+            this.supports,
             userAuth,
             getter
         )
@@ -82,9 +102,18 @@ internal class ClaimConceptImpl<UserContext : Any, Id : Any, Model : Any, Value 
     override val name: String,
     override val valueType: KClass<Value>,
     override val comparator: Comparator<Value>,
+    private val supportedRelationships: Set<UAPIClaimRelationship>,
     private val authz: ConceptAuthZ<UserContext, Model>,
     private val getter: ValuePropGetter<Model, ClaimValueResult<Value>>
 ) : SimpleConcept<UserContext, Id, Model, Value>() {
+
+    override fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, Id, Model, Value>? {
+        if (relationship !in supportedRelationships) {
+            return null
+        }
+        return super.getClaimEvaluator(relationship)
+    }
+
     override fun canUserEvaluateClaim(
         requestContext: ResourceRequestContext,
         user: UserContext,

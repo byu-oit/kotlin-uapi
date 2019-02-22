@@ -1,14 +1,13 @@
 package edu.byu.uapi.http
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter
+import com.fasterxml.jackson.annotation.JsonAnySetter
 import edu.byu.uapi.http.json.JsonEngine
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
 import edu.byu.uapi.server.UserContextResult
-import edu.byu.uapi.server.claims.ClaimAssertion
-import edu.byu.uapi.server.claims.ClaimEvaluationMode
-import edu.byu.uapi.server.claims.ClaimRequest
-import edu.byu.uapi.server.claims.ClaimsRuntime
+import edu.byu.uapi.server.claims.*
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.*
 import edu.byu.uapi.server.types.GenericUAPIErrorResponse
@@ -123,7 +122,18 @@ class EvaluateClaimsHandler<UserContext : Any, Id : Any, Model : Any>(
         return UAPIHttpResponse(result)
     }
 
-    data class HttpClaimRequest(
+    class HttpClaimRequest {
+        @JsonAnySetter
+        var claims: MutableMap<String, HttpClaim> = mutableMapOf()
+
+        internal fun <Id: Any> asClaimRequest(idScalar: ScalarType<Id>): MultiClaimRequest<Id> {
+            return MultiClaimRequest(
+                claims.mapValues { it.value.asClaimRequest(idScalar) }
+            )
+        }
+    }
+
+    data class HttpClaim(
         val subject: String,
         val mode: ClaimEvaluationMode,
         val claims: List<ClaimAssertion>

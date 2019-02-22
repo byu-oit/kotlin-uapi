@@ -33,8 +33,17 @@ class ClaimsRuntime<UserContext : Any, SubjectId : Any, Model : Any>(
     ): UAPIResponse<*> {
         LOG.info { "Evaluating claim request: $request" }
         val result = doEvaluate(requestContext, user, request)
-        LOG.info { "Claim result: $result" }
+        LOG.info { "Claim results: $result" }
         return resultToResponse(result)
+    }
+
+    fun evaluate(
+        requestContext: ResourceRequestContext,
+        user: UserContext,
+        request: MultiClaimRequest<SubjectId>
+    ): UAPIResponse<*> {
+        val map = request.claims.mapValues { evaluate(requestContext, user, it.value) }
+        return MultiClaimResponse(map)
     }
 
     override fun introspect(context: IntrospectionContext): Map<String, UAPIClaimModel> {
@@ -75,7 +84,7 @@ class ClaimsRuntime<UserContext : Any, SubjectId : Any, Model : Any>(
 
 
         val model = loader.loadClaimModel(requestContext, user, request.subject)
-            ?: return EvalResult.Success(false) //TODO: Is this really the right response for a bad subject ID?
+            ?: return EvalResult.Error(404, listOf("Subject does not exist"))
 
         val authorized = loader.canUserMakeAnyClaims(requestContext, user, request.subject, model)
         if (!authorized) {
@@ -93,7 +102,6 @@ class ClaimsRuntime<UserContext : Any, SubjectId : Any, Model : Any>(
 
         val result = when (request.mode) {
             ClaimEvaluationMode.ALL -> resultList.all { it }
-            ClaimEvaluationMode.ONE -> resultList.count { it } == 1
             ClaimEvaluationMode.ANY -> resultList.any { it }
         }
         return EvalResult.Success(result)
@@ -191,6 +199,10 @@ interface ClaimModelLoader<UserContext : Any, SubjectId : Any, Model : Any> {
     ): Boolean
 }
 
+data class MultiClaimRequest<SubjectId: Any>(
+    val claims: Map<String, ClaimRequest<SubjectId>>
+)
+
 data class ClaimRequest<SubjectId : Any>(
     val subject: SubjectId,
     val mode: ClaimEvaluationMode,
@@ -206,7 +218,6 @@ data class ClaimAssertion(
 
 enum class ClaimEvaluationMode(val apiValue: String) {
     ALL("ALL"),
-    ONE("ONE"),
     ANY("ANY")
 }
 

@@ -1,7 +1,6 @@
 package edu.byu.uapi.library
 
 import edu.byu.uapi.kotlin.examples.library.*
-import edu.byu.uapi.model.UAPIClaimRelationship
 import edu.byu.uapi.model.UAPISortOrder
 import edu.byu.uapi.server.claims.ClaimValueResult
 import edu.byu.uapi.server.claims.claimConcepts
@@ -12,7 +11,6 @@ import edu.byu.uapi.server.types.CreateResult
 import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.spi.input.ListWithTotal
-import java.util.*
 
 class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
                       ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
@@ -76,9 +74,9 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override val listDefaultSubsetSize: Int = 50
     override val listMaxSubsetSize: Int = 100
     override fun listSearchContexts(value: BookSearchContext) = when (value) {
-        BookSearchContext.TITLES -> listOf("title", "subtitles")
-        BookSearchContext.AUTHORS -> listOf("authors.name")
-        BookSearchContext.GENRES -> listOf("genreCodes.codes", "genreCodes.name")
+        BookSearchContext.TITLES          -> listOf("title", "subtitles")
+        BookSearchContext.AUTHORS         -> listOf("authors.name")
+        BookSearchContext.GENRES          -> listOf("genreCodes.codes", "genreCodes.name")
         BookSearchContext.CONTROL_NUMBERS -> listOf("oclc", "isbn")
     }
 
@@ -303,10 +301,13 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
         concept<String>("foo") {
             canUserMakeClaim { requestContext, user, model -> true }
             getValue { ClaimValueResult.Value("foo") }
-            compareUsing {
-                it.length
-            }
-            supports = EnumSet.complementOf(EnumSet.of(UAPIClaimRelationship.GREATER_THAN))
+//            compareUsing {
+//                it.length
+//            }
+//            supports = EnumSet.of(UAPIClaimRelationship.GREATER_THAN)
+        }
+        concept(Book::title) {
+            canUserMakeClaim { _, _, _ -> true }
         }
     }
 }

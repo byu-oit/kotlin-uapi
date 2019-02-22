@@ -138,13 +138,24 @@ object UAPIEmptyResponse : UAPIResponse<EmptyResponseMetadata>() {
     override val links: UAPILinks = emptyMap()
 }
 
-data class ClaimResponse(
-    val result: Boolean,
+data class MultiClaimResponse(
+    val results: Map<String, UAPIResponse<*>>,
     override val metadata: ClaimsResponseMetadata = ClaimsResponseMetadata(),
     override val links: UAPILinks = emptyMap()
 ) : UAPIResponse<ClaimsResponseMetadata>() {
     override fun renderExtras(renderer: Renderer<*>) {
-        renderer.value("result", result)
+        super.renderExtras(renderer)
+        renderer.mergeTree(results)
+    }
+}
+
+data class ClaimResponse(
+    val verified: Boolean,
+    override val metadata: ClaimsResponseMetadata = ClaimsResponseMetadata(),
+    override val links: UAPILinks = emptyMap()
+) : UAPIResponse<ClaimsResponseMetadata>() {
+    override fun renderExtras(renderer: Renderer<*>) {
+        renderer.value("verified", verified)
     }
 }
 
@@ -152,13 +163,13 @@ data class UAPIClaimDescriptionResponse(
     val values: List<ConceptDescription>,
     override val metadata: ClaimsResponseMetadata = ClaimsResponseMetadata(),
     override val links: UAPILinks = emptyMap()
-): UAPIResponse<ClaimsResponseMetadata>() {
+) : UAPIResponse<ClaimsResponseMetadata>() {
     data class ConceptDescription(
         val concept: String,
         val type: UAPIValueType,
         val relationships: Set<UAPIClaimRelationship>,
         val constraints: UAPIValueConstraints? = null
-    ): Renderable {
+    ) : Renderable {
         override fun render(renderer: Renderer<*>) {
             renderer.value("concept", concept)
             renderer.value("type", type.apiValue)
