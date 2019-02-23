@@ -15,7 +15,7 @@ class SwaggerViewerDocs(val model: UAPIModel) : DocSource {
 
     @Language("HTML")
     private val html = """
-        <html>
+        <!doctype html>
           <head>
             <meta charset="utf-8">
             <script async src="https://cdn.byu.edu/byu-theme-components/1.x.x/byu-theme-components.min.js"></script>
