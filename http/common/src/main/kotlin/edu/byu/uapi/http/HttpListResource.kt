@@ -1,6 +1,5 @@
 package edu.byu.uapi.http
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import edu.byu.uapi.http.json.JsonEngine
 import edu.byu.uapi.server.UAPIRuntime
