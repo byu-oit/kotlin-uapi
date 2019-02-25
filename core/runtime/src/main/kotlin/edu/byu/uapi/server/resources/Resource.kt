@@ -31,7 +31,7 @@ interface Resource<UserContext : Any, Model : Any, ModelStyle : ModelHolder> {
         fun canUserMakeAnyClaims(
             requestContext: ResourceRequestContext,
             user: UserContext,
-            ubject: SubjectId,
+            subject: SubjectId,
             subjectModel: Model
         ): Boolean
 

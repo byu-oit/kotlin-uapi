@@ -2,7 +2,7 @@ package edu.byu.uapi.kotlin.examples.library
 
 data class Book(
     val id: Long,
-    val oclc: Long,
+    val oclc: OCLCNumber,
     val isbn: String? = null,
     val title: String,
     val subtitles: List<String> = emptyList(),
@@ -13,3 +13,5 @@ data class Book(
     val availableCopies: Int,
     val restricted: Boolean
 )
+
+data class OCLCNumber(val oclc: Long)

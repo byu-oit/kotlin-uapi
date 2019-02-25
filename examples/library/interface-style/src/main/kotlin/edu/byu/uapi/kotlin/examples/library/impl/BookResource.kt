@@ -2,6 +2,7 @@ package edu.byu.uapi.kotlin.examples.library.impl
 
 import edu.byu.uapi.kotlin.examples.library.Book
 import edu.byu.uapi.kotlin.examples.library.Library
+import edu.byu.uapi.kotlin.examples.library.OCLCNumber
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.response.ResponseField
@@ -14,7 +15,7 @@ import edu.byu.uapi.spi.input.ListParams
  */
 class BookResource : ListResource.Simple<
     MyUserContext, // user info
-    Long, // id
+    OCLCNumber, // id
     Book // model
     > {
 
@@ -23,21 +24,21 @@ class BookResource : ListResource.Simple<
     override fun loadModel(
         requestContext: ResourceRequestContext,
         userContext: MyUserContext,
-        id: Long
+        id: OCLCNumber
     ): Book? {
-        return Library.getBookByOclc(id)
+        return Library.getBookByOclc(id.oclc)
     }
 
     override fun canUserViewModel(
         requestContext: ResourceRequestContext,
         userContext: MyUserContext,
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): Boolean {
         return true // all books are publicly viewable
     }
 
-    override fun idFromModel(model: Book): Long {
+    override fun idFromModel(model: Book): OCLCNumber {
         return model.oclc
     }
 

@@ -1,7 +1,8 @@
 package edu.byu.uapi.server.inputs
 
-import edu.byu.uapi.server.util.DarkerMagic
+import edu.byu.uapi.server.scalars.SingleElementDataClassScalarType
 import edu.byu.uapi.server.scalars.builtinScalarTypeMap
+import edu.byu.uapi.server.util.DarkerMagic
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.scalars.ScalarType
 import edu.byu.uapi.utility.collections.TypeMap
@@ -62,6 +63,9 @@ class DefaultTypeDictionary : TypeDictionary {
         if (type.isEnum()) {
             return getOrCreateEnumScalar(type)
         }
+        if (type.isData) {
+            return getOrCreateDataClassScalar(type)
+        }
         return null
     }
 
@@ -76,6 +80,10 @@ class DefaultTypeDictionary : TypeDictionary {
             dispatchScalarRegistered(type, scalarType)
         }
         return scalarType
+    }
+
+    private fun <Type: Any> getOrCreateDataClassScalar(type: KClass<Type>): ScalarType<Type>? {
+        return SingleElementDataClassScalarType.createIfPossible(type, this)?.also { registerScalarType(it) }
     }
 
     override fun isScalarType(type: KClass<*>): Boolean {

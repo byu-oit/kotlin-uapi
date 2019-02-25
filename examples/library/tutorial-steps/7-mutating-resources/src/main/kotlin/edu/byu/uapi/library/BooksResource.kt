@@ -12,16 +12,16 @@ import edu.byu.uapi.server.types.DeleteResult
 import edu.byu.uapi.server.types.UpdateResult
 import edu.byu.uapi.spi.input.ListWithTotal
 
-class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
-                      ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
-                      ListResource.ListWithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
-                      ListResource.ListWithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
-                      ListResource.ListWithSubset<LibraryUser, Long, Book, BookListParams>,
-                      ListResource.Creatable<LibraryUser, Long, Book, CreateBook>,
-                      ListResource.Updatable<LibraryUser, Long, Book, UpdateBook>,
-                      ListResource.CreatableWithId<LibraryUser, Long, Book, UpdateBook>,
-                      ListResource.Deletable<LibraryUser, Long, Book>,
-                      ListResource.HasClaims<LibraryUser, Long, Book> {
+class BooksResource : ListResource<LibraryUser, OCLCNumber, Book, BookListParams>,
+                      ListResource.ListWithSort<LibraryUser, OCLCNumber, Book, BookListParams, BookSortProperty>,
+                      ListResource.ListWithFilters<LibraryUser, OCLCNumber, Book, BookListParams, BookFilters>,
+                      ListResource.ListWithSearch<LibraryUser, OCLCNumber, Book, BookListParams, BookSearchContext>,
+                      ListResource.ListWithSubset<LibraryUser, OCLCNumber, Book, BookListParams>,
+                      ListResource.Creatable<LibraryUser, OCLCNumber, Book, CreateBook>,
+                      ListResource.Updatable<LibraryUser, OCLCNumber, Book, UpdateBook>,
+                      ListResource.CreatableWithId<LibraryUser, OCLCNumber, Book, UpdateBook>,
+                      ListResource.Deletable<LibraryUser, OCLCNumber, Book>,
+                      ListResource.HasClaims<LibraryUser, OCLCNumber, Book> {
 
     override val pluralName: String = "books"
     override val scalarIdParamName: String = "oclc"
@@ -29,19 +29,19 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun loadModel(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long
+        id: OCLCNumber
     ): Book? {
-        return Library.getBookByOclc(id)
+        return Library.getBookByOclc(id.oclc)
     }
 
-    override fun idFromModel(model: Book): Long {
+    override fun idFromModel(model: Book): OCLCNumber {
         return model.oclc
     }
 
     override fun canUserViewModel(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): Boolean {
         return userContext.canViewBook(model)
@@ -175,14 +175,14 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun canUserUpdate(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): Boolean {
         return userContext.canModifyBooks
     }
 
     override fun canBeUpdated(
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): Boolean {
         return true
@@ -191,7 +191,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun handleUpdate(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long,
+        id: OCLCNumber,
         model: Book,
         input: UpdateBook
     ): UpdateResult<Book> {
@@ -206,7 +206,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
 
         val updated = Library.updateBook(
             NewBook(
-                oclc = id,
+                oclc = id.oclc,
                 isbn = input.isbn,
                 title = input.title,
                 subtitles = input.subtitles,
@@ -224,7 +224,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun canUserCreateWithId(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long
+        id: OCLCNumber
     ): Boolean {
         return userContext.canCreateBooks
     }
@@ -232,7 +232,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun handleCreateWithId(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long,
+        id: OCLCNumber,
         input: UpdateBook
     ): CreateResult<Book> {
         val publisher = Library.getPublisher(input.publisherId)
@@ -246,7 +246,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
 
         val created = Library.createBook(
             NewBook(
-                oclc = id,
+                oclc = id.oclc,
                 isbn = input.isbn,
                 title = input.title,
                 subtitles = input.subtitles,
@@ -264,14 +264,14 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun canUserDelete(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): Boolean {
         return userContext.canDeleteBooks
     }
 
     override fun canBeDeleted(
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): Boolean {
         val copies = Library.hasCheckedOutCopies(model.id)
@@ -281,7 +281,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun handleDelete(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): DeleteResult {
         Library.deleteBook(model.id)
@@ -291,7 +291,7 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun canUserMakeAnyClaims(
         requestContext: ResourceRequestContext,
         user: LibraryUser,
-        ubject: Long,
+        subject: OCLCNumber,
         subjectModel: Book
     ): Boolean {
         return true

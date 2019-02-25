@@ -120,7 +120,7 @@ object Library {
         val publisher = getPublisher(rs.getInt("publisher_id"))
         val id = rs.getLong("book_id")
         return Book(id,
-                    rs.getLong("oclc"),
+                    OCLCNumber(rs.getLong("oclc")),
                     rs.getString("isbn"),
                     rs.getString("title"),
                     getSubtitles(id),

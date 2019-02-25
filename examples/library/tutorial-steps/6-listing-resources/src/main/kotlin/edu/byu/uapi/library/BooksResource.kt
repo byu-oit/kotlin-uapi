@@ -1,20 +1,17 @@
 package edu.byu.uapi.library
 
-import edu.byu.uapi.kotlin.examples.library.Author
-import edu.byu.uapi.kotlin.examples.library.Book
-import edu.byu.uapi.kotlin.examples.library.Genre
-import edu.byu.uapi.kotlin.examples.library.Library
+import edu.byu.uapi.kotlin.examples.library.*
 import edu.byu.uapi.model.UAPISortOrder
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import edu.byu.uapi.server.resources.list.ListResource
 import edu.byu.uapi.server.resources.list.fields
 import edu.byu.uapi.spi.input.ListWithTotal
 
-class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
-                      ListResource.ListWithSort<LibraryUser, Long, Book, BookListParams, BookSortProperty>,
-                      ListResource.ListWithFilters<LibraryUser, Long, Book, BookListParams, BookFilters>,
-                      ListResource.ListWithSearch<LibraryUser, Long, Book, BookListParams, BookSearchContext>,
-                      ListResource.ListWithSubset<LibraryUser, Long, Book, BookListParams> {
+class BooksResource : ListResource<LibraryUser, OCLCNumber, Book, BookListParams>,
+                      ListResource.ListWithSort<LibraryUser, OCLCNumber, Book, BookListParams, BookSortProperty>,
+                      ListResource.ListWithFilters<LibraryUser, OCLCNumber, Book, BookListParams, BookFilters>,
+                      ListResource.ListWithSearch<LibraryUser, OCLCNumber, Book, BookListParams, BookSearchContext>,
+                      ListResource.ListWithSubset<LibraryUser, OCLCNumber, Book, BookListParams> {
 
     override val pluralName: String = "books"
 
@@ -23,19 +20,19 @@ class BooksResource : ListResource<LibraryUser, Long, Book, BookListParams>,
     override fun loadModel(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long
+        id: OCLCNumber
     ): Book? {
-        return Library.getBookByOclc(id)
+        return Library.getBookByOclc(id.oclc)
     }
 
-    override fun idFromModel(model: Book): Long {
+    override fun idFromModel(model: Book): OCLCNumber {
         return model.oclc
     }
 
     override fun canUserViewModel(
         requestContext: ResourceRequestContext,
         userContext: LibraryUser,
-        id: Long,
+        id: OCLCNumber,
         model: Book
     ): Boolean {
         return userContext.canViewBook(model)
