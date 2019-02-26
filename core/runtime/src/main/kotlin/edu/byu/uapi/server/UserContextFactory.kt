@@ -42,4 +42,12 @@ interface UserContextAuthnInfo {
     val requestUrl: String
     val relativePath: String
     val remoteIp: String
+
+    data class Simple(
+        override val requestUrl: String,
+        override val relativePath: String,
+        override val remoteIp: String,
+        override val headers: Headers = Headers.Simple(),
+        override val queryParams: Map<String, Set<String>> = emptyMap()
+    ): UserContextAuthnInfo
 }
