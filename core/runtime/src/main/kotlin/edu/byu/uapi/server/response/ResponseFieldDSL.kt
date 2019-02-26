@@ -36,9 +36,10 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
 
     inline fun <reified T : Any> value(
         prop: KProperty1<Model, T>,
+        name: String = prop.name.toSnakeCase(),
         fn: ValueInit<UserContext, Model, T, T>.() -> Unit
     ) {
-        val p = UAPIValueInit<UserContext, Model, T>(prop.name.toSnakeCase(), T::class)
+        val p = UAPIValueInit<UserContext, Model, T>(name, T::class)
         p.getValue(prop) //TODO: We might want to make a separate type for property-driven values
         p.fn()
         fieldList.add(p.toDefinition())
@@ -67,9 +68,10 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
 
     inline fun <reified T : Any> nullableValue(
         prop: KProperty1<Model, T?>,
+        name: String = prop.name.toSnakeCase(),
         fn: ValueInit<UserContext, Model, T?, T>.() -> Unit
     ) {
-        val p = NullableUAPIValueInit<UserContext, Model, T>(prop.name.toSnakeCase(), T::class)
+        val p = NullableUAPIValueInit<UserContext, Model, T>(name, T::class)
         p.getValue(prop) //TODO: We might want to make a separate type for property-driven values
         p.fn()
         fieldList.add(p.toDefinition())
@@ -78,7 +80,7 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
     inline fun <reified Output : Any, MappedFrom : Any> nullableValue(
         prop: KProperty1<Model, MappedFrom?>,
         value: KProperty1<MappedFrom, Output?>,
-        name: String = prop.name.toSnakeCase(),
+        name: String = prop.name.toSnakeCase() + "_" + value.name.toSnakeCase(),
         fn: NullableMappedValueInit<UserContext, Model, MappedFrom, Output>.() -> Unit
     ) {
         val p = NullableMappedValueInit<UserContext, Model, MappedFrom, Output>(name, Output::class, value)
@@ -98,9 +100,10 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
 
     inline fun <reified T : Any> valueArray(
         prop: KProperty1<Model, Collection<T>>,
+        name: String = prop.name.toSnakeCase(),
         fn: ArrayInit<UserContext, Model, T>.() -> Unit
     ) {
-        val p = ArrayInit<UserContext, Model, T>(prop.name.toSnakeCase(), T::class)
+        val p = ArrayInit<UserContext, Model, T>(name, T::class)
         p.getValues(prop)
         p.fn()
         fieldList.add(p.toDefinition())
@@ -122,9 +125,10 @@ class UAPIResponseInit<UserContext : Any, Model : Any>() {
     inline fun <reified Value : Any, Item : Any> mappedValueArray(
         listProp: KProperty1<Model, Collection<Item?>>,
         valueProp: KProperty1<Item, Value>,
+        name: String = listProp.name.toSnakeCase(),
         fn: MappedValueArrayInit<UserContext, Model, Value, Item>.() -> Unit
     ) {
-        val p = MappedValueArrayInit<UserContext, Model, Value, Item>(listProp.name.toSnakeCase(), Value::class)
+        val p = MappedValueArrayInit<UserContext, Model, Value, Item>(name, Value::class)
         p.getArray(listProp)
         p.getValue(valueProp)
         p.fn()
