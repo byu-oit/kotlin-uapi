@@ -71,13 +71,13 @@
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-core</artifactId>
-            <version>3.2.1</version>
+            <version>3.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-assertions</artifactId>
-            <version>3.2.1</version>
+            <version>3.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>io.kotlintest</groupId>
             <artifactId>kotlintest-runner-junit5</artifactId>
-            <version>3.2.1</version>
+            <version>3.3.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
