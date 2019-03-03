@@ -17,9 +17,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>edu.byu.uapi.kotlin</groupId>
+                <groupId>edu.byu.uapi.server</groupId>
                 <artifactId>uapi-bom</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>0.5.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -28,18 +28,18 @@
 
     <dependencies>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
+            <groupId>edu.byu.uapi.server</groupId>
             <artifactId>uapi-runtime</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.http</groupId>
+            <groupId>edu.byu.uapi.server.http</groupId>
             <artifactId>spark-http-adapter</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.examples</groupId>
+            <groupId>edu.byu.uapi.server.examples</groupId>
             <artifactId>library-example-common</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>0.5.0</version>
         </dependency>
 
         <dependency>

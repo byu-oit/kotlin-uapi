@@ -23,8 +23,8 @@ Create a file named `BooksResource.kt`. You will probably want to put it in the 
 ```kotlin
 package edu.byu.uapi.library
 
-import edu.byu.uapi.kotlin.examples.library.Book
-import edu.byu.uapi.kotlin.examples.library.Library
+import edu.byu.uapi.server.examples.library.Book
+import edu.byu.uapi.server.examples.library.Library
 import edu.byu.uapi.server.resources.identified.ListResource
 import edu.byu.uapi.server.resources.identified.fields
 import kotlin.reflect.KClass

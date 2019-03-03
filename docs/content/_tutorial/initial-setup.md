@@ -33,7 +33,7 @@ as the UAPI Bill of Materials POM does not include the example code.
 
 ```xml
 <dependency>
-  <groupId>edu.byu.uapi.kotlin.examples</groupId>
+  <groupId>edu.byu.uapi.server.examples</groupId>
   <artifactId>library-example-common</artifactId>
   <version>{Latest version here}</version>
 </dependency>

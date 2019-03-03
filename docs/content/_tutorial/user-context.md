@@ -110,7 +110,7 @@ In order to use it, you will first need to add the following dependency to your 
 
 ```xml
 <dependency>
-  <groupId>edu.byu.uapi.kotlin.utilities</groupId>
+  <groupId>edu.byu.uapi.server.utilities</groupId>
   <artifactId>jwt-extensions</artifactId>
 </dependency>
 ```

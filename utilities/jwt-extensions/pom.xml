@@ -11,9 +11,9 @@
     <name>Kotlin UAPI Utilities - JWT-Based Extensions</name>
 
     <parent>
-        <groupId>edu.byu.uapi.kotlin.utilities</groupId>
+        <groupId>edu.byu.uapi.server.utilities</groupId>
         <artifactId>kotlin-uapi-utilities-pom</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.5.0</version>
     </parent>
 
     <properties>
@@ -31,7 +31,7 @@
     <dependencies>
         <!-- UAPI -->
         <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
+            <groupId>edu.byu.uapi.server</groupId>
             <artifactId>uapi-runtime</artifactId>
         </dependency>
 

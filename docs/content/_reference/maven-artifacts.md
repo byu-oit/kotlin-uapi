@@ -21,7 +21,7 @@ To import a Bill of Materials, you must add a `<dependencyManagement>` section t
 <dependencyManagement>
   <dependencies>
     <dependency>
-      <groupId>edu.byu.uapi.kotlin</groupId>
+      <groupId>edu.byu.uapi.server</groupId>
       <artifactId>uapi-bom</artifactId>
       <version>{insert latest version here}</version>
       <scope>import</scope>
@@ -43,7 +43,7 @@ All projects will require the core runtime artifact:
 <dependencies>
   <!-- other dependencies -->
   <dependency>
-    <groupId>edu.byu.uapi.kotlin</groupId>
+    <groupId>edu.byu.uapi.server</groupId>
     <artifactId>uapi-runtime</artifactId>
   </dependency>
 </dependencies>
@@ -57,7 +57,7 @@ All projects will require the core runtime artifact:
 <dependencies>
   <!-- other dependencies -->
   <dependency>
-    <groupId>edu.byu.uapi.kotlin.http</groupId>
+    <groupId>edu.byu.uapi.server.http</groupId>
     <artifactId>spark-http-adapter</artifactId>
   </dependency>
 </dependencies>

@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
         <artifactId>kotlin-uapi-examples-pom</artifactId>
-        <groupId>edu.byu.uapi.kotlin.examples</groupId>
-        <version>1.0.0-SNAPSHOT</version>
+        <groupId>edu.byu.uapi.server.examples</groupId>
+        <version>0.5.0</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -23,9 +23,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>edu.byu.uapi.kotlin</groupId>
+                <groupId>edu.byu.uapi.server</groupId>
                 <artifactId>uapi-bom</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>0.5.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -34,19 +34,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
+            <groupId>edu.byu.uapi.server</groupId>
             <artifactId>uapi-runtime</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.http</groupId>
+            <groupId>edu.byu.uapi.server.http</groupId>
             <artifactId>aws-lambda-proxy-adapter</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.http</groupId>
+            <groupId>edu.byu.uapi.server.http</groupId>
             <artifactId>spark-http-adapter</artifactId>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.utilities</groupId>
+            <groupId>edu.byu.uapi.server.utilities</groupId>
             <artifactId>jwt-extensions</artifactId>
         </dependency>
 

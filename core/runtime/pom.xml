@@ -11,32 +11,32 @@
     <name>Kotlin UAPI Runtime</name>
 
     <parent>
-        <groupId>edu.byu.uapi.kotlin</groupId>
+        <groupId>edu.byu.uapi.server</groupId>
         <artifactId>kotlin-uapi-core-pom</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.5.0</version>
     </parent>
 
     <dependencies>
         <!-- UAPI -->
         <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
+            <groupId>edu.byu.uapi.server</groupId>
             <artifactId>uapi-spi</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
+            <groupId>edu.byu.uapi.server</groupId>
             <artifactId>uapi-utility-types</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin.validation</groupId>
+            <groupId>edu.byu.uapi.server.validation</groupId>
             <artifactId>uapi-hibernate-validator</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>edu.byu.uapi.kotlin</groupId>
+            <groupId>edu.byu.uapi.server</groupId>
             <artifactId>uapi-schemagen</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>0.5.0</version>
         </dependency>
         <dependency>
             <groupId>edu.byu.uapi.model</groupId>
