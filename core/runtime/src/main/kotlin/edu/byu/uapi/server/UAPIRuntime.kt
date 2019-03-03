@@ -9,6 +9,7 @@ import edu.byu.uapi.server.resources.list.ListResourceRuntime
 import edu.byu.uapi.server.resources.list.ResourceRuntime
 import edu.byu.uapi.server.resources.list.asIntrospectionLocation
 import edu.byu.uapi.server.subresources.Subresource
+import edu.byu.uapi.server.subresources.SubresourceConfig
 import edu.byu.uapi.server.types.IdentifiedModel
 import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.server.util.loggerFor
@@ -159,33 +160,18 @@ class DefaultIntrospectionContext(
     }
 }
 
-internal sealed class ResourceMapping<UserContext : Any, Model : Any, Parent : ModelHolder> {
-
-    abstract fun toRuntime(
-        typeDictionary: TypeDictionary,
-        validationEngine: ValidationEngine
-    ): ResourceRuntime<UserContext, Parent, *>
-
-    data class List<UserContext : Any, Id : Any, Model : Any>(
-        val resource: ListResource<UserContext, Id, Model, *>,
-        val subresources: kotlin.collections.List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = emptyList()
-    ) : ResourceMapping<UserContext, Model, IdentifiedModel<Id, Model>>() {
-        override fun toRuntime(
-            typeDictionary: TypeDictionary,
-            validationEngine: ValidationEngine
-        ): ResourceRuntime<UserContext, IdentifiedModel<Id, Model>, *> {
-            return ListResourceRuntime(
-                this.resource,
-                typeDictionary,
-                validationEngine,
-                subresources
-            )
-        }
-    }
+interface SimpleResourceInit<UserContext : Any, ParentType : ModelHolder> {
+    fun subresource(
+        subresource: Subresource<UserContext, ParentType, *>,
+        config: SubresourceConfig = SubresourceConfig()
+    )
 }
 
-interface SimpleResourceInit<UserContext : Any, ParentType : ModelHolder> {
-    fun subresource(subresource: Subresource<UserContext, ParentType, *>)
+fun <UserContext : Any, ParentType : ModelHolder> SimpleResourceInit<UserContext, ParentType>.subresource(
+    subresource: Subresource<UserContext, ParentType, *>,
+    returnByDefault: Boolean
+) {
+    this.subresource(subresource, SubresourceConfig(returnByDefault))
 }
 
 interface ResourceWithContextsInit<UserContext : Any, ParentType : ModelHolder, ContextNames : Enum<ContextNames>>
@@ -215,10 +201,14 @@ internal class SimpleResourceInitImpl<UserContext : Any, Id : Any, Model : Any>(
 ) : InternalListResourceInit<UserContext, Id, Model>,
     SimpleResourceInit<UserContext, IdentifiedModel<Id, Model>> {
 
-    internal val subresources: MutableList<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = mutableListOf()
+    internal val subresources: MutableList<Pair<Subresource<UserContext, IdentifiedModel<Id, Model>, *>, SubresourceConfig>> =
+        mutableListOf()
 
-    override fun subresource(subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>) {
-        subresources.add(subresource)
+    override fun subresource(
+        subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>,
+        config: SubresourceConfig
+    ) {
+        subresources.add(subresource to config)
     }
 
     override fun createRuntime(runtime: UAPIRuntime<UserContext>): ListResourceRuntime<UserContext, Id, Model, *> {
@@ -258,7 +248,10 @@ internal class ResourceWithContextsInitImpl<UserContext : Any, Id : Any, Model :
     internal val subresources: MutableMap<Subresource<UserContext, IdentifiedModel<Id, Model>, *>, Set<ContextNames>> =
         mutableMapOf()
 
-    override fun subresource(subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>) {
+    override fun subresource(
+        subresource: Subresource<UserContext, IdentifiedModel<Id, Model>, *>,
+        config: SubresourceConfig
+    ) {
         this.subresource(subresource, emptySet())
     }
 

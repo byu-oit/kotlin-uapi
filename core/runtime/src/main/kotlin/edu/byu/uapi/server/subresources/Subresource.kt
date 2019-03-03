@@ -12,14 +12,19 @@ interface Subresource<UserContext : Any, Parent : ModelHolder, Model : Any> {
 
 }
 
+data class SubresourceConfig(
+    val returnByDefault: Boolean = false
+)
+
 fun <UserContext : Any, Parent : ModelHolder, Model : Any> Subresource<UserContext, Parent, Model>.createRuntime(
     parent: SubresourceParent<UserContext, Parent>,
     typeDictionary: TypeDictionary,
-    validationEngine: ValidationEngine
+    validationEngine: ValidationEngine,
+    config: SubresourceConfig
 ): SubresourceRuntime<UserContext, Parent, Model> {
     return when {
-        this is SingletonSubresource -> SingletonSubresourceRuntime(this, parent, typeDictionary, validationEngine)
-        this is ListSubresource<UserContext, Parent, *, Model, *> -> ListSubresourceRuntime(this, parent, typeDictionary, validationEngine)
+        this is SingletonSubresource -> SingletonSubresourceRuntime(this, parent, typeDictionary, validationEngine, config)
+        this is ListSubresource<UserContext, Parent, *, Model, *> -> ListSubresourceRuntime(this, parent, typeDictionary, validationEngine, config)
         else -> throw IllegalStateException("Unknown subresource type: ${this::class.qualifiedName}")
     }
 }

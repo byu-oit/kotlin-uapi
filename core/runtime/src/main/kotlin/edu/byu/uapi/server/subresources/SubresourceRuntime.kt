@@ -22,6 +22,7 @@ sealed class SubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model :
     ): UAPIResponse<*>
 
     abstract val fieldsetName: String
+    abstract val config: SubresourceConfig
 
     override fun introspect(context: IntrospectionContext): UAPISubresourceModel {
         return introspect(this, context)
@@ -32,7 +33,8 @@ class SingletonSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Model
     internal val subresource: SingletonSubresource<UserContext, Parent, Model>,
     val parent: SubresourceParent<UserContext, Parent>,
     val typeDictionary: TypeDictionary,
-    val validationEngine: ValidationEngine
+    val validationEngine: ValidationEngine,
+    override val config: SubresourceConfig
 ) : SubresourceRuntime<UserContext, Parent, Model>() {
 
     val name = subresource.name
@@ -109,7 +111,8 @@ class ListSubresourceRuntime<UserContext : Any, Parent : ModelHolder, Id : Any, 
     internal val subresource: ListSubresource<UserContext, Parent, Id, Model, Params>,
     val parent: SubresourceParent<UserContext, Parent>,
     val typeDictionary: TypeDictionary,
-    val validationEngine: ValidationEngine
+    val validationEngine: ValidationEngine,
+    override val config: SubresourceConfig
 ) : SubresourceRuntime<UserContext, Parent, Model>() {
     val pluralName = subresource.pluralName
     val singleName = subresource.singleName

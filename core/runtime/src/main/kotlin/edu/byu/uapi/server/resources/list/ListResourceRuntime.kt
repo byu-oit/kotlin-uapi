@@ -11,6 +11,7 @@ import edu.byu.uapi.server.types.IdentifiedModel
 import edu.byu.uapi.server.types.ModelHolder
 import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.SpecConstants.FieldSets.DEFAULT_FIELDSETS
+import edu.byu.uapi.spi.SpecConstants.FieldSets.VALUE_BASIC
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.input.IdParamReader
 import edu.byu.uapi.spi.input.ListParams
@@ -38,7 +39,7 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
     internal val resource: ListResource<UserContext, Id, Model, Params>,
     val typeDictionary: TypeDictionary,
     val validationEngine: ValidationEngine,
-    subresourceList: List<Subresource<UserContext, IdentifiedModel<Id, Model>, *>> = emptyList()
+    subresourceList: List<Pair<Subresource<UserContext, IdentifiedModel<Id, Model>, *>, SubresourceConfig>> = emptyList()
 ) : ResourceRuntime<UserContext, IdentifiedModel<Id, Model>, UAPIListResourceModel>() {
 
     val pluralName = resource.pluralName
@@ -70,7 +71,11 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
     }
 
     val subresources: Map<String, SubresourceRuntime<UserContext, IdentifiedModel<Id, Model>, *>> =
-        subresourceList.map { it.createRuntime(this, typeDictionary, validationEngine) }.associateBy { it.fieldsetName }
+        subresourceList.map { it.first.createRuntime(this, typeDictionary, validationEngine, it.second) }.associateBy { it.fieldsetName }
+
+    val defaultFieldsets: Set<String> = setOf(VALUE_BASIC) + subresources.asSequence()
+        .filter { it.value.config.returnByDefault }
+        .map { it.key }
     val availableFieldsets = DEFAULT_FIELDSETS + subresources.keys
     val availableContexts = emptyMap<String, Set<String>>()
 
@@ -78,7 +83,7 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
 
     override fun getRequestedFieldsets(fieldsetRequest: FieldsetRequest?): RequestedFieldsetResponse {
         if (fieldsetRequest == null) {
-            return RequestedFieldsetResponse.of(DEFAULT_FIELDSETS)
+            return RequestedFieldsetResponse.of(defaultFieldsets)
         }
         val requestedFieldsets = fieldsetRequest.requestedFieldsets
         val requestedContexts = fieldsetRequest.requestedContexts
@@ -89,7 +94,7 @@ class ListResourceRuntime<UserContext : Any, Id : Any, Model : Any, Params : Lis
 
         val fromContexts =
             fieldsetRequest.requestedContexts.flatMap { availableContexts.getValue(it) /* we already validated contexts */ }
-        val set = fieldsetRequest.requestedFieldsets.ifEmpty { DEFAULT_FIELDSETS } + fromContexts
+        val set = fieldsetRequest.requestedFieldsets.ifEmpty { defaultFieldsets } + fromContexts
         return RequestedFieldsetResponse.of(set)
     }
 
