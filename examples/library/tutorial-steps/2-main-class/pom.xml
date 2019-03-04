@@ -19,7 +19,7 @@
             <dependency>
                 <groupId>edu.byu.uapi.server</groupId>
                 <artifactId>uapi-bom</artifactId>
-                <version>0.5.1-SNAPSHOT</version>
+                <version>0.5.1</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>edu.byu.uapi.server.examples</groupId>
             <artifactId>library-example-common</artifactId>
-            <version>0.5.1-SNAPSHOT</version>
+            <version>0.5.1</version>
         </dependency>
 
         <dependency>

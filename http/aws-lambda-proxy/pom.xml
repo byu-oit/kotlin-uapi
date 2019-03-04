@@ -13,7 +13,7 @@
     <parent>
         <groupId>edu.byu.uapi.server.http</groupId>
         <artifactId>kotlin-uapi-http-pom</artifactId>
-        <version>0.5.1-SNAPSHOT</version>
+        <version>0.5.1</version>
     </parent>
 
     <properties>
