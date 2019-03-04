@@ -6,7 +6,7 @@
 
     <groupId>edu.byu.uapi.server</groupId>
     <artifactId>kotlin-uapi-pom</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Kotlin UAPI Parent POM</name>
@@ -102,10 +102,6 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
-        </repository>
-        <repository>
-            <id>kotlin-eap</id>
-            <url>https://dl.bintray.com/kotlin/kotlin-eap</url>
         </repository>
     </repositories>
 
