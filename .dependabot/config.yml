@@ -1,0 +1,15 @@
+---
+version: 1
+update_configs:
+  - package_manager: java:maven
+    directory: "/"
+    update_schedule: daily
+    target_branch: master
+    default_reviewers:
+      - ThatJoeMoore
+    default_assignees:
+      - ThatJoeMoore
+    ignored_updates:
+      - match:
+          dependency_name: "org.jetbrains.kotlin:*"
+          version_requirement: "(,1.3.29],[1.3.30,)"
