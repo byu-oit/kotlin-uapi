@@ -51,7 +51,7 @@
         <uapi.model.version>0.1.0-SNAPSHOT</uapi.model.version>
 
         <!-- Guava because, well, Guava. -->
-        <util.guava.version>27.0.1-jre</util.guava.version>
+        <util.guava.version>27.1-jre</util.guava.version>
 
         <logging.slf4j.version>1.7.26</logging.slf4j.version>
 
