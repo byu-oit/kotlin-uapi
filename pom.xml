@@ -78,7 +78,7 @@
         <test.mockito.version>2.25.0</test.mockito.version>
         <test.mockitokotlin.version>2.1.0</test.mockitokotlin.version>
         <test.junit.platform.version>1.3.2</test.junit.platform.version>
-        <test.junit.version>5.4.0</test.junit.version>
+        <test.junit.version>5.4.1</test.junit.version>
         <!-- Utilities for testing annotation processors -->
         <test.google.compile.version>0.15</test.google.compile.version>
 
