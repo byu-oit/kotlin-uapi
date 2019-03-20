@@ -68,7 +68,7 @@ sealed class ListSubresourceRequestHandler<UserContext : Any, Parent : ModelHold
             RequestedFieldsetResponse.InvalidFieldsets -> return UAPIBadRequestError("Requested one or more invalid fieldsets.")
             RequestedFieldsetResponse.InvalidContexts -> return UAPIBadRequestError("Requested one or more invalid contexts.")
         }
-        val context = SubresourceRequestContext.Simple(fieldsets)
+        val context = SubresourceRequestContext.Simple(fieldsets + runtime.fieldsetName)
         return when (val parent = runtime.parent.getParentModel(context, request.userContext, request.parentIdParams)) {
             is ParentResult.Success -> handle(request, context, parent.value)
             ParentResult.DoesNotExist -> UAPINotFoundError
