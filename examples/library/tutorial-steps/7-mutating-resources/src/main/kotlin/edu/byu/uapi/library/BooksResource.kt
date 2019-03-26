@@ -306,8 +306,20 @@ class BooksResource : ListResource<LibraryUser, OCLCNumber, Book, BookListParams
 //            }
 //            supports = EnumSet.of(UAPIClaimRelationship.GREATER_THAN)
         }
-        concept(Book::title) {
-            canUserMakeClaim { _, _, _ -> true }
+        concept(Book::title).qualifiedBy<TitleQualifiers> {
+            canUserMakeClaim { requestContext, user, model, qualifiers ->
+                println(qualifiers)
+                true
+            }
+            compareUsing { v, q ->
+                if (q.matchCase) {
+                    v
+                } else {
+                    v.toLowerCase()
+                }
+            }
         }
     }
 }
+
+data class TitleQualifiers(val matchCase: Boolean = false)

@@ -1,7 +1,10 @@
 package edu.byu.uapi.http
 
 import com.fasterxml.jackson.annotation.JsonAnySetter
+import com.fasterxml.jackson.databind.node.ObjectNode
+import edu.byu.uapi.http.json.JacksonEngine
 import edu.byu.uapi.http.json.JsonEngine
+import edu.byu.uapi.model.UAPIClaimRelationship
 import edu.byu.uapi.server.UAPIRuntime
 import edu.byu.uapi.server.UserContextAuthnInfo
 import edu.byu.uapi.server.UserContextFactory
@@ -20,6 +23,7 @@ import edu.byu.uapi.spi.rendering.Renderable
 import edu.byu.uapi.spi.rendering.Renderer
 import edu.byu.uapi.spi.requests.*
 import edu.byu.uapi.spi.scalars.ScalarType
+import kotlin.reflect.KClass
 
 class HttpListResource<UserContext : Any, Id : Any, Model : Any>(
     val runtime: UAPIRuntime<UserContext>,
@@ -46,11 +50,18 @@ class HttpListResource<UserContext : Any, Id : Any, Model : Any>(
     }
 
     private fun ClaimsRuntime<UserContext, Id, Model>.toHttpRoutes(): List<HttpRoute> {
+        if (config.jsonEngine != JacksonEngine) {
+            throw IllegalStateException("The claims runtime is currently only compatible with the Jackson JSON engine. Sorry!")
+        }
         val path = listOf(StaticPathPart("claims"), StaticPathPart(resource.pluralName))
 
         return listOf(
             HttpRoute(path, HttpMethod.GET, DescribeClaimsHandler(this)),
-            HttpRoute(path, HttpMethod.PUT, EvaluateClaimsHandler(runtime, this, runtime.typeDictionary, config.jsonEngine))
+            HttpRoute(
+                path,
+                HttpMethod.PUT,
+                EvaluateClaimsHandler(runtime, this, runtime.typeDictionary, config.jsonEngine)
+            )
         )
     }
 
@@ -116,7 +127,7 @@ class EvaluateClaimsHandler<UserContext : Any, Id : Any, Model : Any>(
         val result = runtime.evaluate(
             ResourceRequestContext.Simple(emptySet()),
             userContext,
-            body.asClaimRequest(runtime.idType)
+            body.asClaimRequest(runtime.idType, jsonEngine as JacksonEngine)
         )
         return UAPIHttpResponse(result)
     }
@@ -125,9 +136,9 @@ class EvaluateClaimsHandler<UserContext : Any, Id : Any, Model : Any>(
         @JsonAnySetter
         var claims: MutableMap<String, HttpClaim> = mutableMapOf()
 
-        internal fun <Id: Any> asClaimRequest(idScalar: ScalarType<Id>): MultiClaimRequest<Id> {
+        internal fun <Id : Any> asClaimRequest(idScalar: ScalarType<Id>, jsonEngine: JacksonEngine): MultiClaimRequest<Id> {
             return MultiClaimRequest(
-                claims.mapValues { it.value.asClaimRequest(idScalar) }
+                claims.mapValues { it.value.asClaimRequest(idScalar, jsonEngine) }
             )
         }
     }
@@ -135,14 +146,34 @@ class EvaluateClaimsHandler<UserContext : Any, Id : Any, Model : Any>(
     data class HttpClaim(
         val subject: String,
         val mode: ClaimEvaluationMode,
-        val claims: List<ClaimAssertion>
+        val claims: List<HttpClaimAssertion>
     ) {
-        internal fun <Id: Any> asClaimRequest(idScalar: ScalarType<Id>): ClaimRequest<Id> {
+        internal fun <Id : Any> asClaimRequest(idScalar: ScalarType<Id>, jsonEngine: JacksonEngine): ClaimRequest<Id> {
             return ClaimRequest(
                 idScalar.fromString(subject),
                 mode,
-                claims
+                claims.map { TransformingClaimAssertion(it, jsonEngine) }
             )
+        }
+    }
+
+    data class HttpClaimAssertion(
+        val concept: String,
+        val relationship: UAPIClaimRelationship,
+        val value: String,
+        val qualifiers: ObjectNode? = null
+    )
+
+    class TransformingClaimAssertion(
+        val wrapped: HttpClaimAssertion,
+        val jsonEngine: JacksonEngine
+    ) : ClaimAssertion {
+        override val concept: String = wrapped.concept
+        override val relationship: UAPIClaimRelationship = wrapped.relationship
+        override val value: String = wrapped.value
+
+        override fun <Q : Any> getQualifiers(type: KClass<Q>): Q {
+            return jsonEngine.map(wrapped.qualifiers, type)
         }
     }
 }

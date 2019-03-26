@@ -1,5 +1,6 @@
 package edu.byu.uapi.http.json
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -60,6 +61,11 @@ object JacksonEngine : JsonEngine<JacksonGenerator, Writer>() {
             }
         }
     }
+
+    fun <T: Any> map(value: JsonNode?, to: KClass<T>): T {
+        return objectMapper.treeToValue(value ?: objectMapper.createObjectNode(), to.java)
+    }
+
 }
 
 object GsonTreeEngine : JsonEngine<GsonObject, Any?>() {

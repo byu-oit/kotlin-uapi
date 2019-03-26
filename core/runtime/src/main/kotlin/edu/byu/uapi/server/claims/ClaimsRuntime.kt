@@ -11,12 +11,13 @@ import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.introspection.Introspectable
 import edu.byu.uapi.spi.introspection.IntrospectionContext
 import edu.byu.uapi.spi.scalars.ScalarType
+import kotlin.reflect.KClass
 
 class ClaimsRuntime<UserContext : Any, SubjectId : Any, Model : Any>(
     private val loader: ClaimModelLoader<UserContext, SubjectId, Model>,
     typeDictionary: TypeDictionary,
     val idType: ScalarType<SubjectId>,
-    conceptList: List<ClaimConcept<UserContext, SubjectId, Model, *>>
+    conceptList: List<ClaimConcept<UserContext, SubjectId, Model, *, *>>
 ) : Introspectable<Map<String, UAPIClaimModel>> {
     companion object {
         private val LOG = loggerFor<ClaimsRuntime<*, *, *>>()
@@ -109,7 +110,7 @@ class ClaimsRuntime<UserContext : Any, SubjectId : Any, Model : Any>(
 
     @Suppress("UNCHECKED_CAST")
     private fun matchConcept(assertion: ClaimAssertion): MatchedConcept<UserContext, SubjectId, Model, *>? {
-        return (concepts[assertion.concept] as? ConceptRuntime<UserContext, SubjectId, Model, *>?)?.let {
+        return (concepts[assertion.concept] as? ConceptRuntime<UserContext, SubjectId, Model, *, *>?)?.let {
             MatchedConcept(assertion, it)
         }
     }
@@ -119,8 +120,8 @@ class ClaimsRuntime<UserContext : Any, SubjectId : Any, Model : Any>(
     }
 }
 
-class ConceptRuntime<UserContext : Any, SubjectId : Any, Model : Any, Value : Any>(
-    val concept: ClaimConcept<UserContext, SubjectId, Model, Value>,
+class ConceptRuntime<UserContext : Any, SubjectId : Any, Model : Any, Value : Any, Qualifiers: Any>(
+    val concept: ClaimConcept<UserContext, SubjectId, Model, Value, Qualifiers>,
     typeDictionary: TypeDictionary
 ) : Introspectable<UAPIClaimModel> {
     val valueType = typeDictionary.requireScalarType(concept.valueType)
@@ -138,6 +139,13 @@ class ConceptRuntime<UserContext : Any, SubjectId : Any, Model : Any, Value : An
         relationships = evaluators.keys
     )
 
+    @Suppress("UNCHECKED_CAST")
+    private fun parseQualifiers(assertion: ClaimAssertion): Qualifiers {
+        val type = concept.qualifiersType
+        if (type == Any::class) return Any() as Qualifiers
+        return assertion.getQualifiers(type)
+    }
+
     internal fun evaluate(
         requestContext: ResourceRequestContext,
         userContext: UserContext,
@@ -145,26 +153,32 @@ class ConceptRuntime<UserContext : Any, SubjectId : Any, Model : Any, Value : An
         model: Model,
         assertion: ClaimAssertion
     ): EvalResult {
+        val qualifiers = parseQualifiers(assertion)
         val value = valueType.fromString(assertion.value)
-        if (!concept.canUserEvaluateClaim(requestContext, userContext, id, model)) {
+        if (!concept.canUserEvaluateClaim(requestContext, userContext, id, model, qualifiers)) {
             return EvalResult.NotAuthorized
         }
         val e = evaluators.getOrElse(assertion.relationship) {
             return EvalResult.UnsupportedRelationship(concept.name, assertion.relationship)
         }
-        return when (val result = e.invoke(requestContext, userContext, id, model, value)) {
+        return when (val result = e.invoke(requestContext, userContext, id, model, value, qualifiers)) {
             is ClaimEvaluationResult.Success    -> EvalResult.Success(result.result)
             ClaimEvaluationResult.NotAuthorized -> EvalResult.NotAuthorized
             is ClaimEvaluationResult.Error      -> EvalResult.Error(result.code, result.messages, result.cause)
         }
     }
 
-    override fun introspect(context: IntrospectionContext): UAPIClaimModel = model
+    override fun introspect(context: IntrospectionContext): UAPIClaimModel {
+        if (concept.qualifiersType != Any::class) {
+            context.warn("Introspection of claim concept qualifiers is not yet supported.", "How to fix this: Clone Joseph so he can work on Campus Cards and refactoring the UAPI Runtime into something comprehensible at the same time.")
+        }
+        return model
+    }
 }
 
 private data class MatchedConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Any>(
     val claim: ClaimAssertion,
-    val concept: ConceptRuntime<UserContext, SubjectId, Model, Value>
+    val concept: ConceptRuntime<UserContext, SubjectId, Model, Value, *>
 ) {
     fun evaluate(
         requestContext: ResourceRequestContext,
@@ -209,12 +223,12 @@ data class ClaimRequest<SubjectId : Any>(
     val claims: List<ClaimAssertion>
 )
 
-data class ClaimAssertion(
-    val concept: String,
-    val relationship: UAPIClaimRelationship,
+interface ClaimAssertion {
+    val concept: String
+    val relationship: UAPIClaimRelationship
     val value: String
-    //TODO: Qualifiers
-)
+    fun <Q: Any> getQualifiers(type: KClass<Q>): Q
+}
 
 enum class ClaimEvaluationMode(val apiValue: String) {
     ALL("ALL"),

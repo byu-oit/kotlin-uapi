@@ -4,28 +4,31 @@ import edu.byu.uapi.model.UAPIClaimRelationship
 import edu.byu.uapi.server.resources.ResourceRequestContext
 import kotlin.reflect.KClass
 
-interface ClaimConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Any> {
+interface ClaimConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Any, Qualifiers: Any> {
 
     val valueType: KClass<Value>
     val name: String
+    val qualifiersType: KClass<Qualifiers>
 
     fun canUserEvaluateClaim(
         requestContext: ResourceRequestContext,
         user: UserContext,
         subjectId: SubjectId,
-        subjectModel: Model
+        subjectModel: Model,
+        qualifiers: Qualifiers
     ): Boolean
 
-    fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, SubjectId, Model, Value>?
+    fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, SubjectId, Model, Value, Qualifiers>?
 
 }
 
-typealias ClaimEvaluator<User, SubjectId, Model, Value> = (
+typealias ClaimEvaluator<User, SubjectId, Model, Value, Qualifiers> = (
     requestContext: ResourceRequestContext,
     user: User,
     subjectId: SubjectId,
     subjectModel: Model,
-    requestedValue: Value
+    requestedValue: Value,
+    qualifiers: Qualifiers
 ) -> ClaimEvaluationResult
 
 sealed class ClaimEvaluationResult {
@@ -47,20 +50,23 @@ sealed class ClaimEvaluationResult {
     }
 }
 
-abstract class SimpleConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Any>
-    : ClaimConcept<UserContext, SubjectId, Model, Value> {
+typealias QualifiedComparator<Value, Qualifiers> = (left: Value, right: Value, qualifiers: Qualifiers) -> Int
 
-    abstract val comparator: Comparator<Value>
+abstract class SimpleConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Any, Qualifiers: Any>
+    : ClaimConcept<UserContext, SubjectId, Model, Value, Qualifiers> {
+
+    abstract val comparator: QualifiedComparator<Value, Qualifiers>
 
     abstract fun getValue(
         requestContext: ResourceRequestContext,
         user: UserContext,
         subjectId: SubjectId,
-        subjectModel: Model
+        subjectModel: Model,
+        qualifiers: Qualifiers
     ): ClaimValueResult<Value>
 
 
-    override fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, SubjectId, Model, Value>? {
+    override fun getClaimEvaluator(relationship: UAPIClaimRelationship): ClaimEvaluator<UserContext, SubjectId, Model, Value, Qualifiers>? {
         @Suppress("REDUNDANT_ELSE_IN_WHEN")
         return when (relationship) {
             UAPIClaimRelationship.GREATER_THAN          -> getEvaluator { it > 0 }
@@ -73,9 +79,9 @@ abstract class SimpleConcept<UserContext : Any, SubjectId : Any, Model : Any, Va
         }
     }
 
-    private fun getEvaluator(evaluateResult: (Int) -> Boolean): ClaimEvaluator<UserContext, SubjectId, Model, Value> =
-        { requestContext, user, subjectId, model, value ->
-            val current = getValue(requestContext, user, subjectId, model)
+    private fun getEvaluator(evaluateResult: (Int) -> Boolean): ClaimEvaluator<UserContext, SubjectId, Model, Value, Qualifiers> =
+        { requestContext, user, subjectId, model, value, qualifiers ->
+            val current = getValue(requestContext, user, subjectId, model, qualifiers)
             when (current) {
                 is ClaimValueResult.Error      -> ClaimEvaluationResult.Error(
                     current.code,
@@ -84,19 +90,20 @@ abstract class SimpleConcept<UserContext : Any, SubjectId : Any, Model : Any, Va
                 ClaimValueResult.NotAuthorized -> ClaimEvaluationResult.NotAuthorized
                 ClaimValueResult.None          -> ClaimEvaluationResult.Success(false)
                 is ClaimValueResult.Value      -> {
-                    val compareResult = comparator.compare(current.value, value)
+                    val compareResult = comparator.invoke(current.value, value, qualifiers)
                     ClaimEvaluationResult.Success(evaluateResult(compareResult))
                 }
             }
         }
 }
 
-abstract class SimpleComparableConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Comparable<Value>>
-    : SimpleConcept<UserContext, SubjectId, Model, Value>() {
+abstract class SimpleComparableConcept<UserContext : Any, SubjectId : Any, Model : Any, Value : Comparable<Value>, Qualifiers: Any>
+    : SimpleConcept<UserContext, SubjectId, Model, Value, Qualifiers>() {
 
-    override val comparator: Comparator<Value> = java.util.Comparator.naturalOrder()
+    override val comparator: QualifiedComparator<Value, Qualifiers> = java.util.Comparator.naturalOrder<Value>().asQualifiedComparator()
 }
 
+fun <C: Any, Q: Any> Comparator<C>.asQualifiedComparator(): QualifiedComparator<C, Q> = {l, r, _ -> this.compare(l, r)}
 
 sealed class ClaimValueResult<V : Any> {
     data class Value<V : Any>(val value: V) : ClaimValueResult<V>()

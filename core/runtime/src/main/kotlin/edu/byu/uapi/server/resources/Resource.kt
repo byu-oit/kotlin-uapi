@@ -35,7 +35,7 @@ interface Resource<UserContext : Any, Model : Any, ModelStyle : ModelHolder> {
             subjectModel: Model
         ): Boolean
 
-        val claimConcepts: List<ClaimConcept<UserContext, SubjectId, Model, *>>
+        val claimConcepts: List<ClaimConcept<UserContext, SubjectId, Model, *, *>>
     }
 
 }
