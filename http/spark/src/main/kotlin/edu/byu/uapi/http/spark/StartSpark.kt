@@ -81,12 +81,14 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
         rootPath: String,
         runtime: UAPIRuntime<*>
     ) {
-        docRoutes.forEach { dr ->
-            val path = dr.path.stringifySpark()
-            LOG.info("Adding GET $path")
-            server.get(path) { req, res ->
-                res.type(dr.source.contentType)
-                dr.source.getInputStream(req.queryParams("pretty")?.toBoolean() ?: false)
+        server.optionalPath(rootPath) {
+            docRoutes.forEach { dr->
+                val path = dr.path.stringifySpark()
+                LOG.info("Adding GET $rootPath$path")
+                server.get(path) { req, res ->
+                    res.type(dr.source.contentType)
+                    dr.source.getInputStream(req.queryParams("pretty")?.toBoolean() ?: false)
+                }
             }
         }
     }
@@ -159,11 +161,11 @@ fun ResponseBody.renderResponseBody(
     typeDictionary: TypeDictionary
 ): Any {
     return when (json) {
-        is GsonTreeEngine -> {
+        is GsonTreeEngine        -> {
             val result: JsonObject = this.render(json.renderer(typeDictionary, null))
             result.toString()
         }
-        is JavaxJsonTreeEngine -> {
+        is JavaxJsonTreeEngine   -> {
             val obj = this.render(json.renderer(typeDictionary, null))
             obj.toString()
         }
@@ -172,7 +174,7 @@ fun ResponseBody.renderResponseBody(
                 this.render(it)
             }
         }
-        is JacksonEngine -> {
+        is JacksonEngine         -> {
             json.renderWithFile(typeDictionary) {
                 this.render(it)
             }
@@ -248,10 +250,10 @@ class CloseActionInputStream(
 
 private fun HttpMethod.toSpark(): spark.route.HttpMethod {
     return when (this) {
-        HttpMethod.GET -> spark.route.HttpMethod.get
-        HttpMethod.PUT -> spark.route.HttpMethod.put
-        HttpMethod.PATCH -> spark.route.HttpMethod.patch
-        HttpMethod.POST -> spark.route.HttpMethod.post
+        HttpMethod.GET    -> spark.route.HttpMethod.get
+        HttpMethod.PUT    -> spark.route.HttpMethod.put
+        HttpMethod.PATCH  -> spark.route.HttpMethod.patch
+        HttpMethod.POST   -> spark.route.HttpMethod.post
         HttpMethod.DELETE -> spark.route.HttpMethod.delete
     }
 }

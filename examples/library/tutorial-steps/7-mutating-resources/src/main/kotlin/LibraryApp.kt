@@ -22,7 +22,8 @@ fun main(args: Array<String>) {
     // All of our configuration is going to go here
     runtime.resource(BooksResource())
 
-    runtime.startSpark(
+    val s = runtime.startSpark(
         port = 8080
     )
+    s.register(runtime, "again")
 }
