@@ -65,7 +65,7 @@
         <validation.javax-el.version>3.0.1-b11</validation.javax-el.version>
 
         <!-- sparkjava.com -->
-        <http.spark.version>2.8.0</http.spark.version>
+        <http.spark.version>2.9.0</http.spark.version>
 
         <!-- Knows how to generate valid Java source code -->
         <annotations.javapoet.version>1.11.1</annotations.javapoet.version>
