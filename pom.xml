@@ -6,7 +6,7 @@
 
     <groupId>edu.byu.uapi.server</groupId>
     <artifactId>kotlin-uapi-pom</artifactId>
-    <version>0.5.3-SNAPSHOT</version>
+    <version>0.5.3</version>
     <packaging>pom</packaging>
 
     <name>Kotlin UAPI Parent POM</name>
