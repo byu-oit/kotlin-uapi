@@ -16,11 +16,13 @@ import java.io.Writer
 
 data class SparkConfig(
     val port: Int = defaultPort,
-    override val jsonEngine: JsonEngine<*, *> = defaultJsonEngine
+    override val jsonEngine: JsonEngine<*, *> = defaultJsonEngine,
+    val customizer: (Service) -> Unit = defaultCustomizer
 ) : HttpEngineConfig {
     companion object {
         val defaultPort = 4567
         val defaultJsonEngine: JsonEngine<*, *> = JacksonEngine
+        val defaultCustomizer: (Service) -> Unit = {}
     }
 }
 
@@ -34,6 +36,7 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
     override fun startServer(config: SparkConfig): Service {
         return Service.ignite().apply {
             port(config.port)
+            config.customizer(this)
             after { request, response ->
                 response.header("Content-Encoding", "gzip")
             }
@@ -122,6 +125,14 @@ fun <UserContext : Any> UAPIRuntime<UserContext>.startSpark(
     jsonEngine: JsonEngine<*, *> = SparkConfig.defaultJsonEngine
 ): SparkHttpEngine {
     return this.startSpark(SparkConfig(port, jsonEngine))
+}
+
+fun <UserContext : Any> UAPIRuntime<UserContext>.startSpark(
+    port: Int = SparkConfig.defaultPort,
+    jsonEngine: JsonEngine<*, *> = SparkConfig.defaultJsonEngine,
+    customize: (Service) -> Unit
+): SparkHttpEngine {
+    return this.startSpark(SparkConfig(port, jsonEngine, customize))
 }
 
 private fun HttpRoute.toSpark(
