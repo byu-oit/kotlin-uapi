@@ -13,7 +13,7 @@
     <parent>
         <groupId>edu.byu.uapi.server.validation</groupId>
         <artifactId>kotlin-uapi-validation-pom</artifactId>
-        <version>0.5.4</version>
+        <version>0.5.5-SNAPSHOT</version>
     </parent>
 
     <dependencies>
