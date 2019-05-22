@@ -9,8 +9,8 @@ import edu.byu.uapi.server.util.loggerFor
 import edu.byu.uapi.spi.dictionary.TypeDictionary
 import edu.byu.uapi.spi.rendering.Renderer
 import spark.*
-import java.io.File
 import java.io.InputStream
+import java.io.StringWriter
 import java.io.Writer
 
 
@@ -27,7 +27,9 @@ data class SparkConfig(
 }
 
 class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig>(config) {
-    private val LOG = loggerFor<SparkHttpEngine>()
+    companion object {
+        internal val LOG = loggerFor<SparkHttpEngine>()
+    }
 
     init {
         super.doInit()
@@ -85,7 +87,7 @@ class SparkHttpEngine(config: SparkConfig) : HttpEngineBase<Service, SparkConfig
         runtime: UAPIRuntime<*>
     ) {
         server.optionalPath(rootPath) {
-            docRoutes.forEach { dr->
+            docRoutes.forEach { dr ->
                 val path = dr.path.stringifySpark()
                 LOG.info("Adding GET $rootPath$path")
                 server.get(path) { req, res ->
@@ -155,6 +157,11 @@ class SparkHttpRoute(
     val config: SparkConfig,
     val typeDictionary: TypeDictionary
 ) : Route {
+
+    companion object {
+        val LOG = loggerFor<SparkHttpRoute>()
+    }
+
     override fun handle(
         request: Request,
         response: Response
@@ -181,31 +188,37 @@ fun ResponseBody.renderResponseBody(
             obj.toString()
         }
         is JavaxJsonStreamEngine -> {
-            json.renderWithFile(typeDictionary) {
+            json.renderBuffered(typeDictionary) {
                 this.render(it)
             }
         }
         is JacksonEngine         -> {
-            json.renderWithFile(typeDictionary) {
+            json.renderBuffered(typeDictionary) {
                 this.render(it)
             }
         }
     }
 }
 
-inline fun <Output : Any> JsonEngine<Output, Writer>.renderWithFile(
+inline fun <Output : Any> JsonEngine<Output, Writer>.renderBuffered(
     typeDictionary: TypeDictionary,
     render: (Renderer<Output>) -> Unit
 ): InputStream {
-    val file = File.createTempFile("uapi-runtime-render-buffer", ".tmp.json")
-    file.deleteOnExit()
+    //spark has a bug with closing input streams, (https://github.com/perwendel/spark/pull/978), so we're gonna just buffer in memory for now
+//    val file = File.createTempFile("uapi-runtime-render-buffer", ".tmp.json")
+//    file.deleteOnExit()
+//    val writer = file.bufferedWriter()
 
-    file.bufferedWriter().use {
+    val writer = StringWriter()
+
+    writer.use {
         val renderer = this.renderer(typeDictionary, it)
         render(renderer)
         it.flush()
     }
-    return file.inputStream().buffered()//.afterClose { file.delete() }
+
+    return writer.toString().byteInputStream()
+//    return file.inputStream().buffered().afterClose { file.delete() }
 }
 
 fun InputStream.afterClose(afterClose: () -> Unit): InputStream {
