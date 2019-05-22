@@ -6,7 +6,7 @@
 
     <groupId>edu.byu.uapi.server.http</groupId>
     <artifactId>kotlin-uapi-http-pom</artifactId>
-    <version>0.5.4-SNAPSHOT</version>
+    <version>0.5.4</version>
     <packaging>pom</packaging>
 
     <name>Kotlin UAPI HTTP Bindings Parent POM</name>
@@ -20,7 +20,7 @@
     <parent>
         <groupId>edu.byu.uapi.server</groupId>
         <artifactId>kotlin-uapi-pom</artifactId>
-        <version>0.5.4-SNAPSHOT</version>
+        <version>0.5.4</version>
     </parent>
 
     <dependencyManagement>
