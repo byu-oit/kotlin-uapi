@@ -33,7 +33,7 @@ abstract class JwtUserContextFactory<UserContext : Any>(
 
         val originalJwt = if (originalHeader != null) {
             try {
-                validator.decodeAndValidateJwt(jwtHeader)
+                validator.decodeAndValidateJwt(originalHeader)
             } catch (ex: JWTValidationException) {
                 LOG.error("Original JWT validation failed", ex)
                 return UserContextResult.Failure("The JWT passed in '${ByuJwtValidator.BYU_JWT_HEADER_ORIGINAL}' is invalid. Check that is has not expired and has not been tampered with.")
