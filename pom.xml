@@ -39,7 +39,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <kotlin.version>1.3.21</kotlin.version>
+        <kotlin.version>1.3.31</kotlin.version>
         <!-- Knowns how to read Kotlinc-generated @Metadata annotations -->
         <kotlin.metadata.version>1.4.0</kotlin.metadata.version>
         <!-- Faster compiles, as long as you don't do a `mvn clean` every time -->
