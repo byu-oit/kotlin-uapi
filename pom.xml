@@ -80,7 +80,7 @@
         <test.junit.platform.version>1.3.2</test.junit.platform.version>
         <test.junit.version>5.4.2</test.junit.version>
         <!-- Utilities for testing annotation processors -->
-        <test.google.compile.version>0.17</test.google.compile.version>
+        <test.google.compile.version>0.18</test.google.compile.version>
 
         <plugins.enforcer.version>3.0.0-M2</plugins.enforcer.version>
         <plugins.enforcer.requireMaven>3.5</plugins.enforcer.requireMaven>
