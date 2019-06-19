@@ -16,7 +16,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.3.31</kotlin.version>
+        <kotlin.version>1.3.40</kotlin.version>
         <dependencies.checkUnused>false</dependencies.checkUnused>
     </properties>
 
