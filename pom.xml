@@ -30,11 +30,8 @@
 
     <modules>
         <module>spi</module>
-	    <!--        <module>core</module>
-        <module>http</module>
-        <module>utilities</module>
-	<module>bom</module> -->
-<!--        <module>examples</module>-->
+	<module>core</module>
+	<module>views</module>
     </modules>
 
     <properties>
