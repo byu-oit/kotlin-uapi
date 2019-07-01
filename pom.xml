@@ -29,10 +29,11 @@
     </distributionManagement>
 
     <modules>
-        <module>core</module>
+        <module>spi</module>
+	    <!--        <module>core</module>
         <module>http</module>
         <module>utilities</module>
-        <module>bom</module>
+	<module>bom</module> -->
 <!--        <module>examples</module>-->
     </modules>
 

@@ -7,7 +7,7 @@ steps=(1-initial-setup 2-main-class 3-user-context 4-creating-a-resource 5-respo
 prev=""
 for step in "${steps[@]}"
 do
-  ./create-patch.sh ${prev} ${step}
+  create-patch.sh ${prev} ${step}
   prev=${step}
 done
 
