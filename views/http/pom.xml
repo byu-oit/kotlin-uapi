@@ -12,7 +12,8 @@
     <name>Kotlin UAPI HTTP Parent POM</name>
 
     <modules>
-	<module>common</module>
+        <module>common</module>
+        <module>common-test</module>
         <module>spark</module>
         <module>ktor</module>
     </modules>
@@ -27,8 +28,24 @@
         <dependencies>
             <dependency>
                 <groupId>edu.byu.uapi.server</groupId>
+                <artifactId>uapi-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.byu.uapi.server</groupId>
                 <artifactId>uapi-core</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>uapi-http-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>uapi-http-common-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

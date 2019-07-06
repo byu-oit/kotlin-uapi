@@ -76,7 +76,7 @@
         <test.mockito.version>2.28.2</test.mockito.version>
         <test.mockitokotlin.version>2.1.0</test.mockitokotlin.version>
         <test.junit.platform.version>1.3.2</test.junit.platform.version>
-        <test.junit.version>5.4.2</test.junit.version>
+        <test.junit.version>5.5.0</test.junit.version>
         <!-- Utilities for testing annotation processors -->
         <test.google.compile.version>0.18</test.google.compile.version>
 
@@ -91,17 +91,19 @@
         <plugins.shade.version>3.2.1</plugins.shade.version>
         <plugins.source.version>3.1.0</plugins.source.version>
         <plugins.build-helper.version>3.0.0</plugins.build-helper.version>
+        <plugins.detekt.version>1.0.0-RC16</plugins.detekt.version>
 
         <!-- Set to `false` in a sub-pom to disable unused dependency checking. You probably shouldn't do that. -->
-        <dependencies.checkUnused>true</dependencies.checkUnused>
+<!--        <dependencies.checkUnused>true</dependencies.checkUnused>-->
+        <dependencies.checkUnused>false</dependencies.checkUnused>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
+<!--    <repositories>-->
+<!--        <repository>-->
+<!--            <id>jitpack.io</id>-->
+<!--            <url>https://jitpack.io</url>-->
+<!--        </repository>-->
+<!--    </repositories>-->
 
     <dependencyManagement>
         <dependencies>
@@ -275,6 +277,12 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
+                <version>${test.junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
                 <version>${test.junit.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -491,6 +499,19 @@
                                 <source>src/main/kotlin</source>
                             </sources>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.ozsie</groupId>
+                <artifactId>detekt-maven-plugin</artifactId>
+                <version>${plugins.detekt.version}</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

@@ -4,11 +4,15 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>uapi-http-spark</artifactId>
+    <artifactId>uapi-http-common-test</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>Kotlin UAPI Spark HTTP View</name>
+    <name>Kotlin UAPI HTTP Common Interface Tests</name>
+    <description>
+        Common code for validating/testing implementations of the contracts defined in
+        the HTTP common package.
+    </description>
 
     <parent>
         <groupId>edu.byu.uapi.server.http</groupId>
@@ -27,35 +31,29 @@
         </dependency>
 
         <dependency>
+            <groupId>edu.byu.uapi.server</groupId>
+            <artifactId>uapi-spi</artifactId>
+        </dependency>
+        <dependency>
             <groupId>${parent.groupId}</groupId>
             <artifactId>uapi-http-common</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.sparkjava</groupId>
-            <artifactId>spark-core</artifactId>
         </dependency>
 
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit5</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${parent.groupId}</groupId>
-            <artifactId>uapi-http-common-test</artifactId>
-        </dependency>
-
-        <!-- Need this to mock Spark requests easily -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>5.1.8.RELEASE</version>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
