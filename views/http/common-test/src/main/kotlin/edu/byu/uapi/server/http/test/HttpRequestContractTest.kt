@@ -1,27 +1,42 @@
 package edu.byu.uapi.server.http.test
 
+import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRequest
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
+import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
+import java.io.IOException
+import java.io.InputStream
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 
 @Suppress("FunctionName")
 interface HttpRequestContractTest {
-    data class ContractTestParameters(
-        val headers: Map<String, String> = emptyMap(),
-        val queryParameters: Map<String, List<String>> = emptyMap(),
-        val pathParameters: Map<String, String> = emptyMap(),
-        val body: String? = null
-    )
 
     fun buildRequest(
+        method: String = "GET",
         headers: Map<String, String> = emptyMap(),
         queryParameters: Map<String, List<String>> = emptyMap(),
         pathParameters: Map<String, String> = emptyMap(),
         body: String? = null
     ): HttpRequest
 
+    @TestFactory
+    fun `val method handles all supported HTTP methods`(): Iterable<DynamicTest> {
+        return HttpMethod.values.map { method ->
+            DynamicTest.dynamicTest(method.name) {
+                val req = buildRequest(method = method.name)
+                assertEquals(method, req.method)
+            }
+        }
+    }
 
     @Test
     fun `val headers contains all header values`() {
@@ -119,6 +134,92 @@ interface HttpRequestContractTest {
         )
 
         assertFalse("bar" in req.pathParams)
+    }
+
+    @Test
+    fun `consumeBody() calls the consumer if the request has a body`() = runBlockingTest {
+        val expectedBody = "Hello World"
+        val req = buildRequest(
+            method = "POST",
+            headers = mapOf("Content-Type" to "foo/bar"),
+            body = expectedBody
+        )
+
+        val result = req.consumeBody(testConsumer())
+
+        assertNotNull(result)
+        val (type, body) = result
+        assertEquals("foo/bar", type)
+
+        assertEquals(expectedBody, body)
+    }
+
+    @Test
+    fun `consumeBody() returns null if there is no Content-Type header`() = runBlockingTest {
+        val req = buildRequest(
+            method = "POST",
+            body = "hi",
+            headers = emptyMap()
+        )
+
+        val body = req.consumeBody(testConsumer())
+        assertNull(body)
+    }
+
+    private fun testConsumer(): suspend (String, InputStream) -> Pair<String, String> = { type, stream ->
+        type to stream.reader(Charsets.UTF_8).readText()
+    }
+
+    @TestFactory
+    fun `consumeBody() returns null if the request method doesn't support bodies`() = runBlockingTest {
+        DynamicTest.stream(
+            HttpMethod.values().filterNot { it.allowsBodyInUAPI }.iterator(),
+            { it.name }
+        ) { method ->
+            val req = buildRequest(
+                method = method.name,
+                body = "hi",
+                headers = mapOf("Content-Type" to "foo/bar")
+            )
+
+            val body = runBlocking {
+                req.consumeBody(testConsumer())
+            }
+            assertNull(body)
+        }
+    }
+
+    @Test
+    fun `consumeBody() returns null if there is no body`() = runBlockingTest {
+        val req = buildRequest(
+            method = "POST",
+            body = null,
+            headers = mapOf("Content-Type" to "foo/bar")
+        )
+
+        val body = req.consumeBody(testConsumer())
+        assertNull(body)
+    }
+
+    @Test
+    fun `consumeBody() always closes the input stream`() = runBlockingTest {
+        val ex = RuntimeException("foobar")
+        val req = buildRequest(
+            method = "POST",
+            body = "body",
+            headers = mapOf("Content-Type" to "foo/bar")
+        )
+        lateinit var actualStream: InputStream
+        val actualEx = assertFailsWith<RuntimeException> {
+            req.consumeBody { _, stream ->
+                actualStream = stream
+                throw ex
+            }
+        }
+        assertEquals(ex, actualEx)
+        val ioex = assertFailsWith<IOException> { actualStream.available() }
+        val msg = assertNotNull(ioex.message)
+        assertTrue("closed" in msg.toLowerCase())
     }
 
 }

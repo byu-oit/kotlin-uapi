@@ -1,14 +1,14 @@
 package edu.byu.uapi.server.http.ktor
 
 import edu.byu.uapi.server.http.HttpRoute
+import edu.byu.uapi.server.http.path.PathFormatters
+import edu.byu.uapi.server.http.path.format
 import io.ktor.http.HttpMethod
 import io.ktor.routing.Route
 import io.ktor.routing.method
-import path.PathFormatters
-import path.format
 import edu.byu.uapi.server.http.HttpMethod as UAPIHttpMethod
 
-private val ktorPathFormatter = PathFormatters.CURLY_BRACE
+private val ktorPathFormatter = PathFormatters.FLAT_CURLY_BRACE
 
 internal fun installOnRoute(base: Route, route: HttpRoute) {
     val path = ktorPathFormatter.format(route.pathParts)
@@ -21,11 +21,11 @@ internal fun installOnRoute(base: Route, route: HttpRoute) {
     }
 }
 
-private val UAPIHttpMethod.ktor: HttpMethod
+private val UAPIHttpMethod.Routable.ktor: HttpMethod
     get() = when (this) {
-        UAPIHttpMethod.GET    -> HttpMethod.Get
-        UAPIHttpMethod.PUT    -> HttpMethod.Put
-        UAPIHttpMethod.PATCH  -> HttpMethod.Patch
-        UAPIHttpMethod.POST   -> HttpMethod.Post
-        UAPIHttpMethod.DELETE -> HttpMethod.Delete
+        UAPIHttpMethod.Routable.GET    -> HttpMethod.Get
+        UAPIHttpMethod.Routable.PUT    -> HttpMethod.Put
+        UAPIHttpMethod.Routable.PATCH  -> HttpMethod.Patch
+        UAPIHttpMethod.Routable.POST   -> HttpMethod.Post
+        UAPIHttpMethod.Routable.DELETE -> HttpMethod.Delete
     }

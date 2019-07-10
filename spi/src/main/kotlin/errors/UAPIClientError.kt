@@ -13,3 +13,13 @@ open class UAPIMissingIdParamValueError protected constructor(
         "Missing values for ID parameters " + paramNames.joinToString { "'$it'" }
     )
 }
+
+open class UAPIMalformedRequestError(
+    message: String,
+    cause: Throwable? = null
+): UAPIClientError(message, cause)
+
+open class UAPIUnsupportedMediaTypeError(
+    message: String,
+    cause: Throwable? = null
+): UAPIClientError(message, cause)

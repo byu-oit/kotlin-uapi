@@ -31,7 +31,7 @@ open class SimplePathFormatter(val prefix: String, val suffix: String = "") : Pa
     protected open fun unformatSingle(name: String, values: Map<String, String>): String {
         return values[name]
             ?: values[formatSingle(name)]
-            ?: throw UAPIHttpInternalError("Missing value for path parameter '$name'")
+            ?: throw UAPIHttpInternalError("Missing name for path parameter '$name'")
     }
 
     protected open fun unformatCompound(names: List<String>, values: Map<String, String>): Map<String, String> {

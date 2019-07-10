@@ -37,11 +37,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <kotlin.version>1.3.40</kotlin.version>
-        <!-- Knowns how to read Kotlinc-generated @Metadata annotations -->
-        <kotlin.metadata.version>1.4.0</kotlin.metadata.version>
+        <kotlin.version>1.3.41</kotlin.version>
         <!-- Faster compiles, as long as you don't do a `mvn clean` every time -->
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+        <kotlinx.coroutines.version>1.3.0-M2</kotlinx.coroutines.version>
 
         <!-- Process and validate JWTs -->
         <byu.jwt.version>2.1.0</byu.jwt.version>
@@ -55,7 +54,7 @@
 
         <json.javax.api.version>1.1.4</json.javax.api.version>
         <json.javax.impl.version>1.1.4</json.javax.impl.version>
-        <json.jackson.version>2.9.9</json.jackson.version>
+        <json.jackson.version>2.9.9.1</json.jackson.version>
 
         <!-- Hibernate validation and associated dependencies -->
         <validation.javax.version>2.0.1.Final</validation.javax.version>
@@ -94,16 +93,16 @@
         <plugins.detekt.version>1.0.0-RC16</plugins.detekt.version>
 
         <!-- Set to `false` in a sub-pom to disable unused dependency checking. You probably shouldn't do that. -->
-<!--        <dependencies.checkUnused>true</dependencies.checkUnused>-->
+        <!--        <dependencies.checkUnused>true</dependencies.checkUnused>-->
         <dependencies.checkUnused>false</dependencies.checkUnused>
     </properties>
 
-<!--    <repositories>-->
-<!--        <repository>-->
-<!--            <id>jitpack.io</id>-->
-<!--            <url>https://jitpack.io</url>-->
-<!--        </repository>-->
-<!--    </repositories>-->
+    <!--    <repositories>-->
+    <!--        <repository>-->
+    <!--            <id>jitpack.io</id>-->
+    <!--            <url>https://jitpack.io</url>-->
+    <!--        </repository>-->
+    <!--    </repositories>-->
 
     <dependencyManagement>
         <dependencies>
@@ -124,9 +123,14 @@
                 <version>${kotlin.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.eugeniomarletti.kotlin.metadata</groupId>
-                <artifactId>kotlin-metadata</artifactId>
-                <version>${kotlin.metadata.version}</version>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines</artifactId>
+                <version>${kotlinx.coroutines.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-jdk8</artifactId>
+                <version>${kotlinx.coroutines.version}</version>
             </dependency>
 
             <!-- BYU -->
@@ -286,6 +290,12 @@
                 <version>${test.junit.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-params</artifactId>
+                <version>${test.junit.version}</version>
+                <scope>test</scope>
+            </dependency>
 
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -293,23 +303,10 @@
                 <version>${kotlin.version}</version>
                 <scope>test</scope>
             </dependency>
-
             <dependency>
-                <groupId>io.kotlintest</groupId>
-                <artifactId>kotlintest-core</artifactId>
-                <version>${test.kotlintest.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.kotlintest</groupId>
-                <artifactId>kotlintest-assertions</artifactId>
-                <version>${test.kotlintest.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.kotlintest</groupId>
-                <artifactId>kotlintest-runner-junit5</artifactId>
-                <version>${test.kotlintest.version}</version>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-test</artifactId>
+                <version>${kotlinx.coroutines.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -374,6 +371,9 @@
                 <inherited>true</inherited>
                 <configuration>
                     <jvmTarget>1.8</jvmTarget>
+                    <args>
+                        <arg>-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi</arg>
+                    </args>
                 </configuration>
                 <executions>
                     <execution>
@@ -397,6 +397,8 @@
                             <sourceDirs>
                                 <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
                                 <sourceDir>${project.basedir}/src/test/java</sourceDir>
+                                <sourceDir>${project.basedir}/src/integration-test/kotlin</sourceDir>
+                                <sourceDir>${project.basedir}/src/integration-test/java</sourceDir>
                             </sourceDirs>
                         </configuration>
                     </execution>
@@ -447,7 +449,43 @@
                         <include>**/*Test*</include>
                         <include>**/*Spec*</include>
                     </includes>
+                    <excludes>
+                        <exclude>**/*IntegrationTest*</exclude>
+                    </excludes>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                        <version>${logging.slf4j.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                        <version>${logging.slf4j.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${test.junit.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -498,6 +536,20 @@
                             <sources>
                                 <source>src/main/kotlin</source>
                             </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-integration-test-resource</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>add-test-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/integration-test/resources</directory>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>

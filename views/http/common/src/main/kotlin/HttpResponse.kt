@@ -5,10 +5,10 @@ import java.io.OutputStream
 interface HttpResponse {
     val status: Int
     val headers: Map<String, String>
-    val responseBody: ResponseBody?
+    val body: HttpResponseBody?
 }
 
-interface ResponseBody {
+interface HttpResponseBody {
     val contentType: String
     fun writeTo(stream: OutputStream)
 }
