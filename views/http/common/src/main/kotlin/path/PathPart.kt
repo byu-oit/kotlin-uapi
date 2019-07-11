@@ -1,5 +1,8 @@
 package edu.byu.uapi.server.http.path
 
+
+typealias RoutePath = List<PathPart>
+
 sealed class PathPart {
     internal abstract fun format(formatter: PathFormatter): String
 }

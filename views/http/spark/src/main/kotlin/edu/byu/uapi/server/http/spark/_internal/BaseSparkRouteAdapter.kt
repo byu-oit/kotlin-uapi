@@ -1,6 +1,7 @@
 package edu.byu.uapi.server.http.spark._internal
 
 import edu.byu.uapi.server.http.HttpHandler
+import edu.byu.uapi.server.http.path.RoutePath
 import kotlinx.coroutines.runBlocking
 import spark.Request
 import spark.Response
@@ -9,12 +10,13 @@ import java.io.ByteArrayOutputStream
 import kotlin.coroutines.CoroutineContext
 
 internal abstract class BaseSparkRouteAdapter(
+    private val routePath: RoutePath,
     private val context: CoroutineContext
 ): Route {
     protected abstract fun getHandlerFor(req: Request): HttpHandler
 
     override fun handle(sparkReq: Request, sparkResp: Response): Any? {
-        val uapiReq = SparkRequestAdapter(sparkReq)
+        val uapiReq = SparkRequestAdapter(sparkReq, routePath)
 
         val handler = getHandlerFor(sparkReq)
 

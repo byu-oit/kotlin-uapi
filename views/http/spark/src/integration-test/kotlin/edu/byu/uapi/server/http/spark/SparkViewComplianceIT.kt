@@ -1,16 +1,17 @@
 package edu.byu.uapi.server.http.spark
 
 import edu.byu.uapi.server.http.HttpRouteSource
-import edu.byu.uapi.server.http.integrationtest.HttpViewComplianceIntegrationTestBase
+import edu.byu.uapi.server.http.integrationtest.HttpViewComplianceTests
 import spark.Service
 import java.net.InetAddress
 
-internal class SparkViewComplianceIT : HttpViewComplianceIntegrationTestBase<Service>() {
+internal class SparkViewComplianceIT : HttpViewComplianceTests<Service>() {
     override fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): Service {
         val service = Service.ignite()
         service.ipAddress(address.hostAddress)
         service.port(port)
         service.uapi(routes)
+        service.init()
         service.awaitInitialization()
         return service
     }

@@ -41,11 +41,11 @@ sealed class HttpMethod(
 
 
     companion object {
-        val GET = Routable.GET
-        val PUT = Routable.PUT
-        val PATCH = Routable.PATCH
-        val POST = Routable.POST
-        val DELETE = Routable.DELETE
+        val GET by lazy { Routable.GET }
+        val PUT by lazy { Routable.PUT }
+        val PATCH by lazy { Routable.PATCH }
+        val POST by lazy { Routable.POST }
+        val DELETE by lazy { Routable.DELETE }
 
         // Lazy due to oddities in companion object init
         val values by lazy { Routable.values + setOf(HEAD, OPTIONS, TRACE, CONNECT) }

@@ -23,6 +23,7 @@ fun mockRequest(
     block: MockHttpServletRequest.() -> Unit
 ): Request {
     val req = MockHttpServletRequest()
+    req.pathInfo = match.requestURI
     req.block()
     return requestConstructor.call(match, req)
 }

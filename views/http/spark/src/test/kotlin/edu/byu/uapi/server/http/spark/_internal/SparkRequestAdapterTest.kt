@@ -1,6 +1,8 @@
 package edu.byu.uapi.server.http.spark._internal
 
 import edu.byu.uapi.server.http.HttpRequest
+import edu.byu.uapi.server.http.path.PathPart
+import edu.byu.uapi.server.http.path.variablePart
 import edu.byu.uapi.server.http.spark.fixtures.mockRequest
 import edu.byu.uapi.server.http.test.HttpRequestContractTest
 import spark.routematch.RouteMatch
@@ -15,10 +17,12 @@ internal class SparkRequestAdapterTest : HttpRequestContractTest {
     ): HttpRequest {
         val matchUri = StringBuilder("/")
         val requestUri = StringBuilder("/")
+        val routePath = mutableListOf<PathPart>()
         if (pathParameters.isNotEmpty()) {
             pathParameters.forEach { (k, v) ->
                 matchUri.append(":$k/")
                 requestUri.append("$v/")
+                routePath += variablePart(k)
             }
         }
         val match = RouteMatch(Any(), matchUri.toString(), requestUri.toString(), "*/*")
@@ -32,6 +36,6 @@ internal class SparkRequestAdapterTest : HttpRequestContractTest {
             }
         }
 
-        return SparkRequestAdapter(req)
+        return SparkRequestAdapter(req, routePath)
     }
 }

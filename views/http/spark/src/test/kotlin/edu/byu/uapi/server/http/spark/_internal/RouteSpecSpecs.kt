@@ -2,7 +2,7 @@ package edu.byu.uapi.server.http.spark._internal
 
 import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRoute
-import edu.byu.uapi.server.http.path.PathPart
+import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.staticPart
 import edu.byu.uapi.server.http.path.variablePart
 import edu.byu.uapi.server.http.test.fixtures.NoopHttpHandler
@@ -32,7 +32,7 @@ internal class RouteSpecSpecs {
 
     @Test
     fun `constructor flattens path parts properly`() {
-        val parts: List<PathPart> = listOf(
+        val parts: RoutePath = listOf(
             staticPart("foo"),
             variablePart("bar"),
             variablePart("baz", "rab", "oof")

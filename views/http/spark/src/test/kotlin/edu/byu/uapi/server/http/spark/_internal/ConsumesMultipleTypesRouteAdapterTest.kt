@@ -3,6 +3,8 @@ package edu.byu.uapi.server.http.spark._internal
 import edu.byu.uapi.server.http.HttpHandler
 import edu.byu.uapi.server.http.errors.UAPIHttpMissingHeaderError
 import edu.byu.uapi.server.http.errors.UAPIHttpUnrecognizedContentTypeError
+import edu.byu.uapi.server.http.path.RoutePath
+import edu.byu.uapi.server.http.path.staticPart
 import edu.byu.uapi.server.http.spark.fixtures.MockResponse
 import edu.byu.uapi.server.http.spark.fixtures.mockRequest
 import edu.byu.uapi.server.http.test.fixtures.MockHttpHandler
@@ -21,10 +23,12 @@ internal class ConsumesMultipleTypesRouteAdapterTest
     : BaseSparkRouteAdapterTest<ConsumesMultipleTypesRouteAdapter>() {
 
     override fun buildAdapterWithSingleHandler(
+        routePath: RoutePath,
         handler: HttpHandler,
         context: CoroutineContext
     ): ConsumesMultipleTypesRouteAdapter {
         return ConsumesMultipleTypesRouteAdapter(
+            routePath,
             mapOf("*/*" to handler),
             context
         )
@@ -43,6 +47,7 @@ internal class ConsumesMultipleTypesRouteAdapterTest
         )
 
         fun CoroutineScope.buildAdapter() = ConsumesMultipleTypesRouteAdapter(
+            listOf(staticPart("foo")),
             mapOf(
                 "*/*" to wildcardHandler,
                 "foo/*" to fooStarHandler,
@@ -74,8 +79,9 @@ internal class ConsumesMultipleTypesRouteAdapterTest
     }
 
     @Test
-    fun `throws when the content-type header is missing`() = runBlockingTest {
+    fun `uses the wildcard handler when the content-type header is missing`() = runBlockingTest {
         val adapter = ConsumesMultipleTypesRouteAdapter(
+            listOf(staticPart("foo")),
             mapOf("foo/bar" to MockHttpHandler()),
             coroutineContext
         )
@@ -97,6 +103,7 @@ internal class ConsumesMultipleTypesRouteAdapterTest
     @Test
     fun `throws when the there is no matching mime type`() = runBlockingTest {
         val adapter = ConsumesMultipleTypesRouteAdapter(
+            listOf(staticPart("foo")),
             mapOf("foo/bar" to MockHttpHandler()),
             coroutineContext
         )

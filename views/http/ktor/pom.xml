@@ -34,7 +34,7 @@
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
         <dependency>
-            <groupId>${parent.groupId}</groupId>
+            <groupId>${project.parent.groupId}</groupId>
             <artifactId>uapi-http-common</artifactId>
         </dependency>
         <dependency>
@@ -71,7 +71,7 @@
             <artifactId>kotlin-test-junit5</artifactId>
         </dependency>
         <dependency>
-            <groupId>${parent.groupId}</groupId>
+            <groupId>${project.parent.groupId}</groupId>
             <artifactId>uapi-http-common-test</artifactId>
         </dependency>
 

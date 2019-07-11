@@ -3,6 +3,7 @@ package edu.byu.uapi.server.http.spark._internal
 import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRoute
 import edu.byu.uapi.server.http.HttpRouteSource
+import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.format
 import kotlinx.coroutines.Dispatchers
 import spark.Route
@@ -26,9 +27,10 @@ internal val sparkCoroutines = Dispatchers.Unconfined
 private inline fun apply(spec: RouteSpec, routes: List<HttpRoute>, fn: (String, String?, Route) -> Unit) {
     val adapter = if (routes.size == 1) {
         val route = routes.single()
-        SimpleRouteAdapter(route.handler, sparkCoroutines)
+        SimpleRouteAdapter(spec.pathParts, route.handler, sparkCoroutines)
     } else {
         ConsumesMultipleTypesRouteAdapter(
+            spec.pathParts,
             routes.associate { (it.consumes ?: "*/*") to it.handler },
             sparkCoroutines
         )
@@ -41,12 +43,14 @@ private inline fun apply(spec: RouteSpec, routes: List<HttpRoute>, fn: (String, 
 }
 
 internal data class RouteSpec(
-    val path: String,
+    val pathParts: RoutePath,
     val method: HttpMethod,
     val acceptType: String?
 ) {
+    val path = sparkPaths.format(pathParts)
+
     constructor(route: HttpRoute) : this(
-        path = sparkPaths.format(route.pathParts),
+        pathParts = route.pathParts,
         method = route.method,
         acceptType = route.produces
     )

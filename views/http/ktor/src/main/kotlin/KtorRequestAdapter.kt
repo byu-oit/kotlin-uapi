@@ -4,6 +4,7 @@ import edu.byu.uapi.server.http.BaseHttpRequest
 import edu.byu.uapi.server.http.HttpMethod
 import io.ktor.application.ApplicationCall
 import io.ktor.request.httpMethod
+import io.ktor.request.path
 import io.ktor.request.receiveStream
 import io.ktor.util.filter
 import io.ktor.util.flattenEntries
@@ -18,6 +19,8 @@ internal class KtorRequestAdapter(
     queryParams = call.getUapiQuery(),
     pathParams = call.getUapiPath()
 ) {
+    override val path: String
+        get() = call.request.path()
     override suspend fun bodyAsStream(): InputStream {
         return call.receiveStream()
     }
