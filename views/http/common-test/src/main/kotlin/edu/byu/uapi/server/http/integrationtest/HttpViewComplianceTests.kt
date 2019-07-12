@@ -14,6 +14,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.io.OutputStream
 import java.net.InetAddress
 import java.util.stream.Stream
@@ -21,6 +23,7 @@ import kotlin.system.exitProcess
 import kotlin.test.assertFalse
 
 @Suppress("FunctionName")
+@Execution(ExecutionMode.CONCURRENT)
 abstract class HttpViewComplianceTests<Handle : Any> {
 
     @TestFactory

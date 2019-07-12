@@ -5,8 +5,8 @@ import edu.byu.uapi.server.http.HttpRoute
 import edu.byu.uapi.server.http.HttpRouteSource
 import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.format
-import kotlinx.coroutines.Dispatchers
 import spark.Route
+import kotlin.coroutines.EmptyCoroutineContext
 
 fun RouteApplier.applyRoutes(routes: HttpRouteSource) {
     routes.buildRoutes()
@@ -22,7 +22,7 @@ fun RouteApplier.applyRoutes(routes: HttpRouteSource) {
         }
 }
 
-internal val sparkCoroutines = Dispatchers.Unconfined
+internal val sparkCoroutines = EmptyCoroutineContext
 
 private inline fun apply(spec: RouteSpec, routes: List<HttpRoute>, fn: (String, String?, Route) -> Unit) {
     println("Adding route ${spec.method} ${spec.path}")
