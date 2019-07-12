@@ -7,13 +7,13 @@ import java.net.InetAddress
 
 internal class SparkViewComplianceIT : HttpViewComplianceTests<Service>() {
     override fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): Service {
-        val service = Service.ignite()
-        service.ipAddress(address.hostAddress)
-        service.port(port)
-        service.uapi(routes)
-        service.init()
-        service.awaitInitialization()
-        return service
+        return Service.ignite().apply {
+            ipAddress(address.hostAddress)
+            port(port)
+            uapi(routes)
+            init()
+            awaitInitialization()
+        }
     }
 
     override fun stopServer(handle: Service) {
