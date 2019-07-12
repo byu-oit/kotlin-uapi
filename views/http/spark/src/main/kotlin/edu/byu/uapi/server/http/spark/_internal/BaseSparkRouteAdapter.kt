@@ -12,7 +12,7 @@ import kotlin.coroutines.CoroutineContext
 internal abstract class BaseSparkRouteAdapter(
     private val routePath: RoutePath,
     private val context: CoroutineContext
-): Route {
+) : Route {
     protected abstract fun getHandlerFor(req: Request): HttpHandler
 
     override fun handle(sparkReq: Request, sparkResp: Response): Any? {
@@ -25,7 +25,7 @@ internal abstract class BaseSparkRouteAdapter(
         }
 
         sparkResp.status(uapiResp.status)
-        uapiResp.headers.forEach{(k, v) -> sparkResp.header(k, v)}
+        uapiResp.headers.forEach { (k, v) -> sparkResp.header(k, v) }
         val body = uapiResp.body
         if (body != null) {
             sparkResp.type(body.contentType)
@@ -34,7 +34,8 @@ internal abstract class BaseSparkRouteAdapter(
             body.writeTo(baos)
             return baos.toByteArray()
         }
-        return null
+        // Spark is buuuuuggy and doesn't know how to do a real no-content response. *sigh*
+        return ""
     }
 }
 

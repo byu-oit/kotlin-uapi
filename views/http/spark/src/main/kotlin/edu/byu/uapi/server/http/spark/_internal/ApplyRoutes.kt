@@ -25,6 +25,7 @@ fun RouteApplier.applyRoutes(routes: HttpRouteSource) {
 internal val sparkCoroutines = Dispatchers.Unconfined
 
 private inline fun apply(spec: RouteSpec, routes: List<HttpRoute>, fn: (String, String?, Route) -> Unit) {
+    println("Adding route ${spec.method} ${spec.path}")
     val adapter = if (routes.size == 1) {
         val route = routes.single()
         SimpleRouteAdapter(spec.pathParts, route.handler, sparkCoroutines)

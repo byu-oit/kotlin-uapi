@@ -1,71 +1,98 @@
 package edu.byu.uapi.server.http.integrationtest
 
 import edu.byu.uapi.server.http.HttpMethod
+import edu.byu.uapi.server.http.integrationtest.dsl.describeAllMethods
+import edu.byu.uapi.server.http.integrationtest.dsl.emptyDelete
+import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
+import edu.byu.uapi.server.http.integrationtest.dsl.emptyPatch
+import edu.byu.uapi.server.http.integrationtest.dsl.emptyPost
+import edu.byu.uapi.server.http.integrationtest.dsl.emptyPut
+import edu.byu.uapi.server.http.integrationtest.dsl.request
 import edu.byu.uapi.server.http.integrationtest.dsl.suite
 import kotlin.test.assertEquals
 
 internal val simpleRoutingTests =
     suite("Simple Routing Tests") {
-        routes {
-            path("simple") {
-                echoGet()
-                echoPost()
-                echoPut()
-                echoPatch()
-                echoDelete()
+        describeAllMethods("method routing") { testMethod ->
+            givenRoutes {
+                emptyGet()
+                emptyPut()
+                emptyPost()
+                emptyPatch()
+                emptyDelete()
             }
+            whenCalledWith { request(testMethod, "") }
+            then {
+                assertStatus(204)
+                assertEmptyBody()
+                assertReceivedRequest {
+                    assertEquals(testMethod, method)
+                    assertEquals("", path)
+                }
 
-            path("params") {
-                path("single") {
-                    pathParam("one") {
-                        pathParam("two") {
-                            echoGet()
-                        }
-                    }
-                }
-                path("compound") {
-                    pathParam("one", "two") {
-                        echoGet()
-                    }
-                }
             }
         }
 
-        tests {
-            group("simple") {
-                HttpMethod.Routable.values().forEach { testMethod ->
-                    test(testMethod.name) {
-                        request(testMethod, "/simple") {}
-                        should {
-                            assertStatus(200)
-                            assertEchoed {
-                                assertEquals(testMethod.name, method)
-                                assertEquals("/simple", path)
+        describe("path parameters") {
+            it("single params") {
+                givenRoutes {
+                    pathParam("one") {
+                        pathParam("two") {
+                            emptyGet()
+                        }
+                    }
+                }
+                whenCalledWith { get("/abcdef/123") }
+                then {
+                    assertStatus(204)
+                    assertEmptyBody()
+                    assertReceivedRequest {
+                        assertEquals(HttpMethod.GET, method)
+                        assertEquals(mapOf("one" to "abcdef", "two" to "123"), pathParams)
+                    }
+                }
+            }
+            it("compound params") {
+                givenRoutes {
+                    pathParam("one", "two") {
+                        emptyGet()
+                    }
+                }
+                whenCalledWith { get("/abcdef,123") }
+                then {
+                    assertStatus(204)
+                    assertEmptyBody()
+                    assertReceivedRequest {
+                        assertEquals(HttpMethod.GET, method)
+                        assertEquals(mapOf("one" to "abcdef", "two" to "123"), pathParams)
+                    }
+                }
+            }
+            it("mixed param types") {
+                givenRoutes {
+                    pathParam("outer") {
+                        pathParam("one", "two", "three") {
+                            pathParam("inner") {
+                                emptyGet()
                             }
                         }
                     }
                 }
-            }
-
-            group("path parameters") {
-                test("single params") {
-                    get("/params/single/abcdef/123") {}
-                    should {
-                        assertStatus(200)
-                        assertEchoed {
-                            assertEquals("GET", method)
-                            assertEquals(mapOf("one" to "abcdef", "two" to "123"), pathParams)
-                        }
-                    }
-                }
-                test("compound params") {
-                    get("/params/compound/abcdef,123") {}
-                    should {
-                        assertStatus(200)
-                        assertEchoed {
-                            assertEquals("GET", method)
-                            assertEquals(mapOf("one" to "abcdef", "two" to "123"), pathParams)
-                        }
+                whenCalledWith { get("/a/b,c,d/e") }
+                then {
+                    assertStatus(204)
+                    assertEmptyBody()
+                    assertReceivedRequest {
+                        assertEquals(HttpMethod.GET, method)
+                        assertEquals(
+                            mapOf(
+                                "outer" to "a",
+                                "one" to "b",
+                                "two" to "c",
+                                "three" to "d",
+                                "inner" to "e"
+                            ), pathParams
+                        )
                     }
                 }
             }

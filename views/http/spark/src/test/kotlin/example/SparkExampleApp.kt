@@ -24,7 +24,7 @@ fun main() {
     }
 
     val routesProp =
-        Service::class.declaredMemberProperties.first { it.name == "routes" } as KProperty1<Service, Routes>
+        Service::class.declaredMemberProperties.first { it.name == "sharedRoutes" } as KProperty1<Service, Routes>
 
     routesProp.isAccessible = true
 
@@ -36,13 +36,13 @@ fun main() {
 
     val routes = routesProp.get(service)
 
-    val routeList = Routes::class.declaredMemberProperties.first { it.name == "routes" }
+    val routeList = Routes::class.declaredMemberProperties.first { it.name == "sharedRoutes" }
         .apply { isAccessible = true }
         .get(routes) as List<*>
 
     routeList.forEach { println(it) }
 
-//    val matches = routes.findMultiple(HttpMethod.get, "/", "*/*")
+//    val matches = sharedRoutes.findMultiple(HttpMethod.emptyGet, "/", "*/*")
 //
 //    matches.forEach {
 //        it.apply {

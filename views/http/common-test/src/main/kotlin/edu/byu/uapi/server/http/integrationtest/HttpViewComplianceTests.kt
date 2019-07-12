@@ -34,7 +34,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
                 stopServer(handle)
             } catch (ex: Throwable) {
                 panic = true
-                System.err.println(" !!!!! Error stopping test server ${this::class.simpleName} $name! !!!!! ")
+                System.err.println(" !!!!! Error stopping it server ${this::class.simpleName} $name! !!!!! ")
                 ex.printStackTrace()
                 Thread.sleep(1)
             }
@@ -59,7 +59,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
         val port = FreePortFinder.findFreeLocalPort(11111, addr)
 
         val baseUrl = "http://${addr.hostAddress}:$port"
-        println("\t-------- Starting test server for '$name' at $baseUrl --------")
+        println("\t-------- Starting it server for '$name' at $baseUrl --------")
 
         handles += (name to startServer(FakeHttpRouteSource(routes), addr, port))
 
@@ -68,7 +68,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
 
     @Test
     fun `server starts on requested port`() {
-        val serverInfo = startServer("init test", emptyList())
+        val serverInfo = startServer("init it", emptyList())
         assertFalse(FreePortFinder.available(serverInfo.port, serverInfo.address))
     }
 

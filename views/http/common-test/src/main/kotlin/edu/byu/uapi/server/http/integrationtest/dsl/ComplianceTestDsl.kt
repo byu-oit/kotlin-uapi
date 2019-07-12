@@ -3,19 +3,25 @@ package edu.byu.uapi.server.http.integrationtest.dsl
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.core.Method
 import com.github.kittinunf.fuel.core.Request
+import com.github.kittinunf.fuel.core.RequestFactory
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.core.interceptors.LogRequestInterceptor
 import com.github.kittinunf.fuel.core.interceptors.LogResponseInterceptor
+import com.github.kittinunf.fuel.util.encodeBase64UrlToString
+import edu.byu.uapi.server.http.BodyConsumer
 import edu.byu.uapi.server.http.HttpHandler
 import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRequest
 import edu.byu.uapi.server.http.HttpResponse
 import edu.byu.uapi.server.http.HttpRoute
+import edu.byu.uapi.server.http.integrationtest.ActualRequest
 import edu.byu.uapi.server.http.integrationtest.ServerInfo
 import edu.byu.uapi.server.http.integrationtest.TestResponse
+import edu.byu.uapi.server.http.integrationtest.jackson
 import edu.byu.uapi.server.http.path.CompoundVariablePathPart
 import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.SingleVariablePathPart
+import edu.byu.uapi.server.http.path.StaticPathPart
 import edu.byu.uapi.server.http.path.staticPart
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.DynamicContainer
@@ -23,7 +29,6 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import java.net.URI
 import java.util.stream.Stream
-import kotlin.test.fail
 
 @DslMarker
 annotation class ComplianceDsl
@@ -37,7 +42,7 @@ class ComplianceSuite(
     private val init: ComplianceSuiteInit
 ) {
     fun buildRoutes(): List<HttpRoute> {
-        return init.buildRoutes()
+        return init.buildRoutes(emptyList())
     }
 
     fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
@@ -45,32 +50,12 @@ class ComplianceSuite(
     }
 }
 
-@ComplianceDsl
-class ComplianceSuiteInit(private val suiteName: String) {
+class ComplianceSuiteInit(private val suiteName: String) : TestGroupInit(suiteName, null) {
+    override val pathUri: URI = URI.create("compliance-dsl://$pathName")
+    override val pathContext: List<String> = emptyList()
 
-    private val routes = mutableListOf<HttpRoute>()
-
-    fun routes(init: RoutingInit.() -> Unit) {
-        routes += RoutingInit(emptyList()).apply(init).buildRoutes()
-    }
-
-    internal fun buildRoutes() = routes
-
-    private lateinit var rootTestGroup: TestGroupInit
-
-    fun tests(init: TestGroupInit.() -> Unit) {
-        rootTestGroup = TestGroupInit(null).apply(init)
-    }
-
-    internal fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
-        val uri = TestUri(suiteName)
-        val http = FuelManager().apply {
-            basePath = serverInfo.url
-            addRequestInterceptor { LogRequestInterceptor(it) }
-            addResponseInterceptor { LogResponseInterceptor(it) }
-        }
-
-        return rootTestGroup.buildTests(http, uri)
+    override fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
+        return super.getChildTests(serverInfo)
     }
 
     internal fun buildSuite(): ComplianceSuite {
@@ -78,122 +63,117 @@ class ComplianceSuiteInit(private val suiteName: String) {
     }
 }
 
-sealed class DynamicNodeBuilder {
-    internal abstract fun buildTests(http: FuelManager, parentUri: TestUri): Stream<DynamicNode>
-}
-
-class TestUri private constructor(private val parts: List<String>) {
-    internal constructor(root: String) : this(listOf(root))
-
-    fun with(part: String) = TestUri(parts + part)
-
-    fun toUri(): URI = URI.create("compliance-dsl://" + parts.joinToString("/") { it.pathSafe })
-
-}
-
 @ComplianceDsl
-class TestGroupInit(
-    private val name: String?
-) : DynamicNodeBuilder() {
+sealed class DynamicNodeBuilder(
+    internal val name: String,
+    internal val parent: DynamicNodeBuilder?
+) {
+    internal val pathName: String = name.pathSafe
+    internal open val pathContext: List<String>
+        get() = parent?.pathContext?.plus(pathName) ?: listOf(pathName)
 
-    override fun buildTests(http: FuelManager, parentUri: TestUri): Stream<DynamicNode> {
-        return if (name != null) {
-            val uri = parentUri.with(name)
-            Stream.of(
-                DynamicContainer.dynamicContainer(
-                    name,
-                    uri.toUri(),
-                    getChildTests(http, uri)
-                )
-            )
-        } else {
-            getChildTests(http, parentUri)
-        }
+    internal open val pathUri: URI
+        get() = URI.create(parent!!.pathUri.toASCIIString() + "/" + this.pathName)
+
+    protected val routeInit: RoutingInit = RoutingInit(emptyList())
+
+    fun givenRoutes(init: RoutingInit.() -> Unit) {
+        routeInit.apply(init)
     }
 
-    private fun getChildTests(http: FuelManager, uri: TestUri): Stream<DynamicNode> {
-        return children.stream().flatMap { it.buildTests(http, uri) }
+    internal abstract fun buildRoutes(
+        extraRoutes: List<RoutingInit>
+    ): List<HttpRoute>
+
+    internal abstract fun buildTests(
+        serverInfo: ServerInfo
+    ): Stream<DynamicNode>
+}
+
+open class TestGroupInit(
+    name: String,
+    parent: DynamicNodeBuilder?
+) : DynamicNodeBuilder(name, parent) {
+
+    fun describe(name: String, init: TestGroupInit.() -> Unit) {
+        children += TestGroupInit(name, this).apply(init)
+    }
+
+    fun it(name: String, init: TestInit.() -> Unit) {
+        children += TestInit(name, this).apply(init)
+    }
+
+    override fun buildRoutes(
+        extraRoutes: List<RoutingInit>
+    ): List<HttpRoute> {
+        return children.flatMap { it.buildRoutes(extraRoutes + this.routeInit) }
+    }
+
+    override fun buildTests(
+        serverInfo: ServerInfo
+    ): Stream<DynamicNode> {
+        val uri = URI.create(pathUri.toASCIIString() + "/root")
+        println(uri)
+        return Stream.of(
+            DynamicContainer.dynamicContainer(
+                name,
+                uri,
+                getChildTests(serverInfo)
+            )
+        )
+    }
+
+    protected fun getChildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
+        return children.stream().flatMap { it.buildTests(serverInfo) }
     }
 
     private val children = mutableListOf<DynamicNodeBuilder>()
 
-    fun group(name: String, init: TestGroupInit.() -> Unit) {
-        children += TestGroupInit(name).apply(init)
-    }
-
-    fun test(name: String, init: TestInit.() -> Unit) {
-        children += TestInit(name).apply(init)
-    }
-
 }
 
-@ComplianceDsl
-class TestInit(private val name: String) : DynamicNodeBuilder() {
+typealias WhenCalledWith = RequestFactory.Convenience.() -> Request
 
-    fun get(path: String, init: Request.() -> Unit) {
-        request(HttpMethod.Routable.GET, path, init)
+class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, parent) {
+
+    fun whenCalledWith(init: WhenCalledWith) {
+        requestInit = init
     }
 
-    fun post(path: String, init: Request.() -> Unit) {
-        request(HttpMethod.Routable.POST, path, init)
-    }
-
-    fun put(path: String, init: Request.() -> Unit) {
-        request(HttpMethod.Routable.PUT, path, init)
-    }
-
-    fun patch(path: String, init: Request.() -> Unit) {
-        request(HttpMethod.Routable.PATCH, path, init)
-    }
-
-    fun delete(path: String, init: Request.() -> Unit) {
-        request(HttpMethod.Routable.DELETE, path, init)
-    }
-
-    fun request(method: HttpMethod, path: String, init: Request.() -> Unit) {
-        requestMethod = method
-        requestPath = path
-        requestInit = {
-            // Hacky workaround to fail an assumption on all patch requests
-            Assumptions.assumeFalse(
-                method == HttpMethod.Routable.PATCH,
-                "Fuel doesn't currently support PATCH, so we can't test it until we swap HTTP clients in the tests."
-            )
-            init()
-        }
-    }
-
-    fun should(init: Response.() -> Unit) {
+    fun then(init: Response.() -> Unit) {
         asserts = init
     }
 
-    private lateinit var requestMethod: HttpMethod
-    private lateinit var requestPath: String
-    private lateinit var requestInit: Request.() -> Unit
+    private lateinit var requestInit: WhenCalledWith
 
     private lateinit var asserts: Response.() -> Unit
 
-    override fun buildTests(http: FuelManager, parentUri: TestUri): Stream<DynamicNode> {
+    override fun buildRoutes(extraRoutes: List<RoutingInit>): List<HttpRoute> {
+        val basePath = pathContext.map(::staticPart)
+        return (extraRoutes + routeInit).flatMap { it.buildRoutes(basePath) }
+    }
+
+    override fun buildTests(
+        serverInfo: ServerInfo
+    ): Stream<DynamicNode> {
         //make sure everything's initialized
-        requestMethod
-        requestPath
         requestInit
         asserts
 
-        val method = when (requestMethod) {
-            HttpMethod.Routable.GET    -> Method.GET
-            HttpMethod.Routable.PUT    -> Method.PUT
-            HttpMethod.Routable.PATCH  -> Method.PATCH
-            HttpMethod.Routable.POST   -> Method.POST
-            HttpMethod.Routable.DELETE -> Method.DELETE
-            HttpMethod.HEAD            -> Method.HEAD
-            HttpMethod.OPTIONS         -> Method.OPTIONS
-            HttpMethod.TRACE           -> Method.TRACE
-            else                       -> fail("Unknown HTTP request method: $requestMethod")
-        }
+        val path = pathContext.joinToString("/", prefix = "/")
+        val url = serverInfo.url + path
 
-        return Stream.of(DynamicTest.dynamicTest(name, parentUri.with(name).toUri()) {
-            val request = http.request(method, requestPath).apply(requestInit)
+        println(pathUri.toString() + "\n")
+        return Stream.of(DynamicTest.dynamicTest(name, pathUri) {
+            val request = FuelManager().apply {
+                basePath = url
+                addRequestInterceptor { LogRequestInterceptor(it) }
+                addResponseInterceptor { LogResponseInterceptor(it) }
+            }.run(requestInit)
+
+            Assumptions.assumeFalse(
+                request.method == Method.PATCH,
+                "Fuel doesn't support PATCH, so we'll skip it until we can work around it."
+            )
 
             val (_, response) = request.response()
             response.apply(asserts)
@@ -206,7 +186,7 @@ class TestInit(private val name: String) : DynamicNodeBuilder() {
 class RoutingInit(
     private val pathParts: RoutePath
 ) {
-    private val routes = mutableListOf<HttpRoute>()
+    private val routes = mutableListOf<RouteBuilding>()
 
     fun path(vararg parts: String, init: RoutingInit.() -> Unit) {
         path(parts.map { staticPart(it) }, init)
@@ -221,18 +201,16 @@ class RoutingInit(
     }
 
     fun path(parts: RoutePath, init: RoutingInit.() -> Unit) {
-        routes += RoutingInit(this.pathParts + parts).apply(init).buildRoutes()
+        routes += RoutingInit(this.pathParts + parts).apply(init).routes
     }
 
     fun get(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
         route(HttpMethod.Routable.GET, consumes, produces, handler)
     }
 
-
     fun post(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
         route(HttpMethod.Routable.POST, consumes, produces, handler)
     }
-
 
     fun put(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
         route(HttpMethod.Routable.PUT, consumes, produces, handler)
@@ -246,33 +224,86 @@ class RoutingInit(
         route(HttpMethod.Routable.DELETE, consumes, produces, handler)
     }
 
-    private fun route(
+    internal fun route(
         method: HttpMethod.Routable,
         consumes: String? = null,
         produces: String? = null,
         handler: TestHttpHandler
     ) {
-        routes += HttpRoute(
+        routes += RouteBuilding(
+            path = pathParts,
             method = method,
-            pathParts = pathParts,
             produces = produces,
             consumes = consumes,
-            handler = CallbackHttpHandler(handler)
+            handler = handler
         )
     }
 
-    internal fun buildRoutes(): List<HttpRoute> {
-        return routes
+    private class RouteBuilding(
+        val path: RoutePath,
+        val method: HttpMethod.Routable,
+        val consumes: String? = null,
+        val produces: String? = null,
+        val handler: TestHttpHandler
+    )
+
+    internal fun buildRoutes(basePath: List<StaticPathPart>): List<HttpRoute> {
+        val basePathString = basePath.joinToString("/", prefix = "/") { it.part }
+        return routes.map {
+            HttpRoute(
+                pathParts = basePath + it.path,
+                method = it.method,
+                consumes = it.consumes,
+                produces = it.produces,
+                handler = TestHandlerWrapper(basePathString, it.handler)
+            )
+        }
     }
 }
 
 typealias TestHttpHandler = suspend HttpRequest.() -> TestResponse
 
-private class CallbackHttpHandler(val handler: TestHttpHandler) : HttpHandler {
+private class TestHandlerWrapper(
+    val basePath: String,
+    val handler: TestHttpHandler
+) : HttpHandler {
     override suspend fun handle(request: HttpRequest): HttpResponse {
-        return handler(request)
+        val tr = TestRequestWrapper(request)
+        val req = ActualRequest(tr, basePath)
+        val resp = handler(tr)
+        return TestResponseWrapper(resp, req)
     }
 }
 
+private class TestRequestWrapper(val request: HttpRequest) : HttpRequest by request {
+    //    override val path: String = request.path.removePrefix(basePath)
+    private lateinit var body: Pair<String?, ByteArray?>
+
+    override suspend fun <T> consumeBody(consumer: BodyConsumer<T>): T? {
+        val (contentType, bytes) = if (this::body.isInitialized) {
+            this.body
+        } else {
+            request.consumeBody { contentType, stream -> contentType to stream.readBytes() }
+                ?: null to null
+        }
+        return if (contentType != null && bytes != null) {
+            consumer(contentType, bytes.inputStream())
+        } else {
+            null
+        }
+    }
+}
+
+private class TestResponseWrapper(val response: HttpResponse, receivedRequest: ActualRequest) :
+    HttpResponse by response {
+    override val headers: Map<String, String> =
+        response.headers + Pair(
+            ActualRequest.headerName,
+            jackson.writeValueAsString(receivedRequest).encodeBase64UrlToString()
+        )
+}
+
 internal val String.pathSafe: String
-    get() = this.replace("""[^-_0-9a-zA-Z]+""".toRegex(), "_")
+    get() = this.toLowerCase().replace("""[^-_0-9a-z]+""".toRegex(), "_")
+
+

@@ -12,7 +12,7 @@ import edu.byu.uapi.server.http.path.variablePart
 import java.io.OutputStream
 
 fun getTestApi(): HttpRouteSource {
-    // suuuper great test API (sufficient for testing for now)
+    // suuuper great it API (sufficient for testing for now)
     return object : HttpRouteSource {
         override fun buildRoutes(): List<HttpRoute> {
             return listOf(
