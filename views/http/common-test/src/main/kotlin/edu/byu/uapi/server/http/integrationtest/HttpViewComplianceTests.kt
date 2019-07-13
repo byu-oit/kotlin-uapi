@@ -23,6 +23,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
     @TestFactory
     fun simpleRouting() = runSuite(simpleRoutingTests())
 
+    //<editor-fold desc="Server Start/Stop" defaultstate="collapsed">
     @AfterEach
     fun stopServers() {
         var panic = false
@@ -49,33 +50,38 @@ abstract class HttpViewComplianceTests<Handle : Any> {
 
     private fun runSuite(suite: ComplianceSuite): Stream<DynamicNode> {
         val routes = suite.buildRoutes()
-        val server = startServer(suite.name, routes)
+        val server = findServerAddress()
+        // Let's put together and validate the tests before doing the hard work of starting the server
+        val tests = suite.buildTests(server)
 
-        return suite.buildTests(server)
+        startServer(suite.name, server, routes)
+
+        return tests
     }
 
-    private fun startServer(name: String, routes: List<HttpRoute>): ServerInfo {
+    private fun findServerAddress(): ServerInfo {
         val addr = InetAddress.getLoopbackAddress()
         println("Searching for open port on ${addr.hostAddress}")
         val port = FreePortFinder.findFreeLocalPort(11111, addr)
+        return ServerInfo(addr, port, "http://${addr.hostAddress}:$port")
+    }
 
-        val baseUrl = "http://${addr.hostAddress}:$port"
-        println("\t-------- Starting it server for '$name' at $baseUrl --------")
+    private fun startServer(name: String, serverInfo: ServerInfo, routes: List<HttpRoute>) {
+        println("\t-------- Starting it server for '$name' at ${serverInfo.url} --------")
 
-        handles += (name to startServer(FakeHttpRouteSource(routes), addr, port))
-
-        return ServerInfo(addr, port, baseUrl)
+        handles += (name to startServer(FakeHttpRouteSource(routes), serverInfo.address, serverInfo.port))
     }
 
     @Test
     fun `server starts on requested port`() {
-        val serverInfo = startServer("init it", emptyList())
+        val serverInfo = findServerAddress()
+        startServer("init test", serverInfo, emptyList())
         assertFalse(FreePortFinder.available(serverInfo.port, serverInfo.address))
     }
 
-
     abstract fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): Handle
     abstract fun stopServer(handle: Handle)
+    //</editor-fold>
 
 }
 

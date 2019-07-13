@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
-import java.net.URI
 import java.util.stream.Stream
 
 @DslMarker
@@ -42,7 +41,6 @@ class ComplianceSuite(
 }
 
 class ComplianceSuiteInit(private val suiteName: String) : TestGroupInit(suiteName, null) {
-    override val pathUri: URI = URI.create("compliance-dsl://$pathName")
     override val pathContext: List<String> = emptyList()
 
     override fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
@@ -57,14 +55,15 @@ class ComplianceSuiteInit(private val suiteName: String) : TestGroupInit(suiteNa
 @ComplianceDsl
 sealed class DynamicNodeBuilder(
     internal val name: String,
-    internal val parent: DynamicNodeBuilder?
+    private val parent: DynamicNodeBuilder?
 ) {
-    internal val pathName: String = name.toPathSegment()
+    var disabled = false
+
+    fun isDisabled(): Boolean = disabled || (parent != null && parent.isDisabled())
+
+    private val pathName: String = name.toPathSegment()
     internal open val pathContext: List<String>
         get() = parent?.pathContext?.plus(pathName) ?: listOf(pathName)
-
-    internal open val pathUri: URI
-        get() = URI.create(parent!!.pathUri.toASCIIString() + "/" + this.name.toPathSegment(100))
 
     protected val routeInit: RoutingInit = RoutingInit(emptyList())
 
@@ -79,25 +78,6 @@ sealed class DynamicNodeBuilder(
     internal abstract fun buildTests(
         serverInfo: ServerInfo
     ): Stream<DynamicNode>
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as DynamicNodeBuilder
-
-        if (name != other.name) return false
-        if (parent != other.parent) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + (parent?.hashCode() ?: 0)
-        return result
-    }
-
 }
 
 open class TestGroupInit(
@@ -122,12 +102,9 @@ open class TestGroupInit(
     override fun buildTests(
         serverInfo: ServerInfo
     ): Stream<DynamicNode> {
-        val uri = URI.create(pathUri.toASCIIString() + "/root")
-        println(uri)
         return Stream.of(
             DynamicContainer.dynamicContainer(
                 name,
-                uri,
                 getChildTests(serverInfo)
             )
         )
@@ -158,6 +135,9 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
     private lateinit var asserts: Response.() -> Unit
 
     override fun buildRoutes(extraRoutes: List<RoutingInit>): List<HttpRoute> {
+        if (isDisabled()) {
+            return emptyList()
+        }
         val basePath = pathContext.map(::staticPart)
         return (extraRoutes + routeInit).flatMap { it.buildRoutes(basePath) }
     }
@@ -172,8 +152,8 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
         val path = pathContext.joinToString("/", prefix = "/")
         val url = serverInfo.url + path
 
-        println(pathUri.toString() + "\n")
-        return Stream.of(DynamicTest.dynamicTest(name, pathUri) {
+        return Stream.of(DynamicTest.dynamicTest(name) {
+            Assumptions.assumeFalse(isDisabled(), "Test is disabled")
             val request = FuelManager().apply {
                 basePath = url
                 addRequestInterceptor { LogRequestInterceptor(it) }
@@ -240,6 +220,7 @@ class RoutingInit(
 
 typealias TestHttpHandler = suspend HttpRequest.() -> TestResponse
 
+// Normalize and shorten path names
 internal fun String.toPathSegment(maxLength: Int = 30): String {
     return this.toLowerCase()
         .replace("'", "")
