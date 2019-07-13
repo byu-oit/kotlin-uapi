@@ -6,9 +6,11 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import org.junit.jupiter.api.Disabled
 import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 
+@Disabled("Ktor server has not been implemented yet")
 internal class KtorViewComplianceIT : HttpViewComplianceTests<ApplicationEngine>() {
 
     override fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): ApplicationEngine {

@@ -3,11 +3,7 @@ package edu.byu.uapi.server.http
 import edu.byu.uapi.server.http.errors.UAPIHttpMissingBodyError
 import java.io.IOException
 import java.io.InputStream
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 
 interface HttpRequest {
     /**
@@ -42,13 +38,16 @@ interface HttpRequest {
 // TODO: find a better way to integrate this
 class UseOnceStreamWrapper(
     private val stream: InputStream
-): AutoCloseable by stream {
+) : AutoCloseable by stream {
     private val consumedAt = AtomicReference<Throwable>(null)
 
     internal fun consume(): InputStream {
         val consumed = consumedAt.getAndSet(Throwable("Body was consumed at:"))
         if (consumed != null) {
-            throw IOException("Body has already been consumed; consumption point is listed as the cause of this exception", consumed)
+            throw IOException(
+                "Body has already been consumed; consumption point is listed as the cause of this exception",
+                consumed
+            )
         }
 
         return stream
@@ -69,7 +68,8 @@ suspend inline fun <T> HttpRequest.requireBody(crossinline consumer: BodyConsume
     }
 
     @Suppress("UNCHECKED_CAST")
-    return result as T // By casting this, we allow the actual type of T to be nullable while still making the compiler happy.
+    // By casting this, we allow the actual type of T to be nullable while still making the compiler happy.
+    return result as T
 }
 
 typealias BodyConsumer<T> = suspend (contentType: String, stream: InputStream) -> T
@@ -90,11 +90,10 @@ abstract class BaseHttpRequest(
         }
         _consumed = true
         bodyAsStream().buffered().use { stream ->
-            if (!method.allowsBodyInUAPI) {
+            val type = headers["content-type"]
+            if (!method.allowsBodyInUAPI || type == null) {
                 return null
             }
-            val type = headers["content-type"]
-                ?: return null
 
             stream.mark(1)
             val byte = stream.read()

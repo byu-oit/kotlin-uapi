@@ -1,4 +1,4 @@
-package edu.byu.uapi.server.http.integrationtest
+package edu.byu.uapi.server.http.integrationtest.dsl
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -10,8 +10,8 @@ import com.github.kittinunf.fuel.util.encodeBase64Url
 import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRequest
 
-fun Response.assertReceivedRequest(asserts: ActualRequest.() -> Unit) {
-    val value = assertHasHeader(ActualRequest.headerName)
+fun Response.expectReceivedRequestLike(asserts: ActualRequest.() -> Unit) {
+    val value = expectHeader(ActualRequest.headerName)
     val decoded = value.decodeBase64ToString()!!
     val request = jackson.readValue<ActualRequest>(decoded)
     request.asserts()

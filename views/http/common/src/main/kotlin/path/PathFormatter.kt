@@ -2,10 +2,12 @@ package edu.byu.uapi.server.http.path
 
 interface PathFormatter {
     fun formatVariable(part: VariablePathPart): String
-    fun unformatVariableValues(
+    fun extractVariableValues(
         part: VariablePathPart,
         values: Map<String, String>
     ): Map<String, String>
+
+    fun unformat(part: String): PathPart
 }
 
 object PathFormatters {
@@ -21,7 +23,7 @@ fun PathFormatter.format(parts: RoutePath): String {
 
 fun PathFormatter.unformatValues(parts: RoutePath, values: Map<String, String>): Map<String, String> {
     return parts.filterIsInstance<VariablePathPart>().fold(mutableMapOf()) { acc, part ->
-        acc += this.unformatVariableValues(part, values)
+        acc += this.extractVariableValues(part, values)
         acc
     }
 }

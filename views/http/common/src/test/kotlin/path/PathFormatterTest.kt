@@ -15,10 +15,14 @@ internal class PathFormatterTest {
                 }
             }
 
-            override fun unformatVariableValues(
+            override fun extractVariableValues(
                 part: VariablePathPart,
                 values: Map<String, String>
             ): Map<String, String> {
+                TODO("not implemented")
+            }
+
+            override fun unformat(part: String): PathPart {
                 TODO("not implemented")
             }
         }

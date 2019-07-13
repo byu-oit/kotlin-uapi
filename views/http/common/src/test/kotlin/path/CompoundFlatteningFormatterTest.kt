@@ -38,7 +38,7 @@ internal class CompoundFlatteningFormatterTest {
     }
 
     @Nested
-    inner class Unformatting {
+    inner class Extracting {
         @Test
         fun `inflates both keys and values of compound variables`() {
             val formatter = CompoundFlatteningFormatter(
@@ -50,7 +50,7 @@ internal class CompoundFlatteningFormatterTest {
                 "p_c__foo__bar_s" to "fooval,barval"
             )
 
-            val result = formatter.unformatVariableValues(part, values)
+            val result = formatter.extractVariableValues(part, values)
 
             assertEquals(
                 mapOf("foo" to "fooval", "bar" to "barval"),
@@ -69,7 +69,7 @@ internal class CompoundFlatteningFormatterTest {
                 "p_c__foo__bar_s" to "fooval"
             )
 
-            assertFailsWith<UAPIHttpMissingCompoundPathParamError> { formatter.unformatVariableValues(part, values) }
+            assertFailsWith<UAPIHttpMissingCompoundPathParamError> { formatter.extractVariableValues(part, values) }
         }
 
         @Test
@@ -83,7 +83,7 @@ internal class CompoundFlatteningFormatterTest {
                 "c__foo__bar" to "fooval,barval"
             )
 
-            val result = formatter.unformatVariableValues(part, values)
+            val result = formatter.extractVariableValues(part, values)
 
             assertEquals(
                 mapOf("foo" to "fooval", "bar" to "barval"),
@@ -92,7 +92,7 @@ internal class CompoundFlatteningFormatterTest {
         }
 
         @Test
-        fun `unformats single variables the same`() {
+        fun `extracts single variables the same`() {
             val simple = SimplePathFormatter("p_", "_s")
             val flat = CompoundFlatteningFormatter(
                 "p_", "_s", "c__", "__"
@@ -104,8 +104,8 @@ internal class CompoundFlatteningFormatterTest {
                 "p_c__foo__bar_s" to "foo-wrong,barval"
             )
 
-            val expected = simple.unformatVariableValues(part, values)
-            val actual = flat.unformatVariableValues(part, values)
+            val expected = simple.extractVariableValues(part, values)
+            val actual = flat.extractVariableValues(part, values)
 
             assertEquals(
                 expected,
@@ -113,4 +113,24 @@ internal class CompoundFlatteningFormatterTest {
             )
         }
     }
+
+    @Nested
+    inner class Unformatting {
+        @Test
+        fun `unflattens compound variables`() {
+            val formatter = CompoundFlatteningFormatter(
+                "p_", "_s", "c__", "__"
+            )
+
+            val formatted = "p_c__foo__bar__baz_s"
+
+            val result = formatter.unformat(formatted)
+
+            assertEquals(
+                CompoundVariablePathPart(listOf("foo", "bar", "baz")),
+                result
+            )
+        }
+    }
+
 }

@@ -37,8 +37,8 @@ internal class ApplyRoutesKtTest {
 
             assertAll(
                 listOf(
-                    "emptyGet" to applier.gets,
-                    "emptyPost" to applier.posts,
+                    "get" to applier.gets,
+                    "post" to applier.posts,
                     "put" to applier.puts,
                     "patch" to applier.patches,
                     "delete" to applier.deletes

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.assertFailsWith
 
 internal class SimplePathFormatterTest {
@@ -112,7 +114,7 @@ internal class SimplePathFormatterTest {
     }
 
     @Nested
-    @DisplayName("unformatVariableValues()")
+    @DisplayName("extractVariableValues()")
     inner class ProcessVariableValues {
 
         @Test
@@ -123,7 +125,7 @@ internal class SimplePathFormatterTest {
 
             val values = mapOf("prefix_foo_suffix" to "bar")
 
-            val result = formatter.unformatVariableValues(part, values)
+            val result = formatter.extractVariableValues(part, values)
 
             assertEquals(
                 mapOf("foo" to "bar"),
@@ -139,7 +141,7 @@ internal class SimplePathFormatterTest {
 
             val values = mapOf("foo" to "bar")
 
-            val result = formatter.unformatVariableValues(part, values)
+            val result = formatter.extractVariableValues(part, values)
 
             assertEquals(
                 mapOf("foo" to "bar"),
@@ -153,7 +155,7 @@ internal class SimplePathFormatterTest {
             val part = variablePart("foo")
 
             assertFailsWith<UAPIHttpInternalError> {
-                formatter.unformatVariableValues(part, emptyMap())
+                formatter.extractVariableValues(part, emptyMap())
             }
         }
 
@@ -163,7 +165,7 @@ internal class SimplePathFormatterTest {
 
             val values = mapOf("prefix_foo_suffix" to "bar")
 
-            val result = formatter.unformatVariableValues(
+            val result = formatter.extractVariableValues(
                 variablePart(listOf("foo")),
                 values
             )
@@ -181,7 +183,7 @@ internal class SimplePathFormatterTest {
             val part = variablePart("foo", "bar")
 
             assertFailsWith<UAPIHttpInternalError> {
-                formatter.unformatVariableValues(part, mapOf("foo" to "baz"))
+                formatter.extractVariableValues(part, mapOf("foo" to "baz"))
             }
         }
 
@@ -198,7 +200,7 @@ internal class SimplePathFormatterTest {
                 "p-%-foo-%-s" to "right"
             )
 
-            val result = formatter.unformatVariableValues(
+            val result = formatter.extractVariableValues(
                 variablePart("foo"),
                 values
             )
@@ -224,7 +226,7 @@ internal class SimplePathFormatterTest {
                 "p-%-bar-%-s" to "right-bar"
             )
 
-            val result = formatter.unformatVariableValues(
+            val result = formatter.extractVariableValues(
                 variablePart("foo", "bar"),
                 values
             )
@@ -238,7 +240,7 @@ internal class SimplePathFormatterTest {
         @Test
         fun `overriding unformatSingle() changes the lookup behavior with single variables`() {
             val formatter = object : SimplePathFormatter("p", "s") {
-                override fun unformatSingle(name: String, values: Map<String, String>): String {
+                override fun extractSingleVariableValues(name: String, values: Map<String, String>): String {
                     return values.getValue("p-%-$name-%-s") + "_found"
                 }
             }
@@ -247,7 +249,7 @@ internal class SimplePathFormatterTest {
                 "p-%-foo-%-s" to "right"
             )
 
-            val result = formatter.unformatVariableValues(
+            val result = formatter.extractVariableValues(
                 variablePart("foo"),
                 values
             )
@@ -261,7 +263,7 @@ internal class SimplePathFormatterTest {
         @Test
         fun `overriding unformatSingle() changes the lookup behavior with compound variables`() {
             val formatter = object : SimplePathFormatter("p", "s") {
-                override fun unformatSingle(name: String, values: Map<String, String>): String {
+                override fun extractSingleVariableValues(name: String, values: Map<String, String>): String {
                     return values.getValue("p-%-$name-%-s") + "_found"
                 }
             }
@@ -273,7 +275,7 @@ internal class SimplePathFormatterTest {
                 "p-%-bar-%-s" to "right-bar"
             )
 
-            val result = formatter.unformatVariableValues(
+            val result = formatter.extractVariableValues(
                 variablePart("foo", "bar"),
                 values
             )
@@ -294,7 +296,7 @@ internal class SimplePathFormatterTest {
 
             val values = mapOf("p_foo_s" to "right")
 
-            val result = formatter.unformatVariableValues(variablePart("foo"), values)
+            val result = formatter.extractVariableValues(variablePart("foo"), values)
 
             assertEquals(
                 mapOf("foo" to "right"),
@@ -315,7 +317,7 @@ internal class SimplePathFormatterTest {
                 "p_bar_s" to "right-bar"
             )
 
-            val result = formatter.unformatVariableValues(variablePart("foo", "bar"), values)
+            val result = formatter.extractVariableValues(variablePart("foo", "bar"), values)
 
             assertEquals(
                 mapOf("foo" to "right-foo", "bar" to "right-bar"),
@@ -326,14 +328,17 @@ internal class SimplePathFormatterTest {
         @Test
         fun `overriding unformatCompound() doesn't change behavior with single variables`() {
             val formatter = object : SimplePathFormatter("p_", "_s") {
-                override fun unformatCompound(names: List<String>, values: Map<String, String>): Map<String, String> {
-                    return super.unformatCompound(names, values).mapValues { it.value + "_modified" }
+                override fun extractCompoundVariableValues(
+                    names: List<String>,
+                    values: Map<String, String>
+                ): Map<String, String> {
+                    return super.extractCompoundVariableValues(names, values).mapValues { it.value + "_modified" }
                 }
             }
 
             val values = mapOf("p_foo_s" to "right")
 
-            val result = formatter.unformatVariableValues(variablePart("foo"), values)
+            val result = formatter.extractVariableValues(variablePart("foo"), values)
 
             assertEquals(
                 mapOf("foo" to "right"),
@@ -344,7 +349,10 @@ internal class SimplePathFormatterTest {
         @Test
         fun `overriding unformatCompound() changes the behavior with compound variables`() {
             val formatter = object : SimplePathFormatter("p_", "_s") {
-                override fun unformatCompound(names: List<String>, values: Map<String, String>): Map<String, String> {
+                override fun extractCompoundVariableValues(
+                    names: List<String>,
+                    values: Map<String, String>
+                ): Map<String, String> {
                     return names.associateWith {
                         values.getValue(it + "_key") + "_found"
                     }
@@ -356,10 +364,71 @@ internal class SimplePathFormatterTest {
                 "bar_key" to "right-bar"
             )
 
-            val result = formatter.unformatVariableValues(variablePart("foo", "bar"), values)
+            val result = formatter.extractVariableValues(variablePart("foo", "bar"), values)
 
             assertEquals(
                 mapOf("foo" to "right-foo_found", "bar" to "right-bar_found"),
+                result
+            )
+        }
+    }
+
+    @Nested
+    @DisplayName("unformat")
+    inner class Unformat {
+        private val formatter = SimplePathFormatter("{", "}")
+
+        @Test
+        fun `maps static parts`() {
+            val result = formatter.unformat("static")
+
+            assertEquals(StaticPathPart("static"), result)
+        }
+
+        @Test
+        fun `maps simple variable parts`() {
+            val result = formatter.unformat("{varname}")
+
+            assertEquals(SingleVariablePathPart("varname"), result)
+        }
+
+        @Test
+        fun `maps compound variable parts`() {
+            val result = formatter.unformat("{foo},{bar}")
+
+            assertEquals(CompoundVariablePathPart(listOf("foo", "bar")), result)
+        }
+
+        @Test
+        fun `maps more than two variable parts`() {
+            val result = formatter.unformat("{foo},{bar},{baz},{oof},{rab},{zab}")
+
+            assertEquals(
+                CompoundVariablePathPart(
+                    listOf(
+                        "foo", "bar", "baz", "oof", "rab", "zab"
+                    )
+                ), result
+            )
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = [
+            "{}",
+            "{},{}",
+            "{foo}bar",
+            "foo{bar}",
+            "foo{bar}baz",
+            "foo,bar",
+            "foo{bar},{baz}",
+            "{foo},{bar}baz",
+            "foo,{bar},{baz}",
+            "{foo},{bar},baz"
+        ])
+        fun `doesn't parse garbage as variables`(value: String) {
+            val result = formatter.unformat(value)
+            assertEquals(
+                StaticPathPart(value),
                 result
             )
         }

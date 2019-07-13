@@ -15,7 +15,6 @@ import spark.routematch.RouteMatch
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 internal abstract class BaseSparkRouteAdapterTest<U : BaseSparkRouteAdapter> {
@@ -64,7 +63,7 @@ internal abstract class BaseSparkRouteAdapterTest<U : BaseSparkRouteAdapter> {
     }
 
     @Test
-    fun `handle() returns null if the handler does`() = runBlockingTest {
+    fun `handle() returns empty string if the handler returns null`() = runBlockingTest {
         val req = mockRequest {
             method = "POST"
             contentType = "foo/bar"
@@ -85,7 +84,7 @@ internal abstract class BaseSparkRouteAdapterTest<U : BaseSparkRouteAdapter> {
         )
 
         val respBody = unit.handle(req, resp)
-        assertNull(respBody)
+        assertEquals("", respBody)
     }
 
     @Test

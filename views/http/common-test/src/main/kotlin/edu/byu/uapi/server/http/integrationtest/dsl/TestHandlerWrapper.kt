@@ -5,8 +5,6 @@ import edu.byu.uapi.server.http.BodyConsumer
 import edu.byu.uapi.server.http.HttpHandler
 import edu.byu.uapi.server.http.HttpRequest
 import edu.byu.uapi.server.http.HttpResponse
-import edu.byu.uapi.server.http.integrationtest.ActualRequest
-import edu.byu.uapi.server.http.integrationtest.jackson
 
 internal class TestHandlerWrapper(
     val basePath: String,

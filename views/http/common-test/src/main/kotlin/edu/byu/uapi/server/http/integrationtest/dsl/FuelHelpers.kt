@@ -6,19 +6,6 @@ import com.github.kittinunf.fuel.core.Request
 import com.github.kittinunf.fuel.core.RequestFactory
 import edu.byu.uapi.server.http.HttpMethod
 
-fun TestGroupInit.describeAllMethods(
-    name: String,
-    block: TestInit.(method: HttpMethod.Routable) -> Unit
-) {
-    this.describe(name) {
-        HttpMethod.Routable.values().forEach { testMethod ->
-            it(testMethod.name) {
-                block(testMethod)
-            }
-        }
-    }
-}
-
 fun RequestFactory.request(method: HttpMethod, path: String, parameters: Parameters? = null): Request {
     return request(method.fuel, path, parameters)
 }

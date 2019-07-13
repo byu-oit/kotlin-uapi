@@ -11,10 +11,7 @@ import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRequest
 import edu.byu.uapi.server.http.HttpRoute
 import edu.byu.uapi.server.http.integrationtest.ServerInfo
-import edu.byu.uapi.server.http.integrationtest.TestResponse
-import edu.byu.uapi.server.http.path.CompoundVariablePathPart
 import edu.byu.uapi.server.http.path.RoutePath
-import edu.byu.uapi.server.http.path.SingleVariablePathPart
 import edu.byu.uapi.server.http.path.StaticPathPart
 import edu.byu.uapi.server.http.path.staticPart
 import org.junit.jupiter.api.Assumptions
@@ -62,12 +59,12 @@ sealed class DynamicNodeBuilder(
     internal val name: String,
     internal val parent: DynamicNodeBuilder?
 ) {
-    internal val pathName: String = name.pathSafe
+    internal val pathName: String = name.toPathSegment()
     internal open val pathContext: List<String>
         get() = parent?.pathContext?.plus(pathName) ?: listOf(pathName)
 
     internal open val pathUri: URI
-        get() = URI.create(parent!!.pathUri.toASCIIString() + "/" + this.pathName)
+        get() = URI.create(parent!!.pathUri.toASCIIString() + "/" + this.name.toPathSegment(100))
 
     protected val routeInit: RoutingInit = RoutingInit(emptyList())
 
@@ -82,6 +79,25 @@ sealed class DynamicNodeBuilder(
     internal abstract fun buildTests(
         serverInfo: ServerInfo
     ): Stream<DynamicNode>
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DynamicNodeBuilder
+
+        if (name != other.name) return false
+        if (parent != other.parent) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + (parent?.hashCode() ?: 0)
+        return result
+    }
+
 }
 
 open class TestGroupInit(
@@ -175,47 +191,14 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
     }
 }
 
-
 @ComplianceDsl
 class RoutingInit(
     private val pathParts: RoutePath
 ) {
     private val routes = mutableListOf<RouteBuilding>()
 
-    fun path(vararg parts: String, init: RoutingInit.() -> Unit) {
-        path(parts.map { staticPart(it) }, init)
-    }
-
-    fun pathParam(name: String, init: RoutingInit.() -> Unit) {
-        path(listOf(SingleVariablePathPart(name)), init)
-    }
-
-    fun pathParam(vararg names: String, init: RoutingInit.() -> Unit) {
-        path(listOf(CompoundVariablePathPart(names.toList())), init)
-    }
-
     fun path(parts: RoutePath, init: RoutingInit.() -> Unit) {
         routes += RoutingInit(this.pathParts + parts).apply(init).routes
-    }
-
-    fun get(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
-        route(HttpMethod.Routable.GET, consumes, produces, handler)
-    }
-
-    fun post(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
-        route(HttpMethod.Routable.POST, consumes, produces, handler)
-    }
-
-    fun put(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
-        route(HttpMethod.Routable.PUT, consumes, produces, handler)
-    }
-
-    fun patch(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
-        route(HttpMethod.Routable.PATCH, consumes, produces, handler)
-    }
-
-    fun delete(consumes: String? = null, produces: String? = null, handler: TestHttpHandler) {
-        route(HttpMethod.Routable.DELETE, consumes, produces, handler)
     }
 
     internal fun route(
@@ -257,7 +240,10 @@ class RoutingInit(
 
 typealias TestHttpHandler = suspend HttpRequest.() -> TestResponse
 
-internal val String.pathSafe: String
-    get() = this.toLowerCase().replace("""[^-_0-9a-z]+""".toRegex(), "_")
-
-
+internal fun String.toPathSegment(maxLength: Int = 30): String {
+    return this.toLowerCase()
+        .replace("'", "")
+        .replace("""(to|the|a) """.toRegex(), "")
+        .replace("""[^-_0-9a-z]+""".toRegex(), "_")
+        .take(maxLength)
+}

@@ -1,11 +1,11 @@
 package edu.byu.uapi.server.http.integrationtest.dsl
 
+import edu.byu.uapi.server.http.HTTP_NO_CONTENT
 import edu.byu.uapi.server.http.HttpMethod
-import edu.byu.uapi.server.http.integrationtest.TestResponse
 
 fun RoutingInit.emptyRoute(method: HttpMethod.Routable, consumes: String? = null) {
     this.route(method, consumes = consumes) {
-        TestResponse.Empty(204)
+        TestResponse.Empty(HTTP_NO_CONTENT)
     }
 }
 
