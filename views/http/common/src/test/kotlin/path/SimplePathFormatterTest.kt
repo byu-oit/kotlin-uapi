@@ -374,34 +374,34 @@ internal class SimplePathFormatterTest {
     }
 
     @Nested
-    @DisplayName("unformat")
+    @DisplayName("unformatPart")
     inner class Unformat {
         private val formatter = SimplePathFormatter("{", "}")
 
         @Test
         fun `maps static parts`() {
-            val result = formatter.unformat("static")
+            val result = formatter.unformatPart("static")
 
             assertEquals(StaticPathPart("static"), result)
         }
 
         @Test
         fun `maps simple variable parts`() {
-            val result = formatter.unformat("{varname}")
+            val result = formatter.unformatPart("{varname}")
 
             assertEquals(SingleVariablePathPart("varname"), result)
         }
 
         @Test
         fun `maps compound variable parts`() {
-            val result = formatter.unformat("{foo},{bar}")
+            val result = formatter.unformatPart("{foo},{bar}")
 
             assertEquals(CompoundVariablePathPart(listOf("foo", "bar")), result)
         }
 
         @Test
         fun `maps more than two variable parts`() {
-            val result = formatter.unformat("{foo},{bar},{baz},{oof},{rab},{zab}")
+            val result = formatter.unformatPart("{foo},{bar},{baz},{oof},{rab},{zab}")
 
             assertEquals(
                 CompoundVariablePathPart(
@@ -426,7 +426,7 @@ internal class SimplePathFormatterTest {
             "{foo},{bar},baz"
         ])
         fun `doesn't parse garbage as variables`(value: String) {
-            val result = formatter.unformat(value)
+            val result = formatter.unformatPart(value)
             assertEquals(
                 StaticPathPart(value),
                 result

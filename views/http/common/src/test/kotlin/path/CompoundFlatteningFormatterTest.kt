@@ -124,7 +124,7 @@ internal class CompoundFlatteningFormatterTest {
 
             val formatted = "p_c__foo__bar__baz_s"
 
-            val result = formatter.unformat(formatted)
+            val result = formatter.unformatPart(formatted)
 
             assertEquals(
                 CompoundVariablePathPart(listOf("foo", "bar", "baz")),

@@ -4,10 +4,10 @@ version: 0.2
 phases:
   build:
     commands:
-      - mvn clean install
+      - ./mvnw clean install
   post_build:
     commands:
-      - mvn deploy -P '!build-tutorial-steps' # don't try to deploy the tutorial
+      - ./.cicd/deploy-if-tagged.sh
 cache:
   paths:
     - '/root/.m2/repository/**/*'

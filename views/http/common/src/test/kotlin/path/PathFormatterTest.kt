@@ -1,6 +1,8 @@
 package edu.byu.uapi.server.http.path
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 internal class PathFormatterTest {
@@ -22,7 +24,7 @@ internal class PathFormatterTest {
                 TODO("not implemented")
             }
 
-            override fun unformat(part: String): PathPart {
+            override fun unformatPart(part: String): PathPart {
                 TODO("not implemented")
             }
         }
@@ -32,6 +34,28 @@ internal class PathFormatterTest {
             "/foo/bar/var_baz/var_i,var_j,var_k",
             result
         )
+    }
+
+    @Nested
+    @DisplayName("PathFormatter#unformat")
+    inner class PathFormatterUnformat {
+
+        @Test
+        fun `it splits up the parts`() {
+            val formatter = PathFormatters.CURLY_BRACE
+
+            val result = formatter.unformat("/foo/{bar}/{baz},{zab}")
+
+            assertEquals(
+                listOf(
+                    staticPart("foo"),
+                    variablePart("bar"),
+                    variablePart("baz", "zab")
+                ),
+                result
+            )
+        }
+
     }
 
     private val allPathPartTypes = listOf(

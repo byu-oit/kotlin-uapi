@@ -7,7 +7,7 @@ interface PathFormatter {
         values: Map<String, String>
     ): Map<String, String>
 
-    fun unformat(part: String): PathPart
+    fun unformatPart(part: String): PathPart
 }
 
 object PathFormatters {
@@ -26,4 +26,12 @@ fun PathFormatter.unformatValues(parts: RoutePath, values: Map<String, String>):
         acc += this.extractVariableValues(part, values)
         acc
     }
+}
+
+fun PathFormatter.unformat(pathSpec: String): List<PathPart> {
+    return pathSpec
+        .removePrefix("/")
+        .removeSuffix("/")
+        .split("/")
+        .map { unformatPart(it) }
 }

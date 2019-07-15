@@ -21,7 +21,7 @@ import kotlin.test.assertFalse
 abstract class HttpViewComplianceTests<Handle : Any> {
 
     @TestFactory
-    fun simpleRouting() = runSuite(simpleRoutingTests())
+    fun simpleRouting() = runSuite(SimpleRoutingTests)
 
     //<editor-fold desc="Server Start/Stop" defaultstate="collapsed">
     @AfterEach
@@ -49,10 +49,9 @@ abstract class HttpViewComplianceTests<Handle : Any> {
     private val handles = mutableMapOf<String, Handle>()
 
     private fun runSuite(suite: ComplianceSuite): Stream<DynamicNode> {
-        val routes = suite.buildRoutes()
         val server = findServerAddress()
         // Let's put together and validate the tests before doing the hard work of starting the server
-        val tests = suite.buildTests(server)
+        val (routes, tests) = suite.build(findServerAddress())
 
         startServer(suite.name, server, routes)
 
@@ -75,7 +74,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
     @Test
     fun `server starts on requested port`() {
         val serverInfo = findServerAddress()
-        startServer("init test", serverInfo, emptyList())
+        startServer("define test", serverInfo, emptyList())
         assertFalse(FreePortFinder.available(serverInfo.port, serverInfo.address))
     }
 

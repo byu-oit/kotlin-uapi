@@ -18,37 +18,63 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
+import org.junit.platform.engine.support.descriptor.MethodSource
+import java.net.URI
 import java.util.stream.Stream
+import kotlin.reflect.full.extensionReceiverParameter
+import kotlin.reflect.full.memberExtensionFunctions
+import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.jvm.javaMethod
 
 @DslMarker
 annotation class ComplianceDsl
 
-fun suite(suiteName: String, init: ComplianceSuiteInit.() -> Unit): ComplianceSuite {
-    return ComplianceSuiteInit(suiteName).apply(init).buildSuite()
-}
+abstract class ComplianceSuite {
+    protected abstract fun ComplianceSuiteInit.define()
 
-class ComplianceSuite(
-    val name: String,
-    private val init: ComplianceSuiteInit
-) {
-    fun buildRoutes(): List<HttpRoute> {
-        return init.buildRoutes(emptyList())
+    open val name: String
+        get() = this::class.simpleName?.fromUpperCamelToWords()
+            ?: throw IllegalStateException("Unable to get kotlin class name")
+
+    fun build(serverInfo: ServerInfo): Pair<List<HttpRoute>, Stream<DynamicNode>> {
+        val definition = ComplianceSuiteInit(name).apply { define() }
+
+        val routes = definition.buildRoutes(emptyList())
+
+        val tests: Stream<DynamicNode> =
+            Stream.of(DynamicContainer.dynamicContainer(this.name, methodUri, definition.buildTests(serverInfo)))
+
+        return routes to tests
     }
 
-    fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
-        return init.buildTests(serverInfo)
+    private val methodUri: URI by lazy {
+        val method = this::class.memberExtensionFunctions.first {
+            it.extensionReceiverParameter!!.type == ComplianceSuiteInit::class.starProjectedType
+                && it.name == "define"
+        }
+        MethodSource.from(method.javaMethod).run {
+            URI(
+                "method", className,
+                "$methodName($methodParameterTypes)"
+            )
+        }
     }
 }
 
-class ComplianceSuiteInit(private val suiteName: String) : TestGroupInit(suiteName, null) {
+private fun String.fromUpperCamelToWords(): String {
+    return fold(StringBuilder()) { sb, c ->
+        if (c.isUpperCase() && sb.isNotEmpty() && !sb.last().isUpperCase()) {
+            sb.append(' ')
+        }
+        sb.append(c)
+    }.toString()
+}
+
+class ComplianceSuiteInit(suiteName: String) : TestGroupInit(suiteName, null) {
     override val pathContext: List<String> = emptyList()
 
     override fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
         return super.getChildTests(serverInfo)
-    }
-
-    internal fun buildSuite(): ComplianceSuite {
-        return ComplianceSuite(suiteName, this)
     }
 }
 

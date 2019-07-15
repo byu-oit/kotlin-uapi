@@ -3,6 +3,8 @@ package edu.byu.uapi.server.http.integrationtest
 import edu.byu.uapi.server.http.HTTP_NO_CONTENT
 import edu.byu.uapi.server.http.HTTP_OK
 import edu.byu.uapi.server.http.HttpMethod
+import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuite
+import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuiteInit
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
 import edu.byu.uapi.server.http.integrationtest.dsl.delete
 import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
@@ -19,11 +21,10 @@ import edu.byu.uapi.server.http.integrationtest.dsl.pathSpec
 import edu.byu.uapi.server.http.integrationtest.dsl.post
 import edu.byu.uapi.server.http.integrationtest.dsl.put
 import edu.byu.uapi.server.http.integrationtest.dsl.request
-import edu.byu.uapi.server.http.integrationtest.dsl.suite
 import kotlin.test.assertEquals
 
-internal fun simpleRoutingTests() =
-    suite("Simple Routing Tests") {
+object SimpleRoutingTests : ComplianceSuite() {
+    override fun ComplianceSuiteInit.define() {
         forAllMethodsIt("should route to the method's handler") { testMethod ->
             givenRoutes {
                 get { TestResponse.Text("GET") }
@@ -115,3 +116,4 @@ internal fun simpleRoutingTests() =
             }
         }
     }
+}

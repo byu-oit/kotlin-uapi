@@ -22,7 +22,7 @@ open class SimplePathFormatter(val prefix: String, val suffix: String = "") : Pa
         return names.joinToString(COMPOUND_PARAMETER_SEPARATOR, transform = this::formatSingle)
     }
 
-    override fun unformat(part: String): PathPart {
+    override fun unformatPart(part: String): PathPart {
         return unformatCompoundVariable(part)
             ?: unformatSingleVariable(part)
             ?: StaticPathPart(part)
