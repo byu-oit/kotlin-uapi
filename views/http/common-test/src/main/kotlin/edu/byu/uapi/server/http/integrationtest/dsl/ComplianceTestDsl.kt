@@ -15,6 +15,7 @@ import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.StaticPathPart
 import edu.byu.uapi.server.http.path.staticPart
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
@@ -74,6 +75,7 @@ class ComplianceSuiteInit(suiteName: String) : TestGroupInit(suiteName, null) {
     override val pathContext: List<String> = emptyList()
 
     override fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
+        assumeFalse(this.disabled, "Suite $name is disabled.")
         return super.getChildTests(serverInfo)
     }
 }
@@ -93,8 +95,12 @@ sealed class DynamicNodeBuilder(
 
     protected val routeInit: RoutingInit = RoutingInit(emptyList())
 
-    fun givenRoutes(init: RoutingInit.() -> Unit) {
-        routeInit.apply(init)
+    fun givenRoutes(pathSpec: String = "", init: RoutingInit.() -> Unit) {
+        if (pathSpec.isNotEmpty()) {
+            routeInit.pathSpec(pathSpec, init)
+        } else {
+            routeInit.apply(init)
+        }
     }
 
     internal abstract fun buildRoutes(
@@ -180,6 +186,7 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
 
         return Stream.of(DynamicTest.dynamicTest(name) {
             Assumptions.assumeFalse(isDisabled(), "Test is disabled")
+            println(url)
             val request = FuelManager().apply {
                 basePath = url
                 addRequestInterceptor { LogRequestInterceptor(it) }

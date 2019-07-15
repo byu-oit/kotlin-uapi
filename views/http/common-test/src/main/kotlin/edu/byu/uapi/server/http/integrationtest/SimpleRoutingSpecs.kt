@@ -11,19 +11,16 @@ import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
 import edu.byu.uapi.server.http.integrationtest.dsl.expectEmptyBody
 import edu.byu.uapi.server.http.integrationtest.dsl.expectReceivedRequestLike
 import edu.byu.uapi.server.http.integrationtest.dsl.expectStatus
-import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBody
+import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.forAllMethodsIt
 import edu.byu.uapi.server.http.integrationtest.dsl.get
 import edu.byu.uapi.server.http.integrationtest.dsl.patch
-import edu.byu.uapi.server.http.integrationtest.dsl.path
-import edu.byu.uapi.server.http.integrationtest.dsl.pathParam
-import edu.byu.uapi.server.http.integrationtest.dsl.pathSpec
 import edu.byu.uapi.server.http.integrationtest.dsl.post
 import edu.byu.uapi.server.http.integrationtest.dsl.put
 import edu.byu.uapi.server.http.integrationtest.dsl.request
 import kotlin.test.assertEquals
 
-object SimpleRoutingTests : ComplianceSuite() {
+object SimpleRoutingSpecs : ComplianceSuite() {
     override fun ComplianceSuiteInit.define() {
         forAllMethodsIt("should route to the method's handler") { testMethod ->
             givenRoutes {
@@ -36,7 +33,7 @@ object SimpleRoutingTests : ComplianceSuite() {
             whenCalledWith { request(testMethod, "") }
             then {
                 expectStatus(HTTP_OK)
-                expectTextBody(testMethod.name)
+                expectTextBodyEquals(testMethod.name)
                 expectReceivedRequestLike {
                     assertEquals(testMethod, method)
                     assertEquals("", path)
@@ -46,19 +43,9 @@ object SimpleRoutingTests : ComplianceSuite() {
         }
 
         describe("path parameters") {
-            givenRoutes {
-                path("shared") {
-                    emptyGet()
-                }
-            }
             it("should parse values for single parameter values") {
-                givenRoutes {
-                    pathSpec("/{one},{two}/{three}") {}
-                    pathParam("one") {
-                        pathParam("two") {
-                            emptyGet()
-                        }
-                    }
+                givenRoutes("/{one}/{two}") {
+                    emptyGet()
                 }
                 whenCalledWith { get("/abcdef/123") }
                 then {
@@ -71,10 +58,8 @@ object SimpleRoutingTests : ComplianceSuite() {
                 }
             }
             it("compound params") {
-                givenRoutes {
-                    pathParam("one", "two") {
-                        emptyGet()
-                    }
+                givenRoutes("/{one},{two}") {
+                    emptyGet()
                 }
                 whenCalledWith { get("/abcdef,123") }
                 then {
@@ -87,14 +72,8 @@ object SimpleRoutingTests : ComplianceSuite() {
                 }
             }
             it("mixed param types") {
-                givenRoutes {
-                    pathParam("outer") {
-                        pathParam("one", "two", "three") {
-                            pathParam("inner") {
-                                emptyGet()
-                            }
-                        }
-                    }
+                givenRoutes("/{outer}/{one},{two},{three}/{inner}") {
+                    emptyGet()
                 }
                 whenCalledWith { get("/a/b,c,d/e") }
                 then {

@@ -16,10 +16,13 @@ fun Response.expectEmptyBody() {
     assertEquals(0, data.size, "Expected an empty body, got a body with length of ${data.size}")
 }
 
-fun Response.expectTextBody(expectedBody: String) {
+fun Response.expectTextBody(): String {
     expectHeaderWithValue("Content-Type", "text/plain")
-    val actual = this.body().asString("text/plain")
-    assertEquals(expectedBody, actual)
+    return this.body().asString("text/plain")
+}
+
+fun Response.expectTextBodyEquals(expectedBody: String) {
+    assertEquals(expectedBody, expectTextBody())
 }
 
 fun Response.expectHeader(name: String): String {

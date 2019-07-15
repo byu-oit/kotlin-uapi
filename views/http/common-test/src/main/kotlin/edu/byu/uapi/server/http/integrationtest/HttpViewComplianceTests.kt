@@ -21,7 +21,22 @@ import kotlin.test.assertFalse
 abstract class HttpViewComplianceTests<Handle : Any> {
 
     @TestFactory
-    fun simpleRouting() = runSuite(SimpleRoutingTests)
+    fun simpleRouting() = runSuite(SimpleRoutingSpecs)
+
+    @TestFactory
+    fun requestParams() = runSuite(RequestParameterSpecs)
+
+    @TestFactory
+    fun requestBody() = runSuite(RequestBodySpecs)
+
+    @TestFactory
+    fun responseHeaders() = runSuite(ResponseHeaderSpecs)
+
+    @TestFactory
+    fun responseBody() = runSuite(ResponseBodySpecs)
+
+    @TestFactory
+    fun contentNegotiation() = runSuite(ContentNegotiationSpecs)
 
     //<editor-fold desc="Server Start/Stop" defaultstate="collapsed">
     @AfterEach
