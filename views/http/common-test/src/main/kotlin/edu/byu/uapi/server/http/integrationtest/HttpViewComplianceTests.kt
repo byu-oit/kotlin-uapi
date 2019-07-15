@@ -2,7 +2,7 @@ package edu.byu.uapi.server.http.integrationtest
 
 import edu.byu.uapi.server.http.HttpRoute
 import edu.byu.uapi.server.http.HttpRouteSource
-import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuite
+import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.test.fixtures.FakeHttpRouteSource
 import me.alexpanov.net.FreePortFinder
 import org.junit.jupiter.api.AfterEach
@@ -21,22 +21,22 @@ import kotlin.test.assertFalse
 abstract class HttpViewComplianceTests<Handle : Any> {
 
     @TestFactory
-    fun simpleRouting() = runSuite(SimpleRoutingSpecs)
+    fun simpleRouting() = runSpecs(SimpleRoutingSpecs)
 
     @TestFactory
-    fun requestParams() = runSuite(RequestParameterSpecs)
+    fun requestParams() = runSpecs(RequestParameterSpecs)
 
     @TestFactory
-    fun requestBody() = runSuite(RequestBodySpecs)
+    fun requestBody() = runSpecs(RequestBodySpecs)
 
     @TestFactory
-    fun responseHeaders() = runSuite(ResponseHeaderSpecs)
+    fun responseHeaders() = runSpecs(ResponseHeaderSpecs)
 
     @TestFactory
-    fun responseBody() = runSuite(ResponseBodySpecs)
+    fun responseBody() = runSpecs(ResponseBodySpecs)
 
     @TestFactory
-    fun contentNegotiation() = runSuite(ContentNegotiationSpecs)
+    fun contentNegotiation() = runSpecs(ContentNegotiationSpecs)
 
     //<editor-fold desc="Server Start/Stop" defaultstate="collapsed">
     @AfterEach
@@ -63,7 +63,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
 
     private val handles = mutableMapOf<String, Handle>()
 
-    private fun runSuite(suite: ComplianceSuite): Stream<DynamicNode> {
+    private fun runSpecs(suite: ComplianceSpecSuite): Stream<DynamicNode> {
         val server = findServerAddress()
         // Let's put together and validate the tests before doing the hard work of starting the server
         val (routes, tests) = suite.build(findServerAddress())

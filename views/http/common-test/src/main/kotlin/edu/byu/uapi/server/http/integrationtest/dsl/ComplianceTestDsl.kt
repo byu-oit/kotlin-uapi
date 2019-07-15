@@ -30,7 +30,7 @@ import kotlin.reflect.jvm.javaMethod
 @DslMarker
 annotation class ComplianceDsl
 
-abstract class ComplianceSuite {
+abstract class ComplianceSpecSuite {
     protected abstract fun ComplianceSuiteInit.define()
 
     open val name: String

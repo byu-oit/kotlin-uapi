@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.http.integrationtest
 
-import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuite
+import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuiteInit
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
 import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.assertAll
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-object RequestParameterSpecs : ComplianceSuite() {
+object RequestParameterSpecs : ComplianceSpecSuite() {
     override fun ComplianceSuiteInit.define() {
         givenRoutes {
             emptyGet()

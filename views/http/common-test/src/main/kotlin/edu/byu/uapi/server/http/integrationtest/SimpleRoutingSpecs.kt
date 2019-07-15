@@ -3,7 +3,7 @@ package edu.byu.uapi.server.http.integrationtest
 import edu.byu.uapi.server.http.HTTP_NO_CONTENT
 import edu.byu.uapi.server.http.HTTP_OK
 import edu.byu.uapi.server.http.HttpMethod
-import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuite
+import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuiteInit
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
 import edu.byu.uapi.server.http.integrationtest.dsl.delete
@@ -20,7 +20,7 @@ import edu.byu.uapi.server.http.integrationtest.dsl.put
 import edu.byu.uapi.server.http.integrationtest.dsl.request
 import kotlin.test.assertEquals
 
-object SimpleRoutingSpecs : ComplianceSuite() {
+object SimpleRoutingSpecs : ComplianceSpecSuite() {
     override fun ComplianceSuiteInit.define() {
         forAllMethodsIt("should route to the method's handler") { testMethod ->
             givenRoutes {
