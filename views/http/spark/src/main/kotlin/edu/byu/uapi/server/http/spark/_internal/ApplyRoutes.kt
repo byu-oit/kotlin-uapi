@@ -13,12 +13,12 @@ fun RouteApplier.applyRoutes(routes: HttpRouteSource) {
         .groupBy { RouteSpec(it) }
         .forEach { (spec, routes) ->
             when (spec.method) {
-                HttpMethod.GET    -> apply(spec, routes, this::get)
-                HttpMethod.PUT    -> apply(spec, routes, this::put)
-                HttpMethod.PATCH  -> apply(spec, routes, this::patch)
-                HttpMethod.POST   -> apply(spec, routes, this::post)
-                HttpMethod.DELETE -> apply(spec, routes, this::delete)
-            }
+                HttpMethod.Routable.GET    -> apply(spec, routes, this::get)
+                HttpMethod.Routable.PUT    -> apply(spec, routes, this::put)
+                HttpMethod.Routable.PATCH  -> apply(spec, routes, this::patch)
+                HttpMethod.Routable.POST   -> apply(spec, routes, this::post)
+                HttpMethod.Routable.DELETE -> apply(spec, routes, this::delete)
+            }.apply {/* exhaustive */}
         }
 }
 
@@ -45,7 +45,7 @@ private inline fun apply(spec: RouteSpec, routes: List<HttpRoute>, fn: (String, 
 
 internal data class RouteSpec(
     val pathParts: RoutePath,
-    val method: HttpMethod,
+    val method: HttpMethod.Routable,
     val acceptType: String?
 ) {
     val path = sparkPaths.format(pathParts)
