@@ -9,11 +9,14 @@ import edu.byu.uapi.server.http.HttpRoute
 import edu.byu.uapi.server.http.HttpRouteSource
 import edu.byu.uapi.server.http.path.staticPart
 import edu.byu.uapi.server.http.path.variablePart
+import edu.byu.uapi.server.http.test.fixtures.RethrowingErrorMapper
 import java.io.OutputStream
 
 fun getTestApi(): HttpRouteSource {
     // suuuper great it API (sufficient for testing for now)
     return object : HttpRouteSource {
+        override fun buildErrorMapper() = RethrowingErrorMapper
+
         override fun buildRoutes(): List<HttpRoute> {
             return listOf(
                 HttpRoute(

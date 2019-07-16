@@ -52,3 +52,9 @@ Milestones:
 * Lifecycle hooks
 * Make all functions `suspend` and use coroutines
 * Extension modules - use lifecycle hooks to do things like add caching, etc.
+
+# Developer Info
+
+## Package Structure
+
+

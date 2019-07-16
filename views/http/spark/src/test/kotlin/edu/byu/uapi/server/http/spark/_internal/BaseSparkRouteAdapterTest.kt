@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.http.spark._internal
 
+import edu.byu.uapi.server.http.errors.HttpErrorMapper
 import edu.byu.uapi.server.http.HttpHandler
 import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.format
@@ -7,6 +8,7 @@ import edu.byu.uapi.server.http.path.staticPart
 import edu.byu.uapi.server.http.path.variablePart
 import edu.byu.uapi.server.http.spark.fixtures.MockResponse
 import edu.byu.uapi.server.http.spark.fixtures.mockRequest
+import edu.byu.uapi.server.http.test.fixtures.RethrowingErrorMapper
 import edu.byu.uapi.server.http.test.fixtures.MockHttpHandler
 import edu.byu.uapi.server.http.test.fixtures.fakeResponse
 import kotlinx.coroutines.test.runBlockingTest
@@ -22,7 +24,8 @@ internal abstract class BaseSparkRouteAdapterTest<U : BaseSparkRouteAdapter> {
     abstract fun buildAdapterWithSingleHandler(
         routePath: RoutePath,
         handler: HttpHandler,
-        context: CoroutineContext
+        context: CoroutineContext,
+        errorMapper: HttpErrorMapper
     ): U
 
     private val fooPath = listOf(staticPart("foo"))
@@ -45,7 +48,8 @@ internal abstract class BaseSparkRouteAdapterTest<U : BaseSparkRouteAdapter> {
         val unit = buildAdapterWithSingleHandler(
             fooPath,
             handler,
-            coroutineContext
+            coroutineContext,
+            RethrowingErrorMapper
         )
 
         val respBody = unit.handle(req, resp)
@@ -80,7 +84,8 @@ internal abstract class BaseSparkRouteAdapterTest<U : BaseSparkRouteAdapter> {
         val unit = buildAdapterWithSingleHandler(
             fooPath,
             handler,
-            coroutineContext
+            coroutineContext,
+            RethrowingErrorMapper
         )
 
         val respBody = unit.handle(req, resp)
@@ -109,7 +114,7 @@ internal abstract class BaseSparkRouteAdapterTest<U : BaseSparkRouteAdapter> {
             fakeResponse { status = 200; noBody() }
         )
 
-        val unit = buildAdapterWithSingleHandler(path, handler, coroutineContext)
+        val unit = buildAdapterWithSingleHandler(path, handler, coroutineContext, RethrowingErrorMapper)
         unit.handle(req, resp)
 
         val call = assertNotNull(handler.calls.firstOrNull())

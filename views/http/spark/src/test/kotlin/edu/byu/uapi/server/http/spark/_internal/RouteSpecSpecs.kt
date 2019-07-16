@@ -26,7 +26,7 @@ internal class RouteSpecSpecs {
         assertAll(
             { assertEquals("/foo", result.path) },
             { assertEquals(HttpMethod.PATCH, result.method) },
-            { assertEquals("bar/baz", result.acceptType) }
+            { assertEquals("bar/baz", result.produces) }
         )
     }
 

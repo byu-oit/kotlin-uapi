@@ -1,5 +1,6 @@
 package edu.byu.uapi.server.http.spark._internal
 
+import edu.byu.uapi.server.http.errors.HttpErrorMapper
 import edu.byu.uapi.server.http.HttpHandler
 import edu.byu.uapi.server.http.errors.UAPIHttpMissingHeaderError
 import edu.byu.uapi.server.http.errors.UAPIHttpUnrecognizedContentTypeError
@@ -7,6 +8,7 @@ import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.staticPart
 import edu.byu.uapi.server.http.spark.fixtures.MockResponse
 import edu.byu.uapi.server.http.spark.fixtures.mockRequest
+import edu.byu.uapi.server.http.test.fixtures.RethrowingErrorMapper
 import edu.byu.uapi.server.http.test.fixtures.MockHttpHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -25,12 +27,14 @@ internal class ConsumesMultipleTypesRouteAdapterTest
     override fun buildAdapterWithSingleHandler(
         routePath: RoutePath,
         handler: HttpHandler,
-        context: CoroutineContext
+        context: CoroutineContext,
+        errorMapper: HttpErrorMapper
     ): ConsumesMultipleTypesRouteAdapter {
         return ConsumesMultipleTypesRouteAdapter(
             routePath,
             mapOf("*/*" to handler),
-            context
+            context,
+            errorMapper
         )
     }
 
@@ -53,7 +57,8 @@ internal class ConsumesMultipleTypesRouteAdapterTest
                 "foo/*" to fooStarHandler,
                 "foo/bar" to fooBarHandler
             ),
-            coroutineContext
+            coroutineContext,
+            RethrowingErrorMapper
         )
 
         return DynamicTest.stream(
@@ -83,7 +88,8 @@ internal class ConsumesMultipleTypesRouteAdapterTest
         val adapter = ConsumesMultipleTypesRouteAdapter(
             listOf(staticPart("foo")),
             mapOf("foo/bar" to MockHttpHandler()),
-            coroutineContext
+            coroutineContext,
+            RethrowingErrorMapper
         )
 
         val req = mockRequest {
@@ -99,13 +105,13 @@ internal class ConsumesMultipleTypesRouteAdapterTest
         assertTrue("Content-Type" in ex.message)
     }
 
-
     @Test
     fun `throws when the there is no matching mime type`() = runBlockingTest {
         val adapter = ConsumesMultipleTypesRouteAdapter(
             listOf(staticPart("foo")),
             mapOf("foo/bar" to MockHttpHandler()),
-            coroutineContext
+            coroutineContext,
+            RethrowingErrorMapper
         )
 
         val req = mockRequest {

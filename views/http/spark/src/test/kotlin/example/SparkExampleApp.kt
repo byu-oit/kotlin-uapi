@@ -46,7 +46,7 @@ fun main() {
 //
 //    matches.forEach {
 //        it.apply {
-//            println("$requestURI matches $matchUri $acceptType $target")
+//            println("$requestURI matches $matchUri $produces $target")
 //        }
 //    }
 

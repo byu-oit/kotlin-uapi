@@ -2,6 +2,7 @@ package edu.byu.uapi.server.http.integrationtest
 
 import edu.byu.uapi.server.http.HttpRoute
 import edu.byu.uapi.server.http.HttpRouteSource
+import edu.byu.uapi.server.http._internal.DefaultErrorMapper
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.test.fixtures.FakeHttpRouteSource
 import me.alexpanov.net.FreePortFinder
@@ -39,6 +40,9 @@ abstract class HttpViewComplianceTests<Handle : Any> {
 
     @TestFactory
     fun contentNegotiation() = runSpecs(ContentNegotiationSpecs)
+
+    abstract fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): Handle
+    abstract fun stopServer(handle: Handle)
 
     //<editor-fold desc="Server Start/Stop" defaultstate="collapsed">
     @AfterEach
@@ -86,7 +90,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
         println("\t-------- Starting it server for '$name' at ${serverInfo.url} --------")
         val start = Instant.now()
 
-        val server = startServer(FakeHttpRouteSource(routes), serverInfo.address, serverInfo.port)
+        val server = startServer(FakeHttpRouteSource(routes, DefaultErrorMapper), serverInfo.address, serverInfo.port)
         handles += (name to server)
 
         val duration = Duration.between(start, Instant.now()).toMillis().toDouble()
@@ -99,9 +103,6 @@ abstract class HttpViewComplianceTests<Handle : Any> {
         startServer("define test", serverInfo, emptyList())
         assertFalse(FreePortFinder.available(serverInfo.port, serverInfo.address))
     }
-
-    abstract fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): Handle
-    abstract fun stopServer(handle: Handle)
     //</editor-fold>
 
 }

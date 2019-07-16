@@ -7,5 +7,5 @@ class UAPIHttpUnrecognizedContentTypeError(
     val acceptableContentTypes: List<String>
 ): UAPIUnsupportedMediaTypeError(
     "Unable to process the provided Content-Type header. " +
-        "Acceptable content types are ${acceptableContentTypes.joinToString()}"
+        "Acceptable content types are ${acceptableContentTypes.sorted().joinToString()}"
 )

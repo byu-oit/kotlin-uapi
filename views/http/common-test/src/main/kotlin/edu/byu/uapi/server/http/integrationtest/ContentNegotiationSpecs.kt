@@ -42,10 +42,10 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
                 }
             }
             it("fails with UAPI-style HTTP 415 if there is no default") {
-                disabled = true
-
                 givenRoutes("no-default") {
-                    post(consumes = "foo/bar") { TestResponse.Text("foo/bar") }
+                    post(consumes = "foo/bar") {
+                        TestResponse.Text("foo/bar")
+                    }
                     post(consumes = "foo/*") { TestResponse.Text("foo/*") }
                     post(consumes = "bar/baz") { TestResponse.Text("bar/baz") }
                 }
@@ -60,14 +60,16 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
                               "message": "Unsupported Media Type"
                             },
                             "validation_information": [
-                              "The request contained a body with an unrecognized type.",
-                              "Allowed types are: \"bar/baz\", \"foo/bar\", \"foo/*\""
+                              "Unable to process the provided Content-Type header. Acceptable content types are bar/baz, foo/*, foo/bar"
                             ]
                           }
                         }
-                    """)
+                    """.trimIndent())
                 }
             }
+        }
+        describe("response content negotiation") {
+
         }
     }
 }
