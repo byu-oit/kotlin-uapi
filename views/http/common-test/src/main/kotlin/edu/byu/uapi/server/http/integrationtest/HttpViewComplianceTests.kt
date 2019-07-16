@@ -12,6 +12,8 @@ import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.net.InetAddress
+import java.time.Duration
+import java.time.Instant
 import java.util.stream.Stream
 import kotlin.system.exitProcess
 import kotlin.test.assertFalse
@@ -70,7 +72,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
 
         startServer(suite.name, server, routes)
 
-        return tests
+        return tests.stream()
     }
 
     private fun findServerAddress(): ServerInfo {
@@ -82,8 +84,13 @@ abstract class HttpViewComplianceTests<Handle : Any> {
 
     private fun startServer(name: String, serverInfo: ServerInfo, routes: List<HttpRoute>) {
         println("\t-------- Starting it server for '$name' at ${serverInfo.url} --------")
+        val start = Instant.now()
 
-        handles += (name to startServer(FakeHttpRouteSource(routes), serverInfo.address, serverInfo.port))
+        val server = startServer(FakeHttpRouteSource(routes), serverInfo.address, serverInfo.port)
+        handles += (name to server)
+
+        val duration = Duration.between(start, Instant.now()).toMillis().toDouble()
+        println("Started server for $name in ${duration / 1000} seconds\n")
     }
 
     @Test

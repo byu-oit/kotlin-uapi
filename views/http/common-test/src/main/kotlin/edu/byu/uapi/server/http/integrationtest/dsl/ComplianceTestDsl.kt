@@ -14,14 +14,13 @@ import edu.byu.uapi.server.http.integrationtest.ServerInfo
 import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.StaticPathPart
 import edu.byu.uapi.server.http.path.staticPart
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Assumptions.assumeFalse
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.DynamicContainer
 import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.platform.engine.support.descriptor.MethodSource
 import java.net.URI
-import java.util.stream.Stream
 import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.memberExtensionFunctions
 import kotlin.reflect.full.starProjectedType
@@ -37,15 +36,12 @@ abstract class ComplianceSpecSuite {
         get() = this::class.simpleName?.fromUpperCamelToWords()
             ?: throw IllegalStateException("Unable to get kotlin class name")
 
-    fun build(serverInfo: ServerInfo): Pair<List<HttpRoute>, Stream<DynamicNode>> {
-        val definition = ComplianceSuiteInit(name).apply { define() }
+    fun build(serverInfo: ServerInfo): Pair<List<HttpRoute>, List<DynamicNode>> {
+        val definition = ComplianceSuiteInit(name, methodUri).apply { define() }
 
         val routes = definition.buildRoutes(emptyList())
 
-        val tests: Stream<DynamicNode> =
-            Stream.of(DynamicContainer.dynamicContainer(this.name, methodUri, definition.buildTests(serverInfo)))
-
-        return routes to tests
+        return routes to listOf(definition.buildTests(serverInfo))
     }
 
     private val methodUri: URI by lazy {
@@ -71,13 +67,8 @@ private fun String.fromUpperCamelToWords(): String {
     }.toString()
 }
 
-class ComplianceSuiteInit(suiteName: String) : TestGroupInit(suiteName, null) {
+class ComplianceSuiteInit(suiteName: String, uri: URI?) : TestGroupInit(suiteName, null, uri) {
     override val pathContext: List<String> = emptyList()
-
-    override fun buildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
-        assumeFalse(this.disabled, "Suite $name is disabled.")
-        return super.getChildTests(serverInfo)
-    }
 }
 
 @ComplianceDsl
@@ -109,16 +100,17 @@ sealed class DynamicNodeBuilder(
 
     internal abstract fun buildTests(
         serverInfo: ServerInfo
-    ): Stream<DynamicNode>
+    ): DynamicNode
 }
 
 open class TestGroupInit(
     name: String,
-    parent: DynamicNodeBuilder?
+    parent: DynamicNodeBuilder?,
+    private val uri: URI?
 ) : DynamicNodeBuilder(name, parent) {
 
     fun describe(name: String, init: TestGroupInit.() -> Unit) {
-        children += TestGroupInit(name, this).apply(init)
+        children += TestGroupInit(name, this, null).apply(init)
     }
 
     fun it(name: String, init: TestInit.() -> Unit) {
@@ -133,17 +125,12 @@ open class TestGroupInit(
 
     override fun buildTests(
         serverInfo: ServerInfo
-    ): Stream<DynamicNode> {
-        return Stream.of(
-            DynamicContainer.dynamicContainer(
-                name,
-                getChildTests(serverInfo)
-            )
-        )
-    }
-
-    protected fun getChildTests(serverInfo: ServerInfo): Stream<DynamicNode> {
-        return children.stream().flatMap { it.buildTests(serverInfo) }
+    ): DynamicNode {
+        return if (children.isNotEmpty()) {
+            DynamicContainer.dynamicContainer(name, uri, children.stream().map { it.buildTests(serverInfo) })
+        } else {
+            DynamicTest.dynamicTest(this.name, uri) { assumeFalse(true, "No tests have been defined") }
+        }
     }
 
     private val children = mutableListOf<DynamicNodeBuilder>()
@@ -176,16 +163,20 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
 
     override fun buildTests(
         serverInfo: ServerInfo
-    ): Stream<DynamicNode> {
-        //make sure everything's initialized
-        requestInit
-        asserts
-
+    ): DynamicNode {
         val path = pathContext.joinToString("/", prefix = "/")
         val url = serverInfo.url + path
 
-        return Stream.of(DynamicTest.dynamicTest(name) {
-            Assumptions.assumeFalse(isDisabled(), "Test is disabled")
+        return DynamicTest.dynamicTest(name) {
+            //make sure everything's initialized
+            assumeTrue(
+                ::requestInit.isInitialized,
+                "You must define a whenCalledWith{} block to build the test request!"
+            )
+            assumeTrue(::asserts.isInitialized, "You must define a then{} block with test assertions!")
+
+            assumeFalse(isDisabled(), "Test is disabled")
+
             println(url)
             val request = FuelManager().apply {
                 basePath = url
@@ -193,14 +184,14 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
                 addResponseInterceptor { LogResponseInterceptor(it) }
             }.run(requestInit)
 
-            Assumptions.assumeFalse(
+            assumeFalse(
                 request.method == Method.PATCH,
                 "Fuel doesn't support PATCH, so we'll skip it until we can work around it."
             )
 
             val (_, response) = request.response()
             response.apply(asserts)
-        })
+        }
     }
 }
 
