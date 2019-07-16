@@ -2,6 +2,7 @@ package edu.byu.uapi.server.http.integrationtest.dsl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.core.Response
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.fail
 import org.skyscreamer.jsonassert.JSONAssert
 import kotlin.test.assertEquals
@@ -41,8 +42,13 @@ private fun Response.expectJsonBody(expectedJson: String, strict: Boolean) {
     JSONAssert.assertEquals(expectedJson, body, strict)
 }
 
-fun Response.expectJsonBodyLike(expectedJson: String) = expectJsonBody(expectedJson, false)
-fun Response.expectJsonBodyEquals(expectedJson: String) = expectJsonBody(expectedJson, true)
+fun Response.expectJsonBodyLike(
+    @Language("JSON") expectedJson: String
+) = expectJsonBody(expectedJson, false)
+
+fun Response.expectJsonBodyEquals(
+    @Language("JSON") expectedJson: String
+) = expectJsonBody(expectedJson, true)
 
 inline fun <reified T : Any> Response.expectJsonParseableAs(expectedType: String = "application/json"): T {
     expectHeaderWithValue("Content-Type", expectedType)

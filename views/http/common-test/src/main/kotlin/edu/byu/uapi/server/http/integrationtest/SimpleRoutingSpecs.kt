@@ -4,7 +4,7 @@ import edu.byu.uapi.server.http.HTTP_NO_CONTENT
 import edu.byu.uapi.server.http.HTTP_OK
 import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
-import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuiteInit
+import edu.byu.uapi.server.http.integrationtest.dsl.SuiteDsl
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
 import edu.byu.uapi.server.http.integrationtest.dsl.delete
 import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
@@ -21,7 +21,7 @@ import edu.byu.uapi.server.http.integrationtest.dsl.request
 import kotlin.test.assertEquals
 
 object SimpleRoutingSpecs : ComplianceSpecSuite() {
-    override fun ComplianceSuiteInit.define() {
+    override fun SuiteDsl.define() {
         forAllMethodsIt("should route to the method's handler") { testMethod ->
             givenRoutes {
                 get { TestResponse.Text("GET") }

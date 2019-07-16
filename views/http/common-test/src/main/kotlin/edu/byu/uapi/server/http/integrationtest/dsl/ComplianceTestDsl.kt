@@ -30,14 +30,14 @@ import kotlin.reflect.jvm.javaMethod
 annotation class ComplianceDsl
 
 abstract class ComplianceSpecSuite {
-    protected abstract fun ComplianceSuiteInit.define()
+    protected abstract fun SuiteDsl.define()
 
     open val name: String
         get() = this::class.simpleName?.fromUpperCamelToWords()
             ?: throw IllegalStateException("Unable to get kotlin class name")
 
     fun build(serverInfo: ServerInfo): Pair<List<HttpRoute>, List<DynamicNode>> {
-        val definition = ComplianceSuiteInit(name, methodUri).apply { define() }
+        val definition = SuiteDsl(name, methodUri).apply { define() }
 
         val routes = definition.buildRoutes(emptyList())
 
@@ -46,7 +46,7 @@ abstract class ComplianceSpecSuite {
 
     private val methodUri: URI by lazy {
         val method = this::class.memberExtensionFunctions.first {
-            it.extensionReceiverParameter!!.type == ComplianceSuiteInit::class.starProjectedType
+            it.extensionReceiverParameter!!.type == SuiteDsl::class.starProjectedType
                 && it.name == "define"
         }
         MethodSource.from(method.javaMethod).run {
@@ -67,7 +67,7 @@ private fun String.fromUpperCamelToWords(): String {
     }.toString()
 }
 
-class ComplianceSuiteInit(suiteName: String, uri: URI?) : TestGroupInit(suiteName, null, uri) {
+class SuiteDsl(suiteName: String, uri: URI?) : TestGroupInit(suiteName, null, uri) {
     override val pathContext: List<String> = emptyList()
 }
 

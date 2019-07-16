@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.http.integrationtest
 
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
-import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSuiteInit
+import edu.byu.uapi.server.http.integrationtest.dsl.SuiteDsl
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
 import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
 import edu.byu.uapi.server.http.integrationtest.dsl.expectReceivedRequestLike
@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 object RequestParameterSpecs : ComplianceSpecSuite() {
-    override fun ComplianceSuiteInit.define() {
+    override fun SuiteDsl.define() {
         givenRoutes {
             emptyGet()
         }
