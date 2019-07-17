@@ -12,6 +12,11 @@ fun Response.expectStatus(expected: Int) {
     assertEquals(expected, this.statusCode, "Expected response status to be $expected, was $statusCode")
 }
 
+fun Response.expectBodyOfType(expectedType: String): String {
+    expectHeaderWithValue("Content-Type", expectedType)
+    return this.body().asString(expectedType)
+}
+
 fun Response.expectEmptyBody() {
     val data = this.data
     assertEquals(0, data.size, "Expected an empty body, got a body with length of ${data.size}")

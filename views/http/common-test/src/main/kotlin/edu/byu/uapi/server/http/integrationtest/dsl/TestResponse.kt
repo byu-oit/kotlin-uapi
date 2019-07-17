@@ -44,7 +44,7 @@ sealed class TestResponse(
         constructor(
             bodyString: String,
             contentType: String,
-            status: Int,
+            status: Int = HTTP_OK,
             headers: Map<String, String> = emptyMap()
         ) : this(bodyString.toByteArray(), contentType, status, headers)
 

@@ -17,15 +17,31 @@ fun Response.expectReceivedRequestLike(asserts: ActualRequest.() -> Unit) {
     request.asserts()
 }
 
+data class ActualRequest(
+    @get:JsonSerialize(converter = MethodConverterOut::class)
+    @JsonDeserialize(converter = MethodConverterIn::class)
+    val method: HttpMethod,
+    val path: String,
+    val headers: Map<String, String>,
+    val pathParams: Map<String, String>,
+    val queryParams: Map<String, List<String>>,
+    val contentType: String?,
+    val body: String?,
+    val bodyWasIncluded: Boolean
+) {
+    companion object {
+        const val headerName = "xx-test-actual-request"
+        const val DEFAULT_INCLUDE_BODY = true
+    }
+}
+
 @Suppress("FunctionName")
-suspend fun ActualRequest(req: HttpRequest, basePath: String? = null): ActualRequest {
-    val (contentType, bodyStr) = req.consumeBody { contentType, stream ->
-        contentType to when (contentType) {
-            "text/plain"       -> stream.reader().readText()
-            "application/json" -> stream.reader().readText()
-            else               -> "base64:" + stream.readBytes().encodeBase64Url().toString(Charsets.UTF_8)
-        }
-    } ?: null to null
+suspend fun ActualRequest(
+    req: HttpRequest,
+    basePath: String? = null,
+    includeBody: Boolean = ActualRequest.DEFAULT_INCLUDE_BODY
+): ActualRequest {
+    val (contentType, bodyStr) = getBody(req, includeBody)
     val path = if (basePath != null) {
         req.path.removePrefix(basePath)
     } else {
@@ -38,30 +54,29 @@ suspend fun ActualRequest(req: HttpRequest, basePath: String? = null): ActualReq
         req.pathParams,
         req.queryParams,
         contentType,
-        bodyStr
+        bodyStr,
+        includeBody
     )
 }
 
-data class ActualRequest(
-    @get:JsonSerialize(converter = MethodConverterOut::class)
-    @JsonDeserialize(converter = MethodConverterIn::class)
-    val method: HttpMethod,
-    val path: String,
-    val headers: Map<String, String>,
-    val pathParams: Map<String, String>,
-    val queryParams: Map<String, List<String>>,
-    val contentType: String?,
-    val body: String?
-) {
-    companion object {
-        const val headerName = "xx-test-actual-request"
+private suspend fun getBody(req: HttpRequest, includeBody: Boolean): Pair<String?, String?> {
+    return if (includeBody) {
+        req.consumeBody { contentType, stream ->
+            contentType to when (contentType) {
+                "text/plain"       -> stream.reader().readText()
+                "application/json" -> stream.reader().readText()
+                else               -> "base64:" + stream.readBytes().encodeBase64Url().toString(Charsets.UTF_8)
+            }
+        } ?: null to null
+    } else {
+        null to null
     }
 }
 
-private class MethodConverterOut: StdConverter<HttpMethod, String>() {
+private class MethodConverterOut : StdConverter<HttpMethod, String>() {
     override fun convert(value: HttpMethod) = value.name
 }
 
-private class MethodConverterIn: StdConverter<String, HttpMethod>() {
-    override fun convert(value: String)= HttpMethod(value)
+private class MethodConverterIn : StdConverter<String, HttpMethod>() {
+    override fun convert(value: String) = HttpMethod(value)
 }

@@ -209,6 +209,7 @@ class RoutingInit(
         method: HttpMethod.Routable,
         consumes: String? = null,
         produces: String? = null,
+        trackActualRequest: Boolean = true,
         handler: TestHttpHandler
     ) {
         routes += RouteBuilding(
