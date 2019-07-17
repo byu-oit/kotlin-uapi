@@ -36,6 +36,7 @@ private val requestConstructor: KFunction<Request> by lazy {
     }
     assertNotNull(found, "Expected to find constructor spark.Request(RouteMatch, HttpServletRequest)")
     found.isAccessible = true
+    @Suppress("UNNECESSARY_NOT_NULL_ASSERTION") // It's actually necessary 🤦
     found!!
 }
 

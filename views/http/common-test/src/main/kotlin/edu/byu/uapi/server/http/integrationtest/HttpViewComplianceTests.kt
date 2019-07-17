@@ -1,10 +1,10 @@
 package edu.byu.uapi.server.http.integrationtest
 
-import edu.byu.uapi.server.http.HttpRoute
-import edu.byu.uapi.server.http.HttpRouteSource
 import edu.byu.uapi.server.http._internal.DefaultErrorMapper
+import edu.byu.uapi.server.http._internal.HttpRouteDefinition
+import edu.byu.uapi.server.http._internal.RouteSourceImpl
+import edu.byu.uapi.server.http.engines.HttpRouteSource
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
-import edu.byu.uapi.server.http.test.fixtures.FakeHttpRouteSource
 import me.alexpanov.net.FreePortFinder
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DynamicNode
@@ -19,9 +19,26 @@ import java.util.stream.Stream
 import kotlin.system.exitProcess
 import kotlin.test.assertFalse
 
+/**
+ * A complete suite of tests that ensure that an HTTP engine has all of the functionality we expect it to have in
+ * order to represent all valid UAPI functions.
+ */
 @Suppress("FunctionName", "TooManyFunctions")
 @Execution(ExecutionMode.CONCURRENT)
 abstract class HttpViewComplianceTests<Handle : Any> {
+
+    /**
+     * Start the HTTP server on the given [address] and [port] with the specified [routes].
+     * @return Some sort of handle that can be used to shut down the server later.
+     */
+    abstract fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): Handle
+
+    /**
+     * Shut down the server with the given [handle].
+     */
+    abstract fun stopServer(handle: Handle)
+
+    //<editor-fold desc="Test Suites" defaultstate="collapsed">
 
     @TestFactory
     fun simpleRouting() = runSpecs(SimpleRoutingSpecs)
@@ -41,8 +58,10 @@ abstract class HttpViewComplianceTests<Handle : Any> {
     @TestFactory
     fun contentNegotiation() = runSpecs(ContentNegotiationSpecs)
 
-    abstract fun startServer(routes: HttpRouteSource, address: InetAddress, port: Int): Handle
-    abstract fun stopServer(handle: Handle)
+    @TestFactory
+    fun errorHandling() = runSpecs(ErrorHandlingSpecs)
+
+    //</editor-fold>
 
     //<editor-fold desc="Server Start/Stop" defaultstate="collapsed">
     @AfterEach
@@ -53,7 +72,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
                 stopServer(handle)
             } catch (ex: Throwable) {
                 panic = true
-                System.err.println(" !!!!! Error stopping it server ${this::class.simpleName} $name! !!!!! ")
+                System.err.println(" !!!!! Error stopping test server ${this::class.simpleName} $name! !!!!! ")
                 ex.printStackTrace()
                 Thread.sleep(1)
             }
@@ -72,7 +91,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
     private fun runSpecs(suite: ComplianceSpecSuite): Stream<DynamicNode> {
         val server = findServerAddress()
         // Let's put together and validate the tests before doing the hard work of starting the server
-        val (routes, tests) = suite.build(findServerAddress())
+        val (routes, tests) = suite.build(server)
 
         startServer(suite.name, server, routes)
 
@@ -86,11 +105,11 @@ abstract class HttpViewComplianceTests<Handle : Any> {
         return ServerInfo(addr, port, "http://${addr.hostAddress}:$port")
     }
 
-    private fun startServer(name: String, serverInfo: ServerInfo, routes: List<HttpRoute>) {
+    private fun startServer(name: String, serverInfo: ServerInfo, routes: List<HttpRouteDefinition<*>>) {
         println("\t-------- Starting it server for '$name' at ${serverInfo.url} --------")
         val start = Instant.now()
 
-        val server = startServer(FakeHttpRouteSource(routes, DefaultErrorMapper), serverInfo.address, serverInfo.port)
+        val server = startServer(RouteSourceImpl(routes, DefaultErrorMapper), serverInfo.address, serverInfo.port)
         handles += (name to server)
 
         val duration = Duration.between(start, Instant.now()).toMillis().toDouble()

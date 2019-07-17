@@ -1,6 +1,8 @@
 complexity:
   LongMethod:
-    excludes: "**/integrationtest/*Spec.kt"
+    excludes: "**/integrationtest/*Specs.kt"
+  TooManyFunctions:
+    active: false
 style:
   MagicNumber:
     active: false

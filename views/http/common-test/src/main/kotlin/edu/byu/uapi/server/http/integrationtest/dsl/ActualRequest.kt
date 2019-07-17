@@ -1,14 +1,16 @@
 package edu.byu.uapi.server.http.integrationtest.dsl
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.fasterxml.jackson.databind.util.StdConverter
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.util.decodeBase64ToString
-import com.github.kittinunf.fuel.util.encodeBase64Url
-import edu.byu.uapi.server.http.HttpMethod
-import edu.byu.uapi.server.http.HttpRequest
+import edu.byu.uapi.server.http._internal.DeleteRequest
+import edu.byu.uapi.server.http._internal.GetRequest
+import edu.byu.uapi.server.http._internal.HttpRequest
+import edu.byu.uapi.server.http._internal.HttpRequestWithBody
+import edu.byu.uapi.server.http._internal.PatchRequest
+import edu.byu.uapi.server.http._internal.PostRequest
+import edu.byu.uapi.server.http._internal.PutRequest
+import org.apache.commons.codec.digest.DigestUtils
 
 fun Response.expectReceivedRequestLike(asserts: ActualRequest.() -> Unit) {
     val value = expectHeader(ActualRequest.headerName)
@@ -17,51 +19,56 @@ fun Response.expectReceivedRequestLike(asserts: ActualRequest.() -> Unit) {
     request.asserts()
 }
 
-@Suppress("FunctionName")
-suspend fun ActualRequest(req: HttpRequest, basePath: String? = null): ActualRequest {
-    val (contentType, bodyStr) = req.consumeBody { contentType, stream ->
-        contentType to when (contentType) {
-            "text/plain"       -> stream.reader().readText()
-            "application/json" -> stream.reader().readText()
-            else               -> "base64:" + stream.readBytes().encodeBase64Url().toString(Charsets.UTF_8)
-        }
-    } ?: null to null
-    val path = if (basePath != null) {
-        req.path.removePrefix(basePath)
-    } else {
-        req.path
-    }
-    return ActualRequest(
-        req.method,
-        path,
-        req.headers,
-        req.pathParams,
-        req.queryParams,
-        contentType,
-        bodyStr
-    )
-}
-
 data class ActualRequest(
-    @get:JsonSerialize(converter = MethodConverterOut::class)
-    @JsonDeserialize(converter = MethodConverterIn::class)
-    val method: HttpMethod,
+    val method: String,
     val path: String,
     val headers: Map<String, String>,
     val pathParams: Map<String, String>,
     val queryParams: Map<String, List<String>>,
-    val contentType: String?,
-    val body: String?
+    val bodySha256: String?
 ) {
     companion object {
         const val headerName = "xx-test-actual-request"
     }
 }
 
-private class MethodConverterOut: StdConverter<HttpMethod, String>() {
-    override fun convert(value: HttpMethod) = value.name
+@Suppress("FunctionName", "ComplexMethod")
+fun ActualRequest(
+    req: HttpRequest,
+    body: ByteArray?,
+    basePath: String? = null
+): ActualRequest {
+    val method = when (req) {
+        is PostRequest   -> "POST"
+        is PutRequest    -> "PUT"
+        is PatchRequest  -> "PATCH"
+        is GetRequest    -> "GET"
+        is DeleteRequest -> "DELETE"
+    }
+    val bodyStr: String?
+
+    if (req is HttpRequestWithBody && body != null) {
+        bodyStr = body.hash()
+    } else {
+        bodyStr = null
+    }
+
+    val path = if (basePath != null) {
+        req.path.removePrefix(basePath)
+    } else {
+        req.path
+    }
+    return ActualRequest(
+        method,
+        path,
+        req.headers,
+        req.pathParams,
+        req.queryParams,
+        bodyStr
+    )
 }
 
-private class MethodConverterIn: StdConverter<String, HttpMethod>() {
-    override fun convert(value: String)= HttpMethod(value)
+fun ByteArray.hash(): String {
+    return DigestUtils.sha256Hex(this)
 }
+

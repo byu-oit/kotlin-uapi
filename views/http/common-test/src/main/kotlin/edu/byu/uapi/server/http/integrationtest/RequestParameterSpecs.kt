@@ -6,11 +6,14 @@ import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
 import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
 import edu.byu.uapi.server.http.integrationtest.dsl.expectReceivedRequestLike
 import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBody
-import edu.byu.uapi.server.http.integrationtest.dsl.get
 import org.junit.jupiter.api.assertAll
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+/**
+ * Tests rules about how query parameters and headers are handled. Path parameters are tested as part of
+ * [SimpleRoutingSpecs].
+ */
 object RequestParameterSpecs : ComplianceSpecSuite() {
     override fun SuiteDsl.define() {
         givenRoutes {

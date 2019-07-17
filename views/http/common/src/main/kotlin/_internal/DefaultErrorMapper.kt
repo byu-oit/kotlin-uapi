@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.util.BufferRecyclers
 import edu.byu.uapi.server.http.HTTP_BAD_REQUEST
 import edu.byu.uapi.server.http.HTTP_INTERNAL_ERROR
 import edu.byu.uapi.server.http.HTTP_UNSUPPORTED_TYPE
-import edu.byu.uapi.server.http.HttpResponse
-import edu.byu.uapi.server.http.HttpResponseBody
+import edu.byu.uapi.server.http.engines.HttpResponse
+import edu.byu.uapi.server.http.engines.HttpResponseBody
 import edu.byu.uapi.server.http.errors.HttpErrorMapper
 import edu.byu.uapi.server.spi.errors.UAPIApplicationError
 import edu.byu.uapi.server.spi.errors.UAPIClientError

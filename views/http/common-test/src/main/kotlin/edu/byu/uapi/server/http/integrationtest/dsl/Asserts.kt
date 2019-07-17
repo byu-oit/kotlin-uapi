@@ -5,11 +5,22 @@ import com.github.kittinunf.fuel.core.Response
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.fail
 import org.skyscreamer.jsonassert.JSONAssert
+import java.nio.charset.Charset
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 fun Response.expectStatus(expected: Int) {
     assertEquals(expected, this.statusCode, "Expected response status to be $expected, was $statusCode")
+}
+
+fun Response.expectBodyOfType(expectedType: String): String {
+    expectHeaderWithValue("Content-Type", expectedType)
+    return this.body().toByteArray().toString(Charset.defaultCharset())
+}
+
+fun Response.expectBodyOfTypeEquals(expectedType: String, expectedBody: String) {
+    val body = expectBodyOfType(expectedType)
+    assertEquals(body, expectedBody)
 }
 
 fun Response.expectEmptyBody() {

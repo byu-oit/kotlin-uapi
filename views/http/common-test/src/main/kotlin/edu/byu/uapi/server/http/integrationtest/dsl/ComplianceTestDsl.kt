@@ -7,9 +7,17 @@ import com.github.kittinunf.fuel.core.RequestFactory
 import com.github.kittinunf.fuel.core.Response
 import com.github.kittinunf.fuel.core.interceptors.LogRequestInterceptor
 import com.github.kittinunf.fuel.core.interceptors.LogResponseInterceptor
-import edu.byu.uapi.server.http.HttpMethod
-import edu.byu.uapi.server.http.HttpRequest
-import edu.byu.uapi.server.http.HttpRoute
+import edu.byu.uapi.server.http._internal.DeleteRequest
+import edu.byu.uapi.server.http._internal.DeleteRoute
+import edu.byu.uapi.server.http._internal.GetRequest
+import edu.byu.uapi.server.http._internal.GetRoute
+import edu.byu.uapi.server.http._internal.HttpRouteDefinition
+import edu.byu.uapi.server.http._internal.PatchRequest
+import edu.byu.uapi.server.http._internal.PatchRoute
+import edu.byu.uapi.server.http._internal.PostRequest
+import edu.byu.uapi.server.http._internal.PostRoute
+import edu.byu.uapi.server.http._internal.PutRequest
+import edu.byu.uapi.server.http._internal.PutRoute
 import edu.byu.uapi.server.http.integrationtest.ServerInfo
 import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.StaticPathPart
@@ -36,7 +44,7 @@ abstract class ComplianceSpecSuite {
         get() = this::class.simpleName?.fromUpperCamelToWords()
             ?: throw IllegalStateException("Unable to get kotlin class name")
 
-    fun build(serverInfo: ServerInfo): Pair<List<HttpRoute>, List<DynamicNode>> {
+    fun build(serverInfo: ServerInfo): Pair<List<HttpRouteDefinition<*>>, List<DynamicNode>> {
         val definition = SuiteDsl(name, methodUri).apply { define() }
 
         val routes = definition.buildRoutes(emptyList())
@@ -96,11 +104,19 @@ sealed class DynamicNodeBuilder(
 
     internal abstract fun buildRoutes(
         extraRoutes: List<RoutingInit>
-    ): List<HttpRoute>
+    ): List<HttpRouteDefinition<*>>
 
     internal abstract fun buildTests(
         serverInfo: ServerInfo
     ): DynamicNode
+}
+
+fun TestGroupInit.describe(name: String) {
+    this.describe(name) { disabled = true }
+}
+
+fun TestGroupInit.it(name: String) {
+    this.it(name) { disabled = true }
 }
 
 open class TestGroupInit(
@@ -119,7 +135,7 @@ open class TestGroupInit(
 
     override fun buildRoutes(
         extraRoutes: List<RoutingInit>
-    ): List<HttpRoute> {
+    ): List<HttpRouteDefinition<*>> {
         return children.flatMap { it.buildRoutes(extraRoutes + this.routeInit) }
     }
 
@@ -153,7 +169,7 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
 
     private lateinit var asserts: Response.() -> Unit
 
-    override fun buildRoutes(extraRoutes: List<RoutingInit>): List<HttpRoute> {
+    override fun buildRoutes(extraRoutes: List<RoutingInit>): List<HttpRouteDefinition<*>> {
         if (isDisabled()) {
             return emptyList()
         }
@@ -195,56 +211,80 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
     }
 }
 
+private typealias RouteCreator = (basePath: String, pathSpec: RoutePath) -> HttpRouteDefinition<*>
+
 @ComplianceDsl
 class RoutingInit(
     private val pathParts: RoutePath
 ) {
-    private val routes = mutableListOf<RouteBuilding>()
+    private val routes = mutableListOf<RouteCreator>()
+    private val children = mutableListOf<RoutingInit>()
 
     fun path(parts: RoutePath, init: RoutingInit.() -> Unit) {
-        routes += RoutingInit(this.pathParts + parts).apply(init).routes
+        children += RoutingInit(this.pathParts + parts).apply(init)
     }
 
-    internal fun route(
-        method: HttpMethod.Routable,
+    fun get(
+        produces: String? = null,
+        handler: TestHttpHandler<GetRequest>
+    ) {
+        routes += { basePath: String, pathSpec: RoutePath ->
+            GetRoute(pathSpec, TestHandlerWrapper(basePath, handler), produces)
+        }
+    }
+
+    fun post(
         consumes: String? = null,
         produces: String? = null,
-        handler: TestHttpHandler
+        handler: TestHttpHandler<PostRequest>
     ) {
-        routes += RouteBuilding(
-            path = pathParts,
-            method = method,
-            produces = produces,
-            consumes = consumes,
-            handler = handler
-        )
+        routes += { basePath: String, pathSpec: RoutePath ->
+            PostRoute(pathSpec, TestHandlerWrapper(basePath, handler), consumes, produces)
+        }
     }
 
-    private class RouteBuilding(
-        val path: RoutePath,
-        val method: HttpMethod.Routable,
-        val consumes: String? = null,
-        val produces: String? = null,
-        val handler: TestHttpHandler
-    )
+    fun put(
+        consumes: String? = null,
+        produces: String? = null,
+        handler: TestHttpHandler<PutRequest>
+    ) {
+        routes += { basePath: String, pathSpec: RoutePath ->
+            PutRoute(pathSpec, TestHandlerWrapper(basePath, handler), consumes, produces)
+        }
+    }
 
-    internal fun buildRoutes(basePath: List<StaticPathPart>): List<HttpRoute> {
+    fun patch(
+        consumes: String? = null,
+        produces: String? = null,
+        handler: TestHttpHandler<PatchRequest>
+    ) {
+        routes += { basePath: String, pathSpec: RoutePath ->
+            PatchRoute(pathSpec, TestHandlerWrapper(basePath, handler), consumes, produces)
+        }
+    }
+
+    fun delete(
+        produces: String? = null,
+        handler: TestHttpHandler<DeleteRequest>
+    ) {
+        routes += { basePath: String, pathSpec: RoutePath ->
+            DeleteRoute(pathSpec, TestHandlerWrapper(basePath, handler), produces)
+        }
+    }
+
+    internal fun buildRoutes(basePath: List<StaticPathPart>): List<HttpRouteDefinition<*>> {
         val basePathString = basePath.joinToString("/", prefix = "/") { it.part }
         return routes.map {
-            HttpRoute(
-                pathParts = basePath + it.path,
-                method = it.method,
-                consumes = it.consumes,
-                produces = it.produces,
-                handler = TestHandlerWrapper(basePathString, it.handler)
-            )
+            it.invoke(basePathString, basePath + this.pathParts)
+        } + children.flatMap {
+            it.buildRoutes(basePath)
         }
     }
 }
 
-typealias TestHttpHandler = suspend HttpRequest.() -> TestResponse
+typealias TestHttpHandler<R> = suspend R.() -> TestResponse
 
-// Normalize and shorten path names
+// Normalize and shorten pathSpec names
 internal fun String.toPathSegment(maxLength: Int = 30): String {
     return this.toLowerCase()
         .replace("'", "")

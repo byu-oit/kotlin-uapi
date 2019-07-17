@@ -1,38 +1,35 @@
 package edu.byu.uapi.server.http.spark._internal
 
+import edu.byu.uapi.server.http.engines.HttpRoute
 import edu.byu.uapi.server.http.errors.HttpErrorMapper
-import edu.byu.uapi.server.http.HttpHandler
 import edu.byu.uapi.server.http.errors.UAPIHttpMissingHeaderError
 import edu.byu.uapi.server.http.errors.UAPIHttpUnrecognizedContentTypeError
-import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.staticPart
 import edu.byu.uapi.server.http.spark.fixtures.MockResponse
 import edu.byu.uapi.server.http.spark.fixtures.mockRequest
+import edu.byu.uapi.server.http.test.fixtures.MockHttpRoute
 import edu.byu.uapi.server.http.test.fixtures.RethrowingErrorMapper
-import edu.byu.uapi.server.http.test.fixtures.MockHttpHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import spark.Request
 import java.util.stream.Stream
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-internal class ConsumesMultipleTypesRouteAdapterTest
-    : BaseSparkRouteAdapterTest<ConsumesMultipleTypesRouteAdapter>() {
-
-    override fun buildAdapterWithSingleHandler(
-        routePath: RoutePath,
-        handler: HttpHandler,
+internal class HasBodyRouteAdapterTest
+    : BaseSparkRouteAdapterTest<HasBodyRouteAdapter>() {
+    override fun buildAdapterWithSingleRoute(
+        route: HttpRoute<Request>,
         context: CoroutineContext,
         errorMapper: HttpErrorMapper
-    ): ConsumesMultipleTypesRouteAdapter {
-        return ConsumesMultipleTypesRouteAdapter(
-            routePath,
-            mapOf("*/*" to handler),
+    ): HasBodyRouteAdapter {
+        return HasBodyRouteAdapter(
+            listOf(route),
             context,
             errorMapper
         )
@@ -40,23 +37,24 @@ internal class ConsumesMultipleTypesRouteAdapterTest
 
     @TestFactory
     fun `handle() uses the best-matching mime type handler`(): Stream<DynamicTest> {
-        val wildcardHandler = MockHttpHandler()
-        val fooStarHandler = MockHttpHandler()
-        val fooBarHandler = MockHttpHandler()
+        val wildcardHandler = MockHttpRoute<Request>(consumes = "*/*")
+        val fooStarHandler = MockHttpRoute<Request>(consumes = "foo/*")
+        val fooBarHandler = MockHttpRoute<Request>(consumes = "foo/bar")
 
-        val types: List<Triple<String, String, MockHttpHandler>> = listOf(
+        val types: List<Triple<String, String, MockHttpRoute<Request>>> = listOf(
             Triple("Exact Match", "foo/bar", fooBarHandler),
             Triple("Partial Match", "foo/baz", fooStarHandler),
             Triple("No Match", "baz/foo", wildcardHandler)
         )
 
-        fun CoroutineScope.buildAdapter() = ConsumesMultipleTypesRouteAdapter(
-            listOf(staticPart("foo")),
-            mapOf(
-                "*/*" to wildcardHandler,
-                "foo/*" to fooStarHandler,
-                "foo/bar" to fooBarHandler
-            ),
+        val routes = listOf(
+            wildcardHandler,
+            fooStarHandler,
+            fooBarHandler
+        )
+
+        fun CoroutineScope.buildAdapter() = HasBodyRouteAdapter(
+            routes,
             coroutineContext,
             RethrowingErrorMapper
         )
@@ -83,11 +81,12 @@ internal class ConsumesMultipleTypesRouteAdapterTest
         }
     }
 
+    private val fooPath = listOf(staticPart("foo"))
+
     @Test
     fun `uses the wildcard handler when the content-type header is missing`() = runBlockingTest {
-        val adapter = ConsumesMultipleTypesRouteAdapter(
-            listOf(staticPart("foo")),
-            mapOf("foo/bar" to MockHttpHandler()),
+        val adapter = HasBodyRouteAdapter(
+            listOf(MockHttpRoute(consumes = "foo/bar")),
             coroutineContext,
             RethrowingErrorMapper
         )
@@ -107,9 +106,8 @@ internal class ConsumesMultipleTypesRouteAdapterTest
 
     @Test
     fun `throws when the there is no matching mime type`() = runBlockingTest {
-        val adapter = ConsumesMultipleTypesRouteAdapter(
-            listOf(staticPart("foo")),
-            mapOf("foo/bar" to MockHttpHandler()),
+        val adapter = HasBodyRouteAdapter(
+            listOf(MockHttpRoute(consumes = "foo/bar")),
             coroutineContext,
             RethrowingErrorMapper
         )

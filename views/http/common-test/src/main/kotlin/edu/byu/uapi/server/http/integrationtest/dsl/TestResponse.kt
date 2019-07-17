@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import edu.byu.uapi.server.http.HTTP_NO_CONTENT
 import edu.byu.uapi.server.http.HTTP_OK
-import edu.byu.uapi.server.http.HttpResponse
-import edu.byu.uapi.server.http.HttpResponseBody
+import edu.byu.uapi.server.http.engines.HttpResponse
+import edu.byu.uapi.server.http.engines.HttpResponseBody
 import java.io.OutputStream
 
 val jackson = ObjectMapper().registerKotlinModule()
@@ -44,7 +44,7 @@ sealed class TestResponse(
         constructor(
             bodyString: String,
             contentType: String,
-            status: Int,
+            status: Int = HTTP_OK,
             headers: Map<String, String> = emptyMap()
         ) : this(bodyString.toByteArray(), contentType, status, headers)
 
