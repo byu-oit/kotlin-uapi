@@ -1,0 +1,4 @@
+naming:
+  PackageNaming:
+    active: true
+    excludes: "**/_internal/**,**/test/**,**/androidTest/**,**/*.Test.kt,**/*.Spec.kt,**/*.Spek.kt"

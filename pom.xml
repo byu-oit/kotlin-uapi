@@ -11,10 +11,6 @@
 
     <name>Kotlin UAPI Parent POM</name>
 
-    <prerequisites>
-        <maven>3.5</maven>
-    </prerequisites>
-
     <distributionManagement>
         <repository>
             <id>byu-release-repo</id>
@@ -347,6 +343,7 @@
     <build>
         <plugins>
             <plugin>
+                <!-- Enforces rules like Java version and Maven version-->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>${plugins.enforcer.version}</version>
@@ -359,6 +356,7 @@
                         </goals>
                         <configuration>
                             <rules>
+                                <reactorModuleConvergence/>
                                 <requireMavenVersion>
                                     <version>${plugins.enforcer.requireMaven}</version>
                                 </requireMavenVersion>
@@ -563,9 +561,23 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <!--suppress MavenModelInspection - Intellij doesn't support this property yet, even though it's been in Maven since 3.3.1! -->
+                    <rulesUri>file://${maven.multiModuleProjectDirectory}/.dependabot/versions-plugin-config.xml
+                    </rulesUri>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>com.github.ozsie</groupId>
                 <artifactId>detekt-maven-plugin</artifactId>
                 <version>${plugins.detekt.version}</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <buildUponDefaultConfig>true</buildUponDefaultConfig>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>verify</phase>
@@ -575,15 +587,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <version>2.7</version>
-                <configuration>
-                    <!--suppress MavenModelInspection - Intellij doesn't support this property yet, even though it's been in Maven since 3.3.1! -->
-                    <rulesUri>file://${maven.multiModuleProjectDirectory}/.dependabot/versions-plugin-config.xml</rulesUri>
-                </configuration>
-            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -592,8 +595,64 @@
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>${plugins.shade.version}</version>
                 </plugin>
+                <plugin>
+                    <artifactId>maven-help-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.5.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.0.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.0.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.6</version>
+                </plugin>
+
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>detekt-top-config-only</id>
+            <activation>
+                <file>
+                    <missing>${project.basedir}/.detekt.yml</missing>
+                </file>
+            </activation>
+            <properties>
+                <!--suppress UnresolvedMavenProperty -->
+                <detekt.config>${maven.multiModuleProjectDirectory}/.detekt.yml</detekt.config>
+            </properties>
+        </profile>
+        <profile>
+            <id>detekt-module-config</id>
+            <activation>
+                <file>
+                    <exists>${project.basedir}/.detekt.yml</exists>
+                </file>
+            </activation>
+            <properties>
+                <!--suppress UnresolvedMavenProperty -->
+                <detekt.config>${maven.multiModuleProjectDirectory}/.detekt.yml;${project.basedir}/.detekt.yml</detekt.config>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

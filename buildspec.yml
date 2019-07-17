@@ -7,7 +7,7 @@ phases:
       - ./mvnw clean install
   post_build:
     commands:
-      - ./.cicd/deploy-if-tagged.sh
+      - ./.cicd/deploy-if-tagged-or-snapshot.sh
 cache:
   paths:
     - '/root/.m2/repository/**/*'

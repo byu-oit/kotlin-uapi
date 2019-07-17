@@ -5,6 +5,7 @@ import org.intellij.lang.annotations.Language
 
 const val COMPOUND_PARAMETER_SEPARATOR = ","
 
+@Suppress("TooManyFunctions")
 open class SimplePathFormatter(val prefix: String, val suffix: String = "") : PathFormatter {
 
     override fun formatVariable(part: VariablePathPart): String {
