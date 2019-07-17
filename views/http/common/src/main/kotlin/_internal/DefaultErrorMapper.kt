@@ -1,6 +1,9 @@
 package edu.byu.uapi.server.http._internal
 
 import com.fasterxml.jackson.core.util.BufferRecyclers
+import edu.byu.uapi.server.http.HTTP_BAD_REQUEST
+import edu.byu.uapi.server.http.HTTP_SERVER_ERROR
+import edu.byu.uapi.server.http.HTTP_UNSUPPORTED_MEDIA_TYPE
 import edu.byu.uapi.server.http.HttpResponse
 import edu.byu.uapi.server.http.HttpResponseBody
 import edu.byu.uapi.server.http.errors.HttpErrorMapper
@@ -13,13 +16,18 @@ import edu.byu.uapi.server.spi.errors.UAPIUnsupportedMediaTypeError
 import java.io.OutputStream
 
 object DefaultErrorMapper : HttpErrorMapper {
+    @Suppress("ForbiddenComment")
     override fun map(ex: Throwable): HttpResponse {
         val (status, message, info) = when (ex) {
             is UAPIClientError -> mapClientError(ex)
             //TODO: Come up with mappings for application and internal errors
             /* is UAPIApplicationError -> mapApplicationError(ex)
              is UAPIInternalError -> mapInternalError(ex)*/
-            else               -> Triple(500, "Unknown Error", listOf("Unknown Exception. See server logs for details"))
+            else               -> Triple(
+                HTTP_SERVER_ERROR,
+                "Unknown Error",
+                listOf("Unknown Exception. See server logs for details")
+            )
         }
         // TODO: Replace with logger
 
@@ -33,9 +41,9 @@ object DefaultErrorMapper : HttpErrorMapper {
 
 private fun mapClientError(ex: UAPIClientError): Triple<Int, String, List<String>> {
     val (code, message) = when (ex) {
-        is UAPIMissingIdParamValueError  -> 400 to "Missing Parameter"
-        is UAPIMalformedRequestError     -> 400 to "Malformed Request"
-        is UAPIUnsupportedMediaTypeError -> 415 to "Unsupported Media Type"
+        is UAPIMissingIdParamValueError -> HTTP_BAD_REQUEST to "Missing Parameter"
+        is UAPIMalformedRequestError -> HTTP_BAD_REQUEST to "Malformed Request"
+        is UAPIUnsupportedMediaTypeError -> HTTP_UNSUPPORTED_MEDIA_TYPE to "Unsupported Media Type"
     }
     return Triple(code, message, listOf(ex.message))
 }
@@ -61,7 +69,7 @@ private class ErrorHttpResponse(
 
     override fun writeTo(stream: OutputStream) {
         val validation = validationInformation.joinToString(",") { "\"${it.escapeForJson()}\"" }
-        //We're consciously not using (much of) Jackson here so as to limit the things that can go wrong while handling errors.
+        //We're consciously not using (much of) Jackson here so as to limit the things that can go wrong
         //language=JSON
         val response = """
                 {

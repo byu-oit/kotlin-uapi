@@ -6,6 +6,7 @@ interface HttpErrorMapper {
     fun map(ex: Throwable): HttpResponse
 }
 
+@Suppress("TooGenericExceptionCaught")
 inline fun HttpErrorMapper.runHandlingErrors(block: () -> HttpResponse): HttpResponse {
     return try {
         block()

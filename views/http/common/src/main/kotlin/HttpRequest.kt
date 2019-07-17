@@ -1,10 +1,12 @@
 package edu.byu.uapi.server.http
 
 import edu.byu.uapi.server.http.errors.UAPIHttpMissingBodyError
+import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicReference
 
+@Suppress("ForbiddenComment")
 interface HttpRequest {
     /**
      * Gets the HTTP Method
@@ -34,8 +36,6 @@ interface HttpRequest {
 
 }
 
-
-// TODO: find a better way to integrate this
 class UseOnceStreamWrapper(
     private val stream: InputStream
 ) : AutoCloseable by stream {
@@ -54,7 +54,9 @@ class UseOnceStreamWrapper(
     }
 }
 
-//suspend inline fun <T> HttpRequest.requireBody(crossinline consumer: suspend (contentType: String, stream: InputStream) -> T): T {
+//suspend inline fun <T> HttpRequest.requireBody(
+// crossinline consumer: suspend (contentType: String, stream: InputStream) -> T
+//): T {
 suspend inline fun <T> HttpRequest.requireBody(crossinline consumer: BodyConsumer<T>): T {
     var consumed = false
 
@@ -91,19 +93,22 @@ abstract class BaseHttpRequest(
         _consumed = true
         bodyAsStream().buffered().use { stream ->
             val type = headers["content-type"]
-            if (!method.allowsBodyInUAPI || type == null) {
-                return null
-            }
+            val bodyNotAllowed = !method.allowsBodyInHttp
 
-            stream.mark(1)
-            val byte = stream.read()
-            stream.reset()
-
-            if (byte == -1) {
+            if (bodyNotAllowed || type == null || stream.isEmpty()) {
                 return null
             }
             return consumer(type, stream)
         }
     }
+}
+
+private fun BufferedInputStream.isEmpty(): Boolean {
+    // Set a marker, read a byte, reset the the buffer back to the marker - if byte is -1 (EOF), the stream is empty
+    mark(1)
+    val byte = read()
+    reset()
+
+    return byte == -1
 }
 
