@@ -2,7 +2,9 @@ package edu.byu.uapi.server.http.spark._internal
 
 import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRoute
+import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.staticPart
+import edu.byu.uapi.server.http.path.variablePart
 import edu.byu.uapi.server.http.test.fixtures.FakeHttpRouteSource
 import edu.byu.uapi.server.http.test.fixtures.NoopHttpHandler
 import org.junit.jupiter.api.DisplayName
@@ -81,6 +83,28 @@ internal class ApplyRoutesKtTest {
             assertTrue(route is ConsumesMultipleTypesRouteAdapter)
 
             assertEquals(2, route.handlers.size)
+        }
+
+        @Test
+        fun `flattens paths properly`() {
+            val parts: RoutePath = listOf(
+                staticPart("foo"),
+                variablePart("bar"),
+                variablePart("baz", "rab", "oof")
+            )
+
+            val route = HttpRoute(parts, HttpMethod.GET, NoopHttpHandler)
+
+            val applier = FakeRouteApplier()
+
+            applier.applyRoutes(FakeHttpRouteSource(listOf(route)))
+
+            val (actualPath) = applier.gets.assertHasSingle()
+
+            assertEquals(
+                "/foo/:bar/:compound__baz__rab__oof",
+                actualPath
+            )
         }
     }
 

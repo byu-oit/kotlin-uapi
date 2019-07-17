@@ -1,0 +1,9 @@
+complexity:
+  LongMethod:
+    excludes: "**/integrationtest/*Spec.kt"
+style:
+  MagicNumber:
+    active: false
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
