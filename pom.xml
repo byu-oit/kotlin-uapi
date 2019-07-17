@@ -66,7 +66,7 @@
         <!-- Common annotation-processing stuff -->
         <annotations.auto-common.version>0.10</annotations.auto-common.version>
         <!-- Automatically generate Java service meta files -->
-        <annotations.auto-service.version>1.0-rc5</annotations.auto-service.version>
+        <annotations.auto-service.version>1.0-rc6</annotations.auto-service.version>
 
         <test.kotlintest.version>3.3.2</test.kotlintest.version>
         <test.mockito.version>3.0.0</test.mockito.version>
