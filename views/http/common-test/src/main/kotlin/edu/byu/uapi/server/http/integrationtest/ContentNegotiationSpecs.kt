@@ -2,7 +2,7 @@ package edu.byu.uapi.server.http.integrationtest
 
 import com.github.kittinunf.fuel.core.Request
 import edu.byu.uapi.server.http.HTTP_OK
-import edu.byu.uapi.server.http.HTTP_UNSUPPORTED_MEDIA_TYPE
+import edu.byu.uapi.server.http.HTTP_UNSUPPORTED_TYPE
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.integrationtest.dsl.SuiteDsl
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
@@ -51,7 +51,8 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
                 }
                 whenCalledWith { post("no-default").type("oof/oof").body("foobar") }
                 then {
-                    expectStatus(HTTP_UNSUPPORTED_MEDIA_TYPE)
+                    expectStatus(HTTP_UNSUPPORTED_TYPE)
+                    @Suppress("MaxLineLength")
                     expectJsonBodyEquals("""
                         {
                           "metadata": {

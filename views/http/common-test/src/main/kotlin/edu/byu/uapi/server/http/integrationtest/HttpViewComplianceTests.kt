@@ -19,7 +19,7 @@ import java.util.stream.Stream
 import kotlin.system.exitProcess
 import kotlin.test.assertFalse
 
-@Suppress("FunctionName")
+@Suppress("FunctionName", "TooManyFunctions")
 @Execution(ExecutionMode.CONCURRENT)
 abstract class HttpViewComplianceTests<Handle : Any> {
 
@@ -63,7 +63,7 @@ abstract class HttpViewComplianceTests<Handle : Any> {
                 "Due to server stopping failure, we're just gonna panic and exit the JVM process, just to be safe. " +
                     "Bye Bye!"
             )
-            exitProcess(11111)
+            exitProcess(1)
         }
     }
 

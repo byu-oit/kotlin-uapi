@@ -1,9 +1,9 @@
 package edu.byu.uapi.server.http.spark._internal
 
-import edu.byu.uapi.server.http.errors.HttpErrorMapper
 import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.HttpRoute
 import edu.byu.uapi.server.http.HttpRouteSource
+import edu.byu.uapi.server.http.errors.HttpErrorMapper
 import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.format
 import spark.Route
@@ -51,7 +51,7 @@ private inline fun apply(
     )
 }
 
-internal data class RouteSpec(
+private data class RouteSpec(
     val pathParts: RoutePath,
     val method: HttpMethod.Routable,
     val produces: String?

@@ -1,3 +1,4 @@
+@file:Suppress("ForbiddenComment")
 package edu.byu.uapi.server.http
 
 import edu.byu.uapi.server.http.errors.UAPIHttpMissingBodyError
@@ -6,7 +7,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicReference
 
-@Suppress("ForbiddenComment")
 interface HttpRequest {
     /**
      * Gets the HTTP Method

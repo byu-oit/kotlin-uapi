@@ -629,11 +629,15 @@
     </build>
 
     <profiles>
+        <!-- * Profiles for setting up Detekt
+             * By default, include the root .detekt.yml. If there's another one present in the working directory,
+             * use both.
+        -->
         <profile>
             <id>detekt-top-config-only</id>
             <activation>
                 <file>
-                    <missing>${project.basedir}/.detekt.yml</missing>
+                    <missing>${basedir}/.detekt.yml</missing>
                 </file>
             </activation>
             <properties>
@@ -641,16 +645,20 @@
                 <detekt.config>${maven.multiModuleProjectDirectory}/.detekt.yml</detekt.config>
             </properties>
         </profile>
+
         <profile>
-            <id>detekt-module-config</id>
+            <id>detekt-module-has-own-config</id>
             <activation>
                 <file>
-                    <exists>${project.basedir}/.detekt.yml</exists>
+                    <exists>${basedir}/.detekt.yml</exists>
                 </file>
             </activation>
             <properties>
+                <!-- Detekt supports listing multiple files, separated by ; or , , but the maven plugin doesn't yet.
+                      So, for now, we won't include the root project. -->
+                <detekt.config>${project.basedir}/.detekt.yml</detekt.config>
                 <!--suppress UnresolvedMavenProperty -->
-                <detekt.config>${maven.multiModuleProjectDirectory}/.detekt.yml;${project.basedir}/.detekt.yml</detekt.config>
+                <!--<detekt.config>${maven.multiModuleProjectDirectory}/.detekt.yml;${project.basedir}/.detekt.yml</detekt.config>-->
             </properties>
         </profile>
     </profiles>
