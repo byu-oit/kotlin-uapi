@@ -209,7 +209,7 @@ class RoutingInit(
         method: HttpMethod.Routable,
         consumes: String? = null,
         produces: String? = null,
-        trackActualRequest: Boolean = true,
+        echoActualBody: Boolean = true,
         handler: TestHttpHandler
     ) {
         routes += RouteBuilding(
@@ -217,7 +217,8 @@ class RoutingInit(
             method = method,
             produces = produces,
             consumes = consumes,
-            handler = handler
+            handler = handler,
+            echoActualBody = echoActualBody
         )
     }
 
@@ -226,7 +227,8 @@ class RoutingInit(
         val method: HttpMethod.Routable,
         val consumes: String? = null,
         val produces: String? = null,
-        val handler: TestHttpHandler
+        val handler: TestHttpHandler,
+        val echoActualBody: Boolean
     )
 
     internal fun buildRoutes(basePath: List<StaticPathPart>): List<HttpRoute> {
@@ -237,7 +239,7 @@ class RoutingInit(
                 method = it.method,
                 consumes = it.consumes,
                 produces = it.produces,
-                handler = TestHandlerWrapper(basePathString, it.handler)
+                handler = TestHandlerWrapper(basePathString, it.handler, it.echoActualBody)
             )
         }
     }

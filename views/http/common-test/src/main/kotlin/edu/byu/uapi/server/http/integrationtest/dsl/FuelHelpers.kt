@@ -10,6 +10,14 @@ fun RequestFactory.request(method: HttpMethod, path: String, parameters: Paramet
     return request(method.fuel, path, parameters)
 }
 
+fun Request.type(type: String): Request {
+    return header("Content-Type", type)
+}
+
+fun Request.accept(type: String): Request {
+    return header("Accept", type)
+}
+
 val HttpMethod.fuel
     get() = when (this) {
         HttpMethod.Routable.GET    -> Method.GET

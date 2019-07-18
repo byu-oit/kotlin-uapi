@@ -1,17 +1,18 @@
 package edu.byu.uapi.server.http.integrationtest
 
-import com.github.kittinunf.fuel.core.Request
 import edu.byu.uapi.server.http.HTTP_OK
 import edu.byu.uapi.server.http.HTTP_UNSUPPORTED_TYPE
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.integrationtest.dsl.SuiteDsl
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
+import edu.byu.uapi.server.http.integrationtest.dsl.accept
 import edu.byu.uapi.server.http.integrationtest.dsl.expectBodyOfType
 import edu.byu.uapi.server.http.integrationtest.dsl.expectJsonBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.expectStatus
 import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.get
 import edu.byu.uapi.server.http.integrationtest.dsl.post
+import edu.byu.uapi.server.http.integrationtest.dsl.type
 
 /**
  * This suite defines the expected behaviors for matching routes based on the media types the consume and produce.
@@ -141,12 +142,4 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
             }
         }
     }
-}
-
-private fun Request.type(type: String): Request {
-    return header("Content-Type", type)
-}
-
-private fun Request.accept(type: String): Request {
-    return header("Accept", type)
 }
