@@ -18,7 +18,7 @@ import java.util.Base64
 
 /**
  * The HTTP implementations should provide the handler with a representation of a body. The primary
- * way for the handlers to interact with the body is using HttpRequestBody#
+ * way for the handlers to interact with the body is using HttpRequestBody#consumeBody
  */
 object RequestBodySpecs : ComplianceSpecSuite() {
     override fun SuiteDsl.define() {

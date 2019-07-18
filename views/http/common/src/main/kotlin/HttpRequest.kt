@@ -5,6 +5,7 @@ import edu.byu.uapi.server.http.errors.UAPIHttpMissingBodyError
 import java.io.BufferedInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 interface HttpRequest {
@@ -84,13 +85,12 @@ abstract class BaseHttpRequest(
 ) : HttpRequest {
     protected abstract suspend fun bodyAsStream(): InputStream
 
-    private var _consumed = false
+    private var _consumed = AtomicBoolean(false)
 
     override suspend fun <T> consumeBody(consumer: BodyConsumer<T>): T? {
-        if (_consumed) {
+        if (_consumed.getAndSet(true)) {
             throw IOException("Body has already been consumed")
         }
-        _consumed = true
         bodyAsStream().buffered().use { stream ->
             val type = headers["content-type"]
             val bodyNotAllowed = !method.allowsBodyInHttp
