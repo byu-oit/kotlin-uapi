@@ -50,7 +50,7 @@
 
         <json.javax.api.version>1.1.4</json.javax.api.version>
         <json.javax.impl.version>1.1.4</json.javax.impl.version>
-        <json.jackson.version>2.9.9</json.jackson.version>
+        <json.jackson.version>2.10.0.pr1</json.jackson.version>
         <json.jackson-databind.version>2.9.9.1</json.jackson-databind.version>
 
         <!-- Hibernate validation and associated dependencies -->
