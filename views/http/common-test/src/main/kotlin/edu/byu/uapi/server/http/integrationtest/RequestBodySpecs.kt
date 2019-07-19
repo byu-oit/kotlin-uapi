@@ -25,7 +25,7 @@ object RequestBodySpecs : ComplianceSpecSuite() {
         describe("empty bodies") {
             givenRoutes {
                 post {
-                    //consumeBody doesn't invoke the
+                    //consumeBody doesn't invoke the callback if there is no request body
                     var invoked = false
                     val body = this.consumeBody { _, _ ->
                         invoked = true

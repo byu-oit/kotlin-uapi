@@ -15,7 +15,7 @@ import edu.byu.uapi.server.http.integrationtest.dsl.post
 import edu.byu.uapi.server.http.integrationtest.dsl.type
 
 /**
- * This suite defines the expected behaviors for matching routes based on the media types the consume and produce.
+ * This suite defines the expected behaviors for matching routes based on the media types they consume and produce.
  *
  * When consuming types, there is only one possible value in the `Content-Type`, so the implementation should match
  * the provided content/type header to the best-matching route.

@@ -5,7 +5,7 @@ import edu.byu.uapi.server.http.HttpMethod
 fun RoutingInit.get(
     consumes: String? = null,
     produces: String? = null,
-    echoActualBody: Boolean = true,
+    echoActualBody: Boolean = DEFAULT_TRACK_ACTUAL_REQUEST,
     handler: TestHttpHandler
 ) {
     route(HttpMethod.Routable.GET, consumes, produces, echoActualBody, handler)
@@ -14,7 +14,7 @@ fun RoutingInit.get(
 fun RoutingInit.post(
     consumes: String? = null,
     produces: String? = null,
-    echoActualBody: Boolean = true,
+    echoActualBody: Boolean = DEFAULT_TRACK_ACTUAL_REQUEST,
     handler: TestHttpHandler
 ) {
     route(HttpMethod.Routable.POST, consumes, produces, echoActualBody, handler)
@@ -23,7 +23,7 @@ fun RoutingInit.post(
 fun RoutingInit.put(
     consumes: String? = null,
     produces: String? = null,
-    echoActualBody: Boolean = true,
+    echoActualBody: Boolean = DEFAULT_TRACK_ACTUAL_REQUEST,
     handler: TestHttpHandler
 ) {
     route(HttpMethod.Routable.PUT, consumes, produces, echoActualBody, handler)
@@ -32,7 +32,7 @@ fun RoutingInit.put(
 fun RoutingInit.patch(
     consumes: String? = null,
     produces: String? = null,
-    echoActualBody: Boolean = true,
+    echoActualBody: Boolean = DEFAULT_TRACK_ACTUAL_REQUEST,
     handler: TestHttpHandler
 ) {
     route(HttpMethod.Routable.PATCH, consumes, produces, echoActualBody, handler)
@@ -41,7 +41,7 @@ fun RoutingInit.patch(
 fun RoutingInit.delete(
     consumes: String? = null,
     produces: String? = null,
-    echoActualBody: Boolean = true,
+    echoActualBody: Boolean = DEFAULT_TRACK_ACTUAL_REQUEST,
     handler: TestHttpHandler
 ) {
     route(HttpMethod.Routable.DELETE, consumes, produces, echoActualBody, handler)

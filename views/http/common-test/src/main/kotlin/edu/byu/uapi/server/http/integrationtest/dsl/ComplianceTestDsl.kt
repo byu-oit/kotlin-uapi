@@ -209,7 +209,7 @@ class RoutingInit(
         method: HttpMethod.Routable,
         consumes: String? = null,
         produces: String? = null,
-        echoActualBody: Boolean = true,
+        echoActualBody: Boolean = DEFAULT_TRACK_ACTUAL_REQUEST,
         handler: TestHttpHandler
     ) {
         routes += RouteBuilding(
