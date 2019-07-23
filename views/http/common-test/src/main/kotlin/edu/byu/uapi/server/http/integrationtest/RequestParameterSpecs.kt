@@ -21,7 +21,7 @@ object RequestParameterSpecs : ComplianceSpecSuite() {
         }
         describe("query params") {
             it("passes query parameters to the handler") {
-                whenCalledWith { get("", listOf("foo" to "bar", "bar" to "baz")) }
+                whenCalledWith { get("?foo=bar&bar=baz") }
                 then {
                     expectReceivedRequestLike {
                         assertEquals(
@@ -35,7 +35,7 @@ object RequestParameterSpecs : ComplianceSpecSuite() {
                 }
             }
             it("handles duplicated query parameters") {
-                whenCalledWith { get("", listOf("foo" to "bar", "foo" to "baz")) }
+                whenCalledWith { get("?foo=bar&foo=baz") }
                 then {
                     expectReceivedRequestLike {
                         assertEquals(
@@ -50,7 +50,7 @@ object RequestParameterSpecs : ComplianceSpecSuite() {
         }
         describe("headers") {
             it("passes headers to the handler") {
-                whenCalledWith { get("").header("foo" to "bar", "bar" to "baz") }
+                whenCalledWith { get().header("foo" to "bar", "bar" to "baz") }
                 then {
                     expectReceivedRequestLike {
                         assertEquals("bar", headers["foo"])

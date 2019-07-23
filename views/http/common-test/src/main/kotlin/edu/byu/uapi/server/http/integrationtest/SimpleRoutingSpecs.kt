@@ -11,7 +11,6 @@ import edu.byu.uapi.server.http.integrationtest.dsl.expectReceivedRequestLike
 import edu.byu.uapi.server.http.integrationtest.dsl.expectStatus
 import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.forAllMethodsIt
-import edu.byu.uapi.server.http.integrationtest.dsl.request
 import kotlin.test.assertEquals
 
 /**
@@ -27,7 +26,7 @@ object SimpleRoutingSpecs : ComplianceSpecSuite() {
                 patch { TestResponse.Text("PATCH") }
                 delete { TestResponse.Text("DELETE") }
             }
-            whenCalledWith { request(testMethod, "") }
+            whenCalledWith { request(testMethod) }
             then {
                 expectStatus(HTTP_OK)
                 expectTextBodyEquals(testMethod.name)

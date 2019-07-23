@@ -1,12 +1,5 @@
 package edu.byu.uapi.server.http.integrationtest.dsl
 
-import com.github.kittinunf.fuel.core.FuelManager
-import com.github.kittinunf.fuel.core.Method
-import com.github.kittinunf.fuel.core.Request
-import com.github.kittinunf.fuel.core.RequestFactory
-import com.github.kittinunf.fuel.core.Response
-import com.github.kittinunf.fuel.core.interceptors.LogRequestInterceptor
-import com.github.kittinunf.fuel.core.interceptors.LogResponseInterceptor
 import edu.byu.uapi.server.http._internal.DeleteRequest
 import edu.byu.uapi.server.http._internal.DeleteRoute
 import edu.byu.uapi.server.http._internal.GetRequest
@@ -22,6 +15,8 @@ import edu.byu.uapi.server.http.integrationtest.ServerInfo
 import edu.byu.uapi.server.http.path.RoutePath
 import edu.byu.uapi.server.http.path.StaticPathPart
 import edu.byu.uapi.server.http.path.staticPart
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.DynamicContainer
@@ -153,21 +148,30 @@ open class TestGroupInit(
 
 }
 
-typealias WhenCalledWith = RequestFactory.Convenience.() -> Request
+private val httpClient = OkHttpClient.Builder()
+    .addInterceptor(HttpLoggingInterceptor(object : HttpLoggingInterceptor.Logger {
+        override fun log(message: String) {
+            println(message)
+        }
+    }).apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    })
+    .build()
+
 
 class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, parent) {
 
-    fun whenCalledWith(init: WhenCalledWith) {
-        requestInit = init
+    fun whenCalledWith(init: WhenCalledWithInit.() -> RequestInit) {
+        requestInit = WhenCalledWithInit().init()
     }
 
-    fun then(init: Response.() -> Unit) {
+    fun then(init: okhttp3.Response.() -> Unit) {
         asserts = init
     }
 
-    private lateinit var requestInit: WhenCalledWith
+    private lateinit var requestInit: RequestInit
 
-    private lateinit var asserts: Response.() -> Unit
+    private lateinit var asserts: okhttp3.Response.() -> Unit
 
     override fun buildRoutes(extraRoutes: List<RoutingInit>): List<HttpRouteDefinition<*>> {
         if (isDisabled()) {
@@ -193,20 +197,13 @@ class TestInit(name: String, parent: TestGroupInit) : DynamicNodeBuilder(name, p
 
             assumeFalse(isDisabled(), "Test is disabled")
 
-            println(url)
-            val request = FuelManager().apply {
-                basePath = url
-                addRequestInterceptor { LogRequestInterceptor(it) }
-                addResponseInterceptor { LogResponseInterceptor(it) }
-            }.run(requestInit)
+            println()
+            val request = requestInit.build(url)
 
-            assumeFalse(
-                request.method == Method.PATCH,
-                "Fuel doesn't support PATCH, so we'll skip it until we can work around it."
-            )
+            val resp = httpClient.newCall(request)
+                .execute()
 
-            val (_, response) = request.response()
-            response.apply(asserts)
+            resp.apply(asserts)
         }
     }
 }

@@ -1,21 +1,21 @@
 package edu.byu.uapi.server.http.integrationtest.dsl
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kittinunf.fuel.core.Response
+import okhttp3.Response
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.fail
 import org.skyscreamer.jsonassert.JSONAssert
-import java.nio.charset.Charset
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 fun Response.expectStatus(expected: Int) {
-    assertEquals(expected, this.statusCode, "Expected response status to be $expected, was $statusCode")
+    assertEquals(expected, this.code, "Expected response status to be $expected, was $code")
 }
 
 fun Response.expectBodyOfType(expectedType: String): String {
     expectHeaderWithValue("Content-Type", expectedType)
-    return this.body().toByteArray().toString(Charset.defaultCharset())
+    return assertNotNull(this.body?.string())
 }
 
 fun Response.expectBodyOfTypeEquals(expectedType: String, expectedBody: String) {
@@ -24,13 +24,13 @@ fun Response.expectBodyOfTypeEquals(expectedType: String, expectedBody: String) 
 }
 
 fun Response.expectEmptyBody() {
-    val data = this.data
-    assertEquals(0, data.size, "Expected an empty body, got a body with length of ${data.size}")
+    val bytes = this.body?.bytes() ?: ByteArray(0)
+    assertEquals(0, bytes.size, "Expected an empty body, got a body with length of ${bytes.size}")
 }
 
 fun Response.expectTextBody(): String {
     expectHeaderWithValue("Content-Type", "text/plain")
-    return this.body().asString("text/plain")
+    return assertNotNull(this.body?.string())
 }
 
 fun Response.expectTextBodyEquals(expectedBody: String) {
@@ -38,8 +38,8 @@ fun Response.expectTextBodyEquals(expectedBody: String) {
 }
 
 fun Response.expectHeader(name: String): String {
-    assertTrue(name in headers, "Expected header '$name' to be set")
-    return headers.getValue(name).first()
+    assertTrue(name in headers.names(), "Expected header '$name' to be set")
+    return assertNotNull(headers[name])
 }
 
 fun Response.expectHeaderWithValue(name: String, value: String) {
@@ -49,7 +49,7 @@ fun Response.expectHeaderWithValue(name: String, value: String) {
 
 private fun Response.expectJsonBody(expectedJson: String, strict: Boolean) {
     expectHeaderWithValue("Content-Type", "application/json")
-    val body = this.body().asString("application/json")
+    val body = this.body?.string()
     JSONAssert.assertEquals(expectedJson, body, strict)
 }
 
@@ -64,7 +64,7 @@ fun Response.expectJsonBodyEquals(
 inline fun <reified T : Any> Response.expectJsonParseableAs(expectedType: String = "application/json"): T {
     expectHeaderWithValue("Content-Type", expectedType)
     try {
-        return this.body().toStream().use { jackson.readValue(it) }
+        return assertNotNull(this.body?.byteStream()?.use { jackson.readValue<T>(it) })
     } catch (ex: Exception) {
         fail("Expected to be able to parse JSON response as ${T::class.simpleName}", ex)
     }

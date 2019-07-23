@@ -1,8 +1,6 @@
 package edu.byu.uapi.server.http.integrationtest.dsl
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kittinunf.fuel.core.Response
-import com.github.kittinunf.fuel.util.decodeBase64ToString
 import edu.byu.uapi.server.http._internal.DeleteRequest
 import edu.byu.uapi.server.http._internal.GetRequest
 import edu.byu.uapi.server.http._internal.HttpRequest
@@ -10,11 +8,13 @@ import edu.byu.uapi.server.http._internal.HttpRequestWithBody
 import edu.byu.uapi.server.http._internal.PatchRequest
 import edu.byu.uapi.server.http._internal.PostRequest
 import edu.byu.uapi.server.http._internal.PutRequest
+import okhttp3.Response
+import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.digest.DigestUtils
 
 fun Response.expectReceivedRequestLike(asserts: ActualRequest.() -> Unit) {
     val value = expectHeader(ActualRequest.headerName)
-    val decoded = value.decodeBase64ToString()!!
+    val decoded = Base64.decodeBase64(value)
     val request = jackson.readValue<ActualRequest>(decoded)
     request.asserts()
 }

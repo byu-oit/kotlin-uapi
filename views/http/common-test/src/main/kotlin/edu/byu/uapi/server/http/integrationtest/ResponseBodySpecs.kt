@@ -9,9 +9,9 @@ import edu.byu.uapi.server.http.integrationtest.dsl.expectStatus
 import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.forAllMethodsIt
 import edu.byu.uapi.server.http.integrationtest.dsl.hash
-import edu.byu.uapi.server.http.integrationtest.dsl.request
 import org.junit.jupiter.api.assertAll
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 /**
  * Makes sure that engines map the HTTP response body returned by the UAPI code to their own response properly.
@@ -26,7 +26,7 @@ object ResponseBodySpecs : ComplianceSpecSuite() {
                 patch { TestResponse.Text("foobar") }
                 delete { TestResponse.Text("foobar") }
             }
-            whenCalledWith { request(method, "") }
+            whenCalledWith { request(method) }
             then {
                 expectTextBodyEquals("foobar")
             }
@@ -44,7 +44,7 @@ object ResponseBodySpecs : ComplianceSpecSuite() {
                 patch { TestResponse.Json(body) }
                 delete { TestResponse.Json(body) }
             }
-            whenCalledWith { request(method, "") }
+            whenCalledWith { request(method) }
             then {
                 expectJsonBodyEquals(
                     """
@@ -67,11 +67,11 @@ object ResponseBodySpecs : ComplianceSpecSuite() {
                 post { TestResponse.Body(binaryData, "some/binary") }
                 delete { TestResponse.Body(binaryData, "some/binary") }
             }
-            whenCalledWith { request(method, "") }
+            whenCalledWith { request(method) }
             then {
                 expectStatus(200)
                 expectHeaderWithValue("Content-Type", "some/binary")
-                val bodyBytes = body().toByteArray()
+                val bodyBytes = assertNotNull(body?.bytes())
                 assertAll("Response body",
                     { assertEquals(binaryData.size, bodyBytes.size) },
                     { assertEquals(binaryData.hash(), bodyBytes.hash())}

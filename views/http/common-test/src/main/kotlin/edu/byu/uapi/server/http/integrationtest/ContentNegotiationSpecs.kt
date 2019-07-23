@@ -5,12 +5,10 @@ import edu.byu.uapi.server.http.HTTP_UNSUPPORTED_TYPE
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.integrationtest.dsl.SuiteDsl
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
-import edu.byu.uapi.server.http.integrationtest.dsl.accept
 import edu.byu.uapi.server.http.integrationtest.dsl.expectBodyOfType
 import edu.byu.uapi.server.http.integrationtest.dsl.expectJsonBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.expectStatus
 import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBodyEquals
-import edu.byu.uapi.server.http.integrationtest.dsl.type
 
 /**
  * This suite defines the expected behaviors for matching routes based on the media types they consume and produce.
@@ -32,21 +30,21 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
                 post { TestResponse.Text("default handler") }
             }
             it("picks the exact match") {
-                whenCalledWith { post("").type("foo/bar").body("foobar") }
+                whenCalledWith { post().type("foo/bar").body("foobar") }
                 then {
                     expectStatus(HTTP_OK)
                     expectTextBodyEquals("foo/bar handler")
                 }
             }
             it("respects wildcards") {
-                whenCalledWith { post("").type("foo/oof").body("foobar") }
+                whenCalledWith { post().type("foo/oof").body("foobar") }
                 then {
                     expectStatus(HTTP_OK)
                     expectTextBodyEquals("foo/* handler")
                 }
             }
             it("falls back to the default handler") {
-                whenCalledWith { post("").type("oof/oof").body("foobar") }
+                whenCalledWith { post().type("oof/oof").body("foobar") }
                 then {
                     expectStatus(HTTP_OK)
                     expectTextBodyEquals("default handler")
@@ -60,7 +58,7 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
                     post(consumes = "foo/*") { TestResponse.Text("foo/*") }
                     post(consumes = "bar/baz") { TestResponse.Text("bar/baz") }
                 }
-                whenCalledWith { post("no-default").type("oof/oof").body("foobar") }
+                whenCalledWith { post("/no-default").type("oof/oof").body("foobar") }
                 then {
                     expectStatus(HTTP_UNSUPPORTED_TYPE)
                     @Suppress("MaxLineLength")
@@ -91,25 +89,25 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
             }
             describe("single value headers") {
                 it("picks the exact match") {
-                    whenCalledWith { get("").accept("foo/bar") }
+                    whenCalledWith { get().accept("foo/bar") }
                     then {
                         expectBodyOfType("foo/bar")
                     }
                 }
                 it("matches wildcards to wildcards") {
-                    whenCalledWith { get("").accept("foo/*") }
+                    whenCalledWith { get().accept("foo/*") }
                     then {
                         expectBodyOfType("foo/star")
                     }
                 }
                 it("matches wildcards to more specific routes") {
-                    whenCalledWith { get("").accept("bar/*") }
+                    whenCalledWith { get().accept("bar/*") }
                     then {
                         expectBodyOfType("bar/baz")
                     }
                 }
                 it("falls back to default if nothing matches") {
-                    whenCalledWith { get("").accept("other/*") }
+                    whenCalledWith { get().accept("other/*") }
                     then {
                         expectBodyOfType("star/star")
                     }
@@ -117,13 +115,13 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
             }
             describe("complex Accept headers") {
                 it("prefers higher-quality types") {
-                    whenCalledWith { get("").accept("foo/bar, foo/*;q=0.4, */*;q=0") }
+                    whenCalledWith { get().accept("foo/bar, foo/*;q=0.4, */*;q=0") }
                     then {
                         expectBodyOfType("foo/bar")
                     }
                 }
                 it("Can fall through to lower-quality types") {
-                    whenCalledWith { get("").accept("zab/zab, zab/*;q=0.6, foo/*;q=0.2, */*;q=0.1") }
+                    whenCalledWith { get().accept("zab/zab, zab/*;q=0.6, foo/*;q=0.2, */*;q=0.1") }
                     then {
                         //I'm not sure if this is actually what we'd expect out of every provider. It's possible
                         // that they might pick the foo/bar route. For now, I'm going off of what Spark is doing,
@@ -132,7 +130,7 @@ object ContentNegotiationSpecs : ComplianceSpecSuite() {
                     }
                 }
                 it("Falls through to default if nothing matches") {
-                    whenCalledWith { get("").accept("zab/zab, zab/*;q=0.6, oof/*;q=0.2, */*;q=0.1") }
+                    whenCalledWith { get().accept("zab/zab, zab/*;q=0.6, oof/*;q=0.2, */*;q=0.1") }
                     then {
                         expectBodyOfType("star/star")
                     }

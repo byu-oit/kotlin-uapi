@@ -13,8 +13,6 @@ import edu.byu.uapi.server.http.integrationtest.dsl.expectBodyOfTypeEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.forAllMethodsIt
 import edu.byu.uapi.server.http.integrationtest.dsl.hash
-import edu.byu.uapi.server.http.integrationtest.dsl.request
-import edu.byu.uapi.server.http.integrationtest.dsl.type
 
 /**
  * The HTTP implementations should provide the handler with a representation of a body, and shouldn't run any
@@ -32,7 +30,7 @@ object RequestBodySpecs : ComplianceSpecSuite() {
                 }
             }
             it("returns null from `consumeBody`") {
-                whenCalledWith { post("") }
+                whenCalledWith { post() }
                 then {
                     expectTextBodyEquals("true")
                 }
@@ -51,7 +49,7 @@ object RequestBodySpecs : ComplianceSpecSuite() {
                     put(handler = handler())
                     patch(handler = handler())
                 }
-                whenCalledWith { request(method, "").type("foo/bar").body("foobar") }
+                whenCalledWith { request(method).type("foo/bar").body("foobar") }
                 then {
                     expectTextBodyEquals("${method.name} foo/bar - foobar")
                 }
@@ -66,7 +64,7 @@ object RequestBodySpecs : ComplianceSpecSuite() {
                         TestResponse.Body(hash, this.contentType()!!)
                     }
                 }
-                whenCalledWith { post("").type("some/binary").body(binaryData) }
+                whenCalledWith { post().type("some/binary").body(binaryData) }
                 then {
                     println(binaryData.size)
                     expectBodyOfTypeEquals("some/binary", binaryData.hash())

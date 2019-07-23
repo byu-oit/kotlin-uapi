@@ -23,7 +23,7 @@ object ResponseHeaderSpecs : ComplianceSpecSuite() {
                 }
             }
             it("Should return the exact headers and values specified") {
-                whenCalledWith { get("") }
+                whenCalledWith { get() }
                 then {
                     expectHeaderWithValue("foo", "bar")
                     expectHeaderWithValue("BAZ", "zab")
