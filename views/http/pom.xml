@@ -16,6 +16,7 @@
         <module>common-test</module>
         <module>spark</module>
         <module>ktor</module>
+	<module>http4k</module>
     </modules>
 
     <parent>
