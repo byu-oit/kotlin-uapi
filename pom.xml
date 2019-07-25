@@ -26,6 +26,7 @@
 
     <modules>
         <module>spi</module>
+        <module>styles</module>
         <module>core</module>
         <module>views</module>
     </modules>
