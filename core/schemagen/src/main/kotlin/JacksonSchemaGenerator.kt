@@ -25,7 +25,7 @@ class JacksonSchemaGenerator(mapper: ObjectMapper = defaultObjectMapper): Schema
     }
 
     private fun JsonNode.toSchema(): Schema {
-        return defaultObjectMapper.treeToValue(this)
+        return defaultObjectMapper.treeToValue(dereferenceSchema(this))
     }
 }
 
