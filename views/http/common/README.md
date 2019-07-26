@@ -1,6 +1,6 @@
 # UAPI HTTP Common
 
-This package has to main parts:
+This package has two main parts:
 
 * Defining an API for different HTTP engines to implement so that they can be used by this module
 * Defining the mapping between abstract UAPI models and concrete HTTP implementations.

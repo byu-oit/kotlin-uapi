@@ -20,12 +20,4 @@ class FakeHttpRouteSource<E: Any>(
         return errorMapper
     }
 
-    //    override fun buildRoutesFor(): List<HttpRoute<*>> {
-//        return routes
-//    }
-//
-//    override fun buildErrorMapperFor(): HttpErrorMapper {
-//        return errorMapper
-//    }
 }
-
