@@ -1,6 +1,6 @@
 package edu.byu.uapi.server.http.spark
 
-import edu.byu.uapi.server.http.HttpRouteSource
+import edu.byu.uapi.server.http.engines.HttpRouteSource
 import edu.byu.uapi.server.http.spark._internal.ServiceRouteApplier
 import edu.byu.uapi.server.http.spark._internal.StaticRouteApplier
 import edu.byu.uapi.server.http.spark._internal.applyRoutes

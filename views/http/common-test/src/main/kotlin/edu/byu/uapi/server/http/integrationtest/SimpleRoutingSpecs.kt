@@ -2,24 +2,21 @@ package edu.byu.uapi.server.http.integrationtest
 
 import edu.byu.uapi.server.http.HTTP_NO_CONTENT
 import edu.byu.uapi.server.http.HTTP_OK
-import edu.byu.uapi.server.http.HttpMethod
 import edu.byu.uapi.server.http.integrationtest.dsl.ComplianceSpecSuite
 import edu.byu.uapi.server.http.integrationtest.dsl.SuiteDsl
 import edu.byu.uapi.server.http.integrationtest.dsl.TestResponse
-import edu.byu.uapi.server.http.integrationtest.dsl.delete
 import edu.byu.uapi.server.http.integrationtest.dsl.emptyGet
 import edu.byu.uapi.server.http.integrationtest.dsl.expectEmptyBody
 import edu.byu.uapi.server.http.integrationtest.dsl.expectReceivedRequestLike
 import edu.byu.uapi.server.http.integrationtest.dsl.expectStatus
 import edu.byu.uapi.server.http.integrationtest.dsl.expectTextBodyEquals
 import edu.byu.uapi.server.http.integrationtest.dsl.forAllMethodsIt
-import edu.byu.uapi.server.http.integrationtest.dsl.get
-import edu.byu.uapi.server.http.integrationtest.dsl.patch
-import edu.byu.uapi.server.http.integrationtest.dsl.post
-import edu.byu.uapi.server.http.integrationtest.dsl.put
 import edu.byu.uapi.server.http.integrationtest.dsl.request
 import kotlin.test.assertEquals
 
+/**
+ * Ensures that paths and methods are routed properly. Doesn't test content negotiation; see [ContentNegotiationSpecs].
+ */
 object SimpleRoutingSpecs : ComplianceSpecSuite() {
     override fun SuiteDsl.define() {
         forAllMethodsIt("should route to the method's handler") { testMethod ->
@@ -35,14 +32,14 @@ object SimpleRoutingSpecs : ComplianceSpecSuite() {
                 expectStatus(HTTP_OK)
                 expectTextBodyEquals(testMethod.name)
                 expectReceivedRequestLike {
-                    assertEquals(testMethod, method)
+                    assertEquals(testMethod.name, method)
                     assertEquals("", path)
                 }
 
             }
         }
 
-        describe("path parameters") {
+        describe("pathSpec parameters") {
             it("should parse values for single parameter values") {
                 givenRoutes("/{one}/{two}") {
                     emptyGet()
@@ -52,7 +49,7 @@ object SimpleRoutingSpecs : ComplianceSpecSuite() {
                     expectStatus(HTTP_NO_CONTENT)
                     expectEmptyBody()
                     expectReceivedRequestLike {
-                        assertEquals(HttpMethod.GET, method)
+                        assertEquals("GET", method)
                         assertEquals(mapOf("one" to "abcdef", "two" to "123"), pathParams)
                     }
                 }
@@ -66,7 +63,7 @@ object SimpleRoutingSpecs : ComplianceSpecSuite() {
                     expectStatus(HTTP_NO_CONTENT)
                     expectEmptyBody()
                     expectReceivedRequestLike {
-                        assertEquals(HttpMethod.GET, method)
+                        assertEquals("GET", method)
                         assertEquals(mapOf("one" to "abcdef", "two" to "123"), pathParams)
                     }
                 }
@@ -80,7 +77,7 @@ object SimpleRoutingSpecs : ComplianceSpecSuite() {
                     expectStatus(HTTP_NO_CONTENT)
                     expectEmptyBody()
                     expectReceivedRequestLike {
-                        assertEquals(HttpMethod.GET, method)
+                        assertEquals("GET", method)
                         assertEquals(
                             mapOf(
                                 "outer" to "a",

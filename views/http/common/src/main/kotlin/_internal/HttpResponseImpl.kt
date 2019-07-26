@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.http._internal
 
-import edu.byu.uapi.server.http.HttpResponse
-import edu.byu.uapi.server.http.HttpResponseBody
+import edu.byu.uapi.server.http.engines.HttpResponse
+import edu.byu.uapi.server.http.engines.HttpResponseBody
 
 class HttpResponseImpl: HttpResponse {
     override val status: Int

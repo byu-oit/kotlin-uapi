@@ -1,66 +1,59 @@
 package edu.byu.uapi.server.http.spark._internal
 
-import edu.byu.uapi.server.http.HttpMethod
-import edu.byu.uapi.server.http.HttpRoute
-import edu.byu.uapi.server.http.HttpRouteSource
+import edu.byu.uapi.server.http.engines.HttpRoute
+import edu.byu.uapi.server.http.engines.HttpRouteSource
+import edu.byu.uapi.server.http.engines.RouteMethod
+import edu.byu.uapi.server.http.engines.RouteMethod.DELETE
+import edu.byu.uapi.server.http.engines.RouteMethod.GET
+import edu.byu.uapi.server.http.engines.RouteMethod.PATCH
+import edu.byu.uapi.server.http.engines.RouteMethod.POST
+import edu.byu.uapi.server.http.engines.RouteMethod.PUT
 import edu.byu.uapi.server.http.errors.HttpErrorMapper
-import edu.byu.uapi.server.http.path.RoutePath
-import edu.byu.uapi.server.http.path.format
-import spark.Route
-import kotlin.coroutines.EmptyCoroutineContext
+import spark.Request
 
 fun RouteApplier.applyRoutes(routes: HttpRouteSource) {
     val errorMapper = routes.buildErrorMapper()
-    routes.buildRoutes()
+
+    routes.buildRoutesFor(SparkEngine)
         .groupBy { RouteSpec(it) }
-        .forEach { (spec, routes) ->
-            when (spec.method) {
-                HttpMethod.Routable.GET    -> apply(spec, routes, errorMapper, this::get)
-                HttpMethod.Routable.PUT    -> apply(spec, routes, errorMapper, this::put)
-                HttpMethod.Routable.PATCH  -> apply(spec, routes, errorMapper, this::patch)
-                HttpMethod.Routable.POST   -> apply(spec, routes, errorMapper, this::post)
-                HttpMethod.Routable.DELETE -> apply(spec, routes, errorMapper, this::delete)
-            }.apply {/* exhaustive */}
-        }
+        .mapValues { buildAdapter(it.key, it.value, errorMapper) }
+        .forEach { (k, v) -> applyToPath(k, v) }
 }
 
-internal val sparkCoroutines = EmptyCoroutineContext
-
-private inline fun apply(
+private fun RouteApplier.applyToPath(
     spec: RouteSpec,
-    routes: List<HttpRoute>,
-    errorMapper: HttpErrorMapper,
-    fn: (String, String?, Route) -> Unit
+    adapter: BaseSparkRouteAdapter
 ) {
-    println("Adding route ${spec.method} ${spec.path}")
-    val adapter = if (routes.size == 1) {
-        val route = routes.single()
-        SimpleRouteAdapter(spec.pathParts, route.handler, sparkCoroutines, errorMapper)
-    } else {
-        ConsumesMultipleTypesRouteAdapter(
-            spec.pathParts,
-            routes.associate { (it.consumes ?: "*/*") to it.handler },
-            sparkCoroutines,
-            errorMapper
-        )
-    }
-    fn(
-        spec.path,
-        spec.produces,
-        adapter
-    )
+    val (pathSpec, method, produces) = spec
+    println("Adding route $method $pathSpec produces=$produces to $adapter")
+    when (method) {
+        GET    -> get(pathSpec, produces, adapter)
+        POST   -> post(pathSpec, produces, adapter)
+        PUT    -> put(pathSpec, produces, adapter)
+        PATCH  -> patch(pathSpec, produces, adapter)
+        DELETE -> delete(pathSpec, produces, adapter)
+    }.apply { /* exhaustive */ }
 }
 
 private data class RouteSpec(
-    val pathParts: RoutePath,
-    val method: HttpMethod.Routable,
+    val pathSpec: String,
+    val method: RouteMethod,
     val produces: String?
 ) {
-    val path = sparkPaths.format(pathParts)
+    constructor(route: HttpRoute<Request>) : this(route.pathSpec, route.method, route.produces)
+}
 
-    constructor(route: HttpRoute) : this(
-        pathParts = route.pathParts,
-        method = route.method,
-        produces = route.produces
-    )
+private fun buildAdapter(
+    spec: RouteSpec,
+    routes: List<HttpRoute<Request>>,
+    errorMapper: HttpErrorMapper
+): BaseSparkRouteAdapter {
+    return if (spec.method.mayHaveBody) {
+        HasBodyRouteAdapter(
+            routes, sparkCoroutines, errorMapper
+        )
+    } else {
+        assert(routes.size == 1)
+        NoBodyRouteAdapter(routes.single(), sparkCoroutines, errorMapper)
+    }
 }

@@ -7,7 +7,6 @@ import spark.Spark
 import spark.Spark.get
 import spark.Spark.path
 import spark.Spark.port
-import spark.route.HttpMethod
 import spark.route.Routes
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
@@ -16,14 +15,14 @@ import kotlin.reflect.jvm.isAccessible
 fun main() {
     port(4567)
 
-    get("/") { req, resp ->
+    get("/") { _, _ ->
         "Hello!"
     }
     path("/api") {
         addUApiToSpark(getTestApi())
     }
 
-    val routesProp =
+    @Suppress("UNCHECKED_CAST") val routesProp =
         Service::class.declaredMemberProperties.first { it.name == "sharedRoutes" } as KProperty1<Service, Routes>
 
     routesProp.isAccessible = true

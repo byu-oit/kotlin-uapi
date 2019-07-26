@@ -1,10 +1,9 @@
 package edu.byu.uapi.server.http.spark._internal
 
-import edu.byu.uapi.server.http.HttpHandler
-import edu.byu.uapi.server.http.HttpResponse
+import edu.byu.uapi.server.http.engines.HttpResponse
+import edu.byu.uapi.server.http.engines.HttpRoute
 import edu.byu.uapi.server.http.errors.HttpErrorMapper
 import edu.byu.uapi.server.http.errors.runHandlingErrors
-import edu.byu.uapi.server.http.path.RoutePath
 import kotlinx.coroutines.runBlocking
 import spark.Request
 import spark.Response
@@ -13,20 +12,17 @@ import java.io.ByteArrayOutputStream
 import kotlin.coroutines.CoroutineContext
 
 internal abstract class BaseSparkRouteAdapter(
-    private val routePath: RoutePath,
     private val context: CoroutineContext,
     private val errorMapper: HttpErrorMapper
 ) : Route {
-    protected abstract fun getHandlerFor(req: Request): HttpHandler
+    protected abstract fun getRouteFor(req: Request): HttpRoute<Request>
 
     override fun handle(sparkReq: Request, sparkResp: Response): Any? {
         return errorMapper.runHandlingErrors {
-            val uapiReq = SparkRequestAdapter(sparkReq, routePath)
-
-            val handler = getHandlerFor(sparkReq)
+            val route = getRouteFor(sparkReq)
 
             runBlocking(context = context) {
-                handler.handle(uapiReq)
+                route.dispatch(sparkReq)
             }
         }.renderTo(sparkResp)
     }
@@ -47,4 +43,3 @@ internal abstract class BaseSparkRouteAdapter(
         }
     }
 }
-

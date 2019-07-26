@@ -131,6 +131,22 @@ internal class CompoundFlatteningFormatterTest {
                 result
             )
         }
+
+        @Test
+        fun `falls back to single value params if the compound prefix isn't present`() {
+            val formatter = CompoundFlatteningFormatter(
+                "p_", "_s", "c__", "__"
+            )
+
+            val formatted = "p_foo__bar__baz_s"
+
+            val result = formatter.unformatPart(formatted)
+
+            assertEquals(
+                SingleVariablePathPart("foo__bar__baz"),
+                result
+            )
+        }
     }
 
 }

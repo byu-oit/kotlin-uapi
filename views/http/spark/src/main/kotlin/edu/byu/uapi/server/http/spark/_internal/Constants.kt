@@ -1,5 +1,5 @@
 package edu.byu.uapi.server.http.spark._internal
 
-import edu.byu.uapi.server.http.path.PathFormatters
+import kotlin.coroutines.EmptyCoroutineContext
 
-internal val sparkPaths = PathFormatters.FLAT_COLON
+internal val sparkCoroutines = EmptyCoroutineContext

@@ -12,7 +12,8 @@ interface RouteApplier {
     fun delete(path: String, accepts: String?, route: Route)
 }
 
-object StaticRouteApplier: RouteApplier {
+object StaticRouteApplier : RouteApplier {
+
     override fun get(path: String, accepts: String?, route: Route) {
         Spark.get(path, accepts, route)
     }
@@ -34,7 +35,7 @@ object StaticRouteApplier: RouteApplier {
     }
 }
 
-class ServiceRouteApplier(private val service: Service): RouteApplier {
+class ServiceRouteApplier(private val service: Service) : RouteApplier {
     override fun get(path: String, accepts: String?, route: Route) {
         service.get(path, accepts, route)
     }

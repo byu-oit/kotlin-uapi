@@ -57,4 +57,11 @@ Milestones:
 
 ## Package Structure
 
+The project is organized into several top-level packages. For details about each package, see the corresponding README.
+
+Note - Everything but `views` is currently in flux.
+
+* [`core`](core/README.md) - Core UAPI definitions
+* [`views`](views/README.md) - Different views into a UAPI Service. Some examples are an HTTP-based RESTful view, GraphQL, and gRPC
+
 

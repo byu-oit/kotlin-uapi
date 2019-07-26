@@ -1,11 +1,11 @@
 package edu.byu.uapi.server.http.test.fixtures
 
-import edu.byu.uapi.server.http.HttpHandler
-import edu.byu.uapi.server.http.HttpRequest
-import edu.byu.uapi.server.http.HttpResponse
+import edu.byu.uapi.server.http._internal.HttpHandler
+import edu.byu.uapi.server.http._internal.HttpRequest
+import edu.byu.uapi.server.http.engines.HttpResponse
 
-object NoopHttpHandler : HttpHandler {
-    override suspend fun handle(request: HttpRequest): HttpResponse {
+class NoopHttpHandler<R: HttpRequest> : HttpHandler<R> {
+    override suspend fun handle(request: R): HttpResponse {
         TODO("not implemented")
     }
 }

@@ -1,16 +1,14 @@
 package edu.byu.uapi.server.http.spark._internal
 
-import edu.byu.uapi.server.http.HttpMethod
-import edu.byu.uapi.server.http.HttpRoute
-import edu.byu.uapi.server.http.path.RoutePath
-import edu.byu.uapi.server.http.path.staticPart
-import edu.byu.uapi.server.http.path.variablePart
+import edu.byu.uapi.server.http.engines.HttpRoute
+import edu.byu.uapi.server.http.engines.RouteMethod
 import edu.byu.uapi.server.http.test.fixtures.FakeHttpRouteSource
-import edu.byu.uapi.server.http.test.fixtures.NoopHttpHandler
+import edu.byu.uapi.server.http.test.fixtures.MockHttpRoute
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
+import spark.Request
 import spark.Route
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -23,14 +21,12 @@ internal class ApplyRoutesKtTest {
     inner class ApplyRoutes {
         @Test
         fun `maps routes to proper methods`() {
-            val routes = FakeHttpRouteSource(
-                HttpMethod.Routable.values().map { method ->
-                    HttpRoute(
-                        listOf(staticPart(method.name.toLowerCase())),
-                        method,
-                        NoopHttpHandler
-                    )
-                }
+            val routes = FakeHttpRouteSource<Request>(
+                MockHttpRoute(method = RouteMethod.GET, pathSpec = "get"),
+                MockHttpRoute(method = RouteMethod.POST, pathSpec = "post"),
+                MockHttpRoute(method = RouteMethod.PUT, pathSpec = "put"),
+                MockHttpRoute(method = RouteMethod.PATCH, pathSpec = "patch"),
+                MockHttpRoute(method = RouteMethod.DELETE, pathSpec = "delete")
             )
 
             val applier = FakeRouteApplier()
@@ -48,14 +44,13 @@ internal class ApplyRoutesKtTest {
                     {
                         val call = calls.assertHasSingle("Expected single call to '$method'")
                         assertAll("call to '$method'",
-                            { assertEquals("/$method", call.first) },
+                            { assertEquals(method, call.first) },
                             { assertNull(call.second) },
                             {
                                 val adapter = call.third
-                                assertTrue(adapter is SimpleRouteAdapter, "Expected route to be SparkRouteAdapter")
-                                assertEquals(
-                                    NoopHttpHandler,
-                                    adapter.handler
+                                assertTrue(
+                                    adapter is BaseSparkRouteAdapter,
+                                    "Expected route to be BaseSparkRouteAdapter"
                                 )
                             }
                         )
@@ -66,55 +61,26 @@ internal class ApplyRoutesKtTest {
 
         @Test
         fun `groups multiple consumes types into the same route`() {
-            val path = listOf(staticPart("foo"))
-            val routes = listOf(
-                HttpRoute(path, HttpMethod.GET, NoopHttpHandler, consumes = "foo/bar"),
-                HttpRoute(path, HttpMethod.GET, NoopHttpHandler, consumes = "bar/baz")
+            val path = "/foo"
+            val routes: List<HttpRoute<Request>> = listOf(
+                MockHttpRoute(method = RouteMethod.POST, pathSpec = path, consumes = "foo/bar"),
+                MockHttpRoute(method = RouteMethod.POST, pathSpec = path, consumes = "foo/bar")
             )
 
             val applier = FakeRouteApplier()
 
             applier.applyRoutes(FakeHttpRouteSource(routes))
 
-            val (actualPath, accepts, route) = applier.gets.assertHasSingle()
+            val (actualPath, accepts, route) = applier.posts.assertHasSingle()
 
             assertEquals("/foo", actualPath)
             assertNull(accepts)
-            assertTrue(route is ConsumesMultipleTypesRouteAdapter)
-
-            assertEquals(2, route.handlers.size)
-        }
-
-        @Test
-        fun `flattens paths properly`() {
-            val parts: RoutePath = listOf(
-                staticPart("foo"),
-                variablePart("bar"),
-                variablePart("baz", "rab", "oof")
-            )
-
-            val route = HttpRoute(parts, HttpMethod.GET, NoopHttpHandler)
-
-            val applier = FakeRouteApplier()
-
-            applier.applyRoutes(FakeHttpRouteSource(listOf(route)))
-
-            val (actualPath) = applier.gets.assertHasSingle()
-
-            assertEquals(
-                "/foo/:bar/:compound__baz__rab__oof",
-                actualPath
-            )
+            assertTrue(route is HasBodyRouteAdapter)
         }
     }
 
     fun assertHasSize(expectedSize: Int, actual: Collection<*>, message: String? = null) {
         assertEquals(expectedSize, actual.size, message ?: "Expected collection to have size of $expectedSize")
-    }
-
-    fun <T> Collection<T>.assertHasSingleMatching(message: String? = null, asserts: T.() -> Unit) {
-        assertHasSize(1, this, message)
-        this.single().asserts()
     }
 
     fun <T> Collection<T>.assertHasSingle(message: String? = null): T {
@@ -149,7 +115,4 @@ internal class ApplyRoutesKtTest {
             deletes += Triple(path, accepts, route)
         }
     }
-
-
 }
-
