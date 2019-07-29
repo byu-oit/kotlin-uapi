@@ -1,9 +1,6 @@
 package edu.byu.uapi.schemagen
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategy
-import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.kjetland.jackson.jsonSchema.JsonSchemaGenerator
 import edu.byu.uapi.model.jsonschema07.Schema
@@ -16,6 +13,7 @@ private val defaultObjectMapper by lazy { ObjectMapper().apply {
     registerModule(UAPIModelModule())
     disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
+    disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 } }
 
 class JacksonSchemaGenerator(mapper: ObjectMapper = defaultObjectMapper): SchemaGenerator {
