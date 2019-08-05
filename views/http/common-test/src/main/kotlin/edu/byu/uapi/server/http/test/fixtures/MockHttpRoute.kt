@@ -1,16 +1,21 @@
 package edu.byu.uapi.server.http.test.fixtures
 
-import edu.byu.uapi.server.http.HttpHandler
-import edu.byu.uapi.server.http.HttpRequest
-import edu.byu.uapi.server.http.HttpResponse
-import edu.byu.uapi.server.http.HttpResponseBody
+import edu.byu.uapi.server.http.engines.HttpResponse
+import edu.byu.uapi.server.http.engines.HttpResponseBody
+import edu.byu.uapi.server.http.engines.HttpRoute
+import edu.byu.uapi.server.http.engines.RouteMethod
 import java.io.OutputStream
 
-class MockHttpHandler(
-    val response: HttpResponse = FakeHttpResponse(200, null)
-) : HttpHandler {
-    val calls = mutableListOf<HttpRequest>()
-    override suspend fun handle(request: HttpRequest): HttpResponse {
+class MockHttpRoute<R : Any>(
+    val response: HttpResponse = FakeHttpResponse(200, null),
+    override val method: RouteMethod = RouteMethod.GET,
+    override val pathSpec: String = "/foo",
+    override val consumes: String? = null,
+    override val produces: String? = null
+) : HttpRoute<R> {
+    val calls = mutableListOf<R>()
+
+    override suspend fun dispatch(request: R): HttpResponse {
         calls += request
         return response
     }
@@ -38,6 +43,7 @@ class FakeResponseInit {
     fun body(value: String, type: String) {
         resp = resp.copy(body = FakeHttpResponseBody(value, type))
     }
+
     fun noBody() {
         resp = resp.copy(body = null)
     }

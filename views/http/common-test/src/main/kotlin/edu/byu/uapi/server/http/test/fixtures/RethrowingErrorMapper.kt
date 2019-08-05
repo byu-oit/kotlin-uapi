@@ -1,7 +1,7 @@
 package edu.byu.uapi.server.http.test.fixtures
 
 import edu.byu.uapi.server.http.errors.HttpErrorMapper
-import edu.byu.uapi.server.http.HttpResponse
+import edu.byu.uapi.server.http.engines.HttpResponse
 
 object RethrowingErrorMapper: HttpErrorMapper {
     override fun map(ex: Throwable): HttpResponse {
