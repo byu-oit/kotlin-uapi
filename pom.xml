@@ -86,7 +86,7 @@
         <plugins.shade.version>3.2.1</plugins.shade.version>
         <plugins.source.version>3.1.0</plugins.source.version>
         <plugins.build-helper.version>3.0.0</plugins.build-helper.version>
-        <plugins.detekt.version>1.0.0-RC16</plugins.detekt.version>
+        <plugins.detekt.version>1.0.0</plugins.detekt.version>
 
         <!-- Set to `false` in a sub-pom to disable unused dependency checking. You probably shouldn't do that. -->
         <!--        <dependencies.checkUnused>true</dependencies.checkUnused>-->
