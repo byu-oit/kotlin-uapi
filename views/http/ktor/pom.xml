@@ -24,7 +24,7 @@
     </repositories>
 
     <properties>
-        <ktor.version>1.2.4</ktor.version>
+        <ktor.version>1.2.5</ktor.version>
     </properties>
 
     <dependencies>
