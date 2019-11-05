@@ -84,7 +84,7 @@
         <plugins.surefire.version>2.22.2</plugins.surefire.version>
         <plugins.dependency.version>3.1.1</plugins.dependency.version>
         <plugins.shade.version>3.2.1</plugins.shade.version>
-        <plugins.source.version>3.1.0</plugins.source.version>
+        <plugins.source.version>3.2.0</plugins.source.version>
         <plugins.build-helper.version>3.0.0</plugins.build-helper.version>
         <plugins.detekt.version>1.0.0</plugins.detekt.version>
 
