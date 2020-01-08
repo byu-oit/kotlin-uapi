@@ -15,18 +15,11 @@
         <maven>3.5</maven>
     </prerequisites>
 
-    <distributionManagement>
-        <repository>
-            <id>byu-release-repo</id>
-            <name>BYU Release Repository</name>
-            <url>https://developer.byu.edu/maven2/content/repositories/byu-release-repo</url>
-        </repository>
-        <snapshotRepository>
-            <id>byu-snapshot-repo</id>
-            <name>BYU Snapshot Repository</name>
-            <url>https://developer.byu.edu/maven2/content/repositories/byu-snapshot-repo</url>
-        </snapshotRepository>
-    </distributionManagement>
+    <parent>
+        <groupId>edu.byu.custom-code</groupId>
+        <artifactId>distribution-management</artifactId>
+        <version>1.2020-01-03</version>
+    </parent>
 
     <modules>
         <module>core</module>
