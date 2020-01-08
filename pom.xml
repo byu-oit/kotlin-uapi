@@ -46,7 +46,7 @@
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <!-- Process and validate JWTs -->
-        <byu.jwt.version>2.1.0</byu.jwt.version>
+        <byu.jwt.version>2.1.1</byu.jwt.version>
 
         <uapi.model.version>0.1.0-SNAPSHOT</uapi.model.version>
 
