@@ -6,7 +6,7 @@
 
     <groupId>edu.byu.uapi.server.examples</groupId>
     <artifactId>kotlin-uapi-examples-pom</artifactId>
-    <version>0.5.5</version>
+    <version>0.5.6</version>
     <packaging>pom</packaging>
 
     <name>Kotlin UAPI Examples - Parent POM</name>
@@ -19,7 +19,7 @@
     <parent>
         <groupId>edu.byu.uapi.server</groupId>
         <artifactId>kotlin-uapi-pom</artifactId>
-        <version>0.5.5</version>
+        <version>0.5.6</version>
     </parent>
 
     <dependencyManagement>
