@@ -6,6 +6,6 @@ update_configs:
     update_schedule: daily
     target_branch: master
     default_reviewers:
-      - ThatJoeMoore
+      - yoshutch
     default_assignees:
-      - ThatJoeMoore
+      - yoshutch
