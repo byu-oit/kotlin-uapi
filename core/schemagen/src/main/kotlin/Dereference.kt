@@ -49,7 +49,7 @@ private fun runDerefPass(root: ObjectNode): ObjectNode? {
         ref.fieldNames().forEach { name ->
             // Don't override existing fields
             if (!n.has(name)) {
-                n.set(name, ref[name])
+                n.set<JsonNode>(name, ref[name])
             }
         }
     }
