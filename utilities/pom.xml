@@ -6,7 +6,7 @@
 
     <groupId>edu.byu.uapi.server.utilities</groupId>
     <artifactId>kotlin-uapi-utilities-pom</artifactId>
-    <version>0.5.7</version>
+    <version>0.5.8</version>
     <packaging>pom</packaging>
 
     <name>Kotlin UAPI Utilities Parent POM</name>
@@ -18,7 +18,7 @@
     <parent>
         <groupId>edu.byu.uapi.server</groupId>
         <artifactId>kotlin-uapi-pom</artifactId>
-        <version>0.5.7</version>
+        <version>0.5.8</version>
     </parent>
 
     <dependencyManagement>
