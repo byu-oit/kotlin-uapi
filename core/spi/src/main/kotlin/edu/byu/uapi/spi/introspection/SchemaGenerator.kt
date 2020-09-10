@@ -4,5 +4,5 @@ import edu.byu.uapi.model.jsonschema07.Schema
 import kotlin.reflect.KClass
 
 interface SchemaGenerator {
-    fun generateSchemaFor(type: KClass<*>): Schema
+    fun generateSchemaFor(type: KClass<*>): Schema?
 }

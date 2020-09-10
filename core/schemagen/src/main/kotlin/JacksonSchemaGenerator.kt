@@ -18,11 +18,11 @@ private val defaultObjectMapper by lazy { ObjectMapper().apply {
 
 class JacksonSchemaGenerator(mapper: ObjectMapper = defaultObjectMapper): SchemaGenerator {
     private val generator by lazy { JsonSchemaGenerator(mapper) }
-    override fun generateSchemaFor(type: KClass<*>): Schema {
+    override fun generateSchemaFor(type: KClass<*>): Schema? {
         return generator.generateJsonSchema(type.java).toSchema()
     }
 
-    private fun JsonNode.toSchema(): Schema {
+    private fun JsonNode.toSchema(): Schema? {
         return defaultObjectMapper.treeToValue(dereferenceSchema(this))
     }
 }

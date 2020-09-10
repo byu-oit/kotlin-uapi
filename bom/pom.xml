@@ -10,7 +10,7 @@
     <parent>
         <groupId>edu.byu.uapi.server</groupId>
         <artifactId>kotlin-uapi-pom</artifactId>
-        <version>0.5.8</version>
+        <version>0.6.0</version>
     </parent>
 
     <packaging>pom</packaging>
