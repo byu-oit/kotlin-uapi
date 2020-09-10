@@ -6,7 +6,7 @@
 
     <groupId>edu.byu.uapi.server</groupId>
     <artifactId>kotlin-uapi-pom</artifactId>
-    <version>0.5.8</version>
+    <version>0.6.0</version>
     <packaging>pom</packaging>
 
     <name>Kotlin UAPI Parent POM</name>
@@ -18,7 +18,7 @@
     <parent>
         <groupId>edu.byu.custom-code</groupId>
         <artifactId>parent</artifactId>
-        <version>1.2020-01-03</version>
+        <version>3.2.1</version>
     </parent>
 
     <modules>

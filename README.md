@@ -12,11 +12,11 @@ This collection of modules provides a type-safe Kotlin runtime for designing and
 
 # Status
 
-The latest release line is 0.5.x.  This provides a working subset of UAPI features.
+The latest release line is 0.6.x.  This provides a working subset of UAPI features.
 
 Now that we understand the problem domain better, and since Kotlin has evolved in the meantime, the upcoming 0.6.x release line will be a substantial re-write to address the issues we've discovered using the MVP in real applications. The general principals, especially concerning the developer experience, will remain the same.
 
-The goals of the 0.6.x release line:
+The goals of the 0.7.x release line:
 
 - COROUTINE ALL THE THINGS!!!
 - Add a simple, hook-able lifecycle to requests and configuration

@@ -11,7 +11,7 @@
     <name>library-tutorial-api 4-creating-a-resource</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>1.3.10</kotlin.version>
+        <kotlin.version>1.4.0</kotlin.version>
     </properties>
 
     <dependencyManagement>
@@ -19,7 +19,7 @@
             <dependency>
                 <groupId>edu.byu.uapi.server</groupId>
                 <artifactId>uapi-bom</artifactId>
-                <version>0.5.8</version>
+                <version>0.6.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>edu.byu.uapi.server.examples</groupId>
             <artifactId>library-example-common</artifactId>
-            <version>0.5.8</version>
+            <version>0.6.0</version>
         </dependency>
 
         <dependency>
