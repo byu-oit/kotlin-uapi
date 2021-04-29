@@ -1,0 +1,28 @@
+version: 2
+registries:
+  maven-repository-byu-jfrog-io-artifactory-custom-maven-virtual:
+    type: maven-repository
+    url: https://byu.jfrog.io/artifactory/custom-maven-virtual
+    username: cicd-tools
+    password: "${{secrets.MAVEN_REPOSITORY_BYU_JFROG_IO_ARTIFACTORY_CUSTOM_MAVEN_VIRTUAL_PASSWORD}}"
+
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "08:00"
+    timezone: America/Denver
+  open-pull-requests-limit: 10
+  target-branch: master
+  reviewers:
+  - yoshutch
+  assignees:
+  - yoshutch
+  ignore:
+  - dependency-name: org.mockito:mockito-core
+    versions:
+    - 3.7.7
+    - 3.8.0
+  registries:
+  - maven-repository-byu-jfrog-io-artifactory-custom-maven-virtual
